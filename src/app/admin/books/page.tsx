@@ -53,7 +53,7 @@ const BookCard: FC<{
   const displayUrl = book.coverUrl || placeholderUrl;
 
   return (
-    <Card className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
+    <Card className="group flex  flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
       <div className="relative">
         <div className="aspect-square w-full overflow-hidden bg-muted">
           <img
