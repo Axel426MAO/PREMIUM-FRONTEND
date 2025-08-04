@@ -159,7 +159,7 @@ export default function BookListPage() {
                 // Adiciona a URL da capa ao objeto do livro
                 return {
                   ...book,
-                  coverUrl: new URL(coverFile.file_path, API_DOMAIN).href,
+                  coverUrl: new URL(coverFile.file_path, "http://212.85.14.247:4000/").href,
                 };
               }
             } catch (fileError) {
