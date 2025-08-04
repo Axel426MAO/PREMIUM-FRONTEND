@@ -28,7 +28,7 @@ import {
 } from "../services/api";
 
 // --- TIPOS E CONSTANTES INTERNAS ---
-const API_DOMAIN = "http://localhost:3000";
+const API_DOMAIN = "http://localhost:4000";
 
 interface UnifiedPreview {
   key: string;
