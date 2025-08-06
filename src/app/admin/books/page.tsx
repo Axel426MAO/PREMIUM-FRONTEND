@@ -159,7 +159,10 @@ export default function BookListPage() {
                 // Adiciona a URL da capa ao objeto do livro
                 return {
                   ...book,
-                  coverUrl: new URL(coverFile.file_path, "http://212.85.14.247:4000/").href,
+                  coverUrl: new URL(
+                    coverFile.file_path,
+                    "http://212.85.14.247:4000/"
+                  ).href,
                 };
               }
             } catch (fileError) {
@@ -202,7 +205,11 @@ export default function BookListPage() {
   const handleEditBook = (id: number) => {
     router.push(`/admin/books/form?id=${id}`);
   };
-
+  const FullScreenLoader = () => (
+    <div className="flex items-center justify-center w-full bg-white">
+      <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-gray-900"></div>
+    </div>
+  );
   const filteredBooks = useMemo(() => {
     if (!searchQuery) return allBooks;
     return allBooks.filter(
@@ -212,7 +219,38 @@ export default function BookListPage() {
     );
   }, [allBooks, searchQuery]);
 
-  if (isLoading) return <p className="text-center p-8">Carregando livros...</p>;
+  if (isLoading)
+    return (
+    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-8 pb-4 border-b gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              Acervo da Biblioteca
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Navegue, adicione e gerencie os livros do seu acervo.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Buscar por título ou autor..."
+                className="pl-8 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button onClick={() => router.push("/admin/books/form")}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Adicionar
+            </Button>
+          </div>
+        </div>
+        <FullScreenLoader />
+      </main>
+    );
   if (error) return <p className="text-center text-red-500 p-8">{error}</p>;
 
   return (

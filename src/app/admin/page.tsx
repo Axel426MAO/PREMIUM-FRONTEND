@@ -120,7 +120,7 @@ export default function Home() {
           Bem-vindo(a) de volta!{" "}
         </h1>
         <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">
-          Aqui está um resumo do seu sistema Biblio System.
+          Aqui está um resumo do seu sistema.
         </p>
       </div>
 

@@ -5,10 +5,6 @@ import { usePathname } from "next/navigation";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-// --- NOSSAS IMPORTAÇÕES DE AUTENTICAÇÃO ---
-// -----------------------------------------
-
-// Seus outros imports
 import "../globals.css";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -16,6 +12,7 @@ import { Menu } from "lucide-react";
 import { SideMenu } from "./components/SideMenu";
 import { AuthProvider } from "./contexts/AuthContext";
 import RouteGuard from "./auth/guard";
+import { Toaster } from "sonner";
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -30,9 +27,13 @@ const protectedRoutes = [
   "/admin/books",
   "/admin/books/form",
   "/admin/users",
+  "/admin/users/form",
   "/admin/secretary",
-  "/settings",
-  // Adicione aqui qualquer outra rota que precise de proteção
+  "/admin/secretary/form",
+  "/admin/schools",
+  "/admin/schools/form",
+  "/admin/licenses",
+  "/admin/licenses/form",
 ];
 // ===================================================================
 
@@ -45,7 +46,6 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full bg-white dark:bg-gray-950">
       <SideMenu isCollapsed={isCollapsed} toggleCollapse={toggleCollapse} />
-
       <div
         className={cn(
           "flex flex-col flex-1 transition-all duration-300 ease-in-out",
@@ -68,6 +68,7 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>
+      <Toaster richColors />
     </div>
   );
 }

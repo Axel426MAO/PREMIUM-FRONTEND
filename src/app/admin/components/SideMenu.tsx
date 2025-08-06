@@ -1,6 +1,5 @@
 "use client";
 
-// Removido o useState, pois o estado será controlado pelo layout
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { type LucideIcon } from "lucide-react";
@@ -31,7 +30,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Book,
-  BoxIcon,
+  Landmark, // Ícone revisado para Secretarias
+  School,   // Ícone novo para Escolas
+  KeyRound, // Ícone novo para Licenças
 } from "lucide-react";
 
 interface NavItem {
@@ -40,10 +41,14 @@ interface NavItem {
   icon: LucideIcon;
 }
 
+// Lista de navegação atualizada com os novos itens e ícones revisados
 const navItems: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/secretary", label: "Secretarias", icon: Landmark },
+  { href: "/admin/schools", label: "Escolas", icon: School },
+  { href: "/admin/licenses", label: "Lotes de Licença", icon: KeyRound },
   { href: "/admin/books", label: "Livros", icon: Book },
-  { href: "/admin/secretary", label: "Secretarias", icon: BoxIcon },
+  { href: "/admin/users", label: "Usuários", icon: Users },
 ];
 
 interface NavLinksProps {
@@ -57,7 +62,7 @@ function NavLinks({ isCollapsed }: NavLinksProps) {
     <TooltipProvider delayDuration={0}>
       <nav className="grid gap-2 px-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname.startsWith(item.href) && (item.href !== "/admin" || pathname === "/admin");
           return (
             <Tooltip key={item.href}>
               <TooltipTrigger asChild>
@@ -108,9 +113,13 @@ function UserProfile({ isCollapsed }: UserProfileProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="flex w-full cursor-pointer items-center gap-3 border-t p-2 transition-colors hover:bg-accent">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="https://github.com/shadcn.png" alt="Avatar do usuário" />
+            <AvatarFallback>AD</AvatarFallback>
+          </Avatar>
           {!isCollapsed && (
             <div className="flex flex-col text-left">
-              <p className="text-sm font-medium leading-none">Shadcn</p>
+              <p className="text-sm font-medium leading-none">Admin</p>
               <p className="text-xs leading-none text-muted-foreground">
                 admin@example.com
               </p>
@@ -119,11 +128,17 @@ function UserProfile({ isCollapsed }: UserProfileProps) {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        align={isCollapsed ? "end" : "start"}
+        align="end"
         side="right"
         sideOffset={8}
         className="w-56"
       >
+        <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <Settings className="mr-2 h-4 w-4" />
+          <span>Configurações</span>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={logout}
@@ -138,7 +153,6 @@ function UserProfile({ isCollapsed }: UserProfileProps) {
 }
 
 // --- COMPONENTE PRINCIPAL ---
-// ✅ Recebe o estado e a função de toggle como props
 export function SideMenu({
   isCollapsed,
   toggleCollapse,
@@ -151,7 +165,7 @@ export function SideMenu({
       className={cn(
         "fixed top-0 left-0 z-50 hidden h-screen flex-col justify-between border-r bg-background md:flex",
         "transition-all duration-300 ease-in-out",
-        isCollapsed ? "w-16" : "w-64" // A largura muda baseada na prop
+        isCollapsed ? "w-16" : "w-64"
       )}
     >
       <div>
@@ -164,7 +178,6 @@ export function SideMenu({
           {!isCollapsed && (
             <span className="pl-2 text-lg font-bold">Premium Admin</span>
           )}
-          {/* ✅ O botão agora chama a função recebida via prop */}
           <Button variant="ghost" size="icon" onClick={toggleCollapse}>
             {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
             <span className="sr-only">Toggle sidebar</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, type FC } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -38,115 +38,118 @@ import {
   Pencil,
   Search,
 } from "lucide-react";
-import {
-  getSecretaries,
-  deleteSecretary,
-  type SecretaryApiResponse,
-} from "./services/api";
+import { getSchools, deleteSchool } from "./services/api"; // Importa as funções da API
 
-// Adicionado 'is_state_level' para permitir a filtragem
-interface SecretaryViewData {
+// Interface para os dados formatados que a tabela usará
+interface SchoolViewData {
   id: number;
   name: string;
-  responsible: string;
-  email: string;
-  phone: string;
+  type: "Pública" | "Privada";
+  location: string;
+  secretaryName: string;
   status: "Ativa" | "Inativa";
-  is_state_level: boolean;
+  is_private: boolean; // Mantido para facilitar a filtragem
 }
 
-export default function SecretaryPage() {
+export default function SchoolsPage() {
   const router = useRouter();
-  const [allSecretaries, setAllSecretaries] = useState<SecretaryViewData[]>([]);
+  const [allSchools, setAllSchools] = useState<SchoolViewData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  // Estado para o novo filtro de nível
-  const [levelFilter, setLevelFilter] = useState<"all" | "municipal" | "state">(
+  const [typeFilter, setTypeFilter] = useState<"all" | "public" | "private">(
     "all"
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Estado para controlar o diálogo de exclusão
-  const [secretaryToDelete, setSecretaryToDelete] =
-    useState<SecretaryViewData | null>(null);
+  const [schoolToDelete, setSchoolToDelete] = useState<SchoolViewData | null>(
+    null
+  );
 
   useEffect(() => {
-    const fetchSecretaries = async () => {
+    const fetchSchools = async () => {
       try {
         setIsLoading(true);
-        const apiData = await getSecretaries();
+        const apiData = await getSchools();
 
-        const viewData: SecretaryViewData[] = apiData.map((sec) => {
-          const mainResponsible = sec.responsibles[0];
-          const user = mainResponsible?.user;
+        // Mapeia os dados da API para o formato que a view precisa
+        const viewData: SchoolViewData[] = apiData.map((school) => {
+          const mainResponsible = school.responsibles?.[0];
+          const userStatus = mainResponsible?.user?.status ?? false;
 
           return {
-            id: sec.id,
-            name: sec.name,
-            responsible: mainResponsible?.name || "N/A",
-            email: user?.email || "N/A",
-            phone: mainResponsible?.phone || mainResponsible?.whatsapp || "N/A",
-            status: user?.status ? "Ativa" : "Inativa",
-            // Adicionado o campo para o filtro
-            is_state_level: sec.is_state_level,
+            id: school.id,
+            name: school.name,
+            type: school.is_private ? "Privada" : "Pública",
+            location: `${school.address.city} - ${school.address.state}`,
+            secretaryName: school.secretary?.name || "N/A",
+            status: userStatus ? "Ativa" : "Inativa",
+            is_private: school.is_private,
           };
         });
 
-        setAllSecretaries(viewData);
+        setAllSchools(viewData);
         setError(null);
       } catch (err) {
-        setError("Não foi possível carregar os dados das secretarias.");
+        setError("Não foi possível carregar os dados das escolas.");
         console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchSecretaries();
+    fetchSchools();
   }, []);
 
-  // Função que executa a exclusão após a confirmação no diálogo
   const handleConfirmDelete = async () => {
-    if (!secretaryToDelete) return;
+    // Garante que há uma escola selecionada para deletar
+    if (!schoolToDelete) return;
 
     try {
-      await deleteSecretary(secretaryToDelete.id);
-      setAllSecretaries((current) =>
-        current.filter((sec) => sec.id !== secretaryToDelete.id)
+      // Chama a função da API para deletar
+      await deleteSchool(schoolToDelete.id);
+
+      // Remove a escola da lista local para atualizar a UI instantaneamente
+      setAllSchools((currentSchools) =>
+        currentSchools.filter((school) => school.id !== schoolToDelete.id)
       );
+
     } catch (err) {
-      alert((err as Error).message); // Considerar usar um componente de Toast para feedback
-      console.error("Erro ao deletar:", err);
+      // Exibe um alerta em caso de erro na exclusão
+      alert((err as Error).message || "Ocorreu um erro ao tentar excluir.");
+      console.error(err);
     } finally {
-      setSecretaryToDelete(null); // Fecha o diálogo
+      // Fecha o diálogo de confirmação, independentemente do resultado
+      setSchoolToDelete(null);
     }
   };
 
   const handleEdit = (id: number) => {
-    router.push(`/admin/secretary/form?id=${id}`);
+    router.push(`/admin/schools/form?id=${id}`);
   };
 
   // Lógica de filtragem combinada
-  const filteredSecretaries = useMemo(() => {
-    let secretaries = allSecretaries;
+  const filteredSchools = useMemo(() => {
+    let schools = allSchools;
 
-    // 1. Aplica o filtro de nível (municipal/estadual)
-    if (levelFilter !== "all") {
-      secretaries = secretaries.filter((sec) =>
-        levelFilter === "state" ? sec.is_state_level : !sec.is_state_level
+    // 1. Filtro por tipo (pública/privada)
+    if (typeFilter !== "all") {
+      schools = schools.filter((school) =>
+        typeFilter === "public" ? !school.is_private : school.is_private
       );
     }
 
-    // 2. Aplica o filtro de busca de texto
+    // 2. Filtro por busca de texto
     if (searchQuery) {
-      secretaries = secretaries.filter(
-        (sec) =>
-          sec.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          sec.responsible.toLowerCase().includes(searchQuery.toLowerCase())
+      schools = schools.filter(
+        (school) =>
+          school.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          school.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          school.secretaryName.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    return secretaries;
-  }, [allSecretaries, searchQuery, levelFilter]);
+    return schools;
+  }, [allSchools, searchQuery, typeFilter]);
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
@@ -154,10 +157,10 @@ export default function SecretaryPage() {
       <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Secretarias
+            Escolas
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie as secretarias e seus responsáveis.
+            Gerencie as escolas da rede pública e privada.
           </p>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
@@ -165,13 +168,13 @@ export default function SecretaryPage() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Buscar por nome ou responsável..."
+              placeholder="Buscar por nome, local ou secretaria..."
               className="pl-8 w-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button onClick={() => router.push("/admin/secretary/form")}>
+          <Button onClick={() => router.push("/admin/schools/form")}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Adicionar
           </Button>
@@ -181,25 +184,25 @@ export default function SecretaryPage() {
       {/* FILTRO DE ABAS */}
       <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-fit">
         <Button
-          variant={levelFilter === "all" ? "default" : "ghost"}
+          variant={typeFilter === "all" ? "default" : "ghost"}
           className="rounded-md"
-          onClick={() => setLevelFilter("all")}
+          onClick={() => setTypeFilter("all")}
         >
           Todas
         </Button>
         <Button
-          variant={levelFilter === "municipal" ? "default" : "ghost"}
+          variant={typeFilter === "public" ? "default" : "ghost"}
           className="rounded-md"
-          onClick={() => setLevelFilter("municipal")}
+          onClick={() => setTypeFilter("public")}
         >
-          Municipais
+          Públicas
         </Button>
         <Button
-          variant={levelFilter === "state" ? "default" : "ghost"}
+          variant={typeFilter === "private" ? "default" : "ghost"}
           className="rounded-md"
-          onClick={() => setLevelFilter("state")}
+          onClick={() => setTypeFilter("private")}
         >
-          Estaduais
+          Privadas
         </Button>
       </div>
 
@@ -209,12 +212,14 @@ export default function SecretaryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
+                <TableHead>Nome da Escola</TableHead>
+                <TableHead className="text-center">Tipo</TableHead>
                 <TableHead className="hidden sm:table-cell">
-                  Responsável
+                  Localização
                 </TableHead>
-                <TableHead className="hidden md:table-cell">Contato</TableHead>
-                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Secretaria Vinculada
+                </TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -234,31 +239,24 @@ export default function SecretaryPage() {
                     {error}
                   </TableCell>
                 </TableRow>
-              ) : filteredSecretaries.length > 0 ? (
-                filteredSecretaries.map((secretary) => (
-                  <TableRow key={secretary.id}>
-                    <TableCell className="font-medium">
-                      {secretary.name}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {secretary.responsible}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <div className="text-sm">{secretary.email}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {secretary.phone}
-                      </div>
-                    </TableCell>
+              ) : filteredSchools.length > 0 ? (
+                filteredSchools.map((school) => (
+                  <TableRow key={school.id}>
+                    <TableCell className="font-medium">{school.name}</TableCell>
                     <TableCell className="text-center">
                       <Badge
                         variant={
-                          secretary.status === "Ativa"
-                            ? "default"
-                            : "destructive"
+                          school.type === "Pública" ? "default" : "secondary"
                         }
                       >
-                        {secretary.status}
+                        {school.type}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {school.location}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {school.secretaryName}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -269,13 +267,11 @@ export default function SecretaryPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            onClick={() => handleEdit(secretary.id)}
-                          >
+                          <DropdownMenuItem onClick={() => handleEdit(school.id)}>
                             <Pencil className="mr-2 h-4 w-4" /> Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => setSecretaryToDelete(secretary)} // Abre o diálogo
+                            onClick={() => setSchoolToDelete(school)}
                             className="text-red-600 focus:text-red-600 focus:bg-red-50"
                           >
                             <Trash2 className="mr-2 h-4 w-4" /> Excluir
@@ -288,7 +284,7 @@ export default function SecretaryPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center h-24">
-                    Nenhuma secretaria encontrada.
+                    Nenhuma escola encontrada.
                   </TableCell>
                 </TableRow>
               )}
@@ -299,16 +295,16 @@ export default function SecretaryPage() {
 
       {/* DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO */}
       <AlertDialog
-        open={!!secretaryToDelete}
-        onOpenChange={(isOpen) => !isOpen && setSecretaryToDelete(null)}
+        open={!!schoolToDelete}
+        onOpenChange={(isOpen) => !isOpen && setSchoolToDelete(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir a secretaria{" "}
-              <strong>&quot;{secretaryToDelete?.name}&quot;</strong>? Esta ação
-              não pode ser desfeita.
+              Tem certeza que deseja excluir a escola{" "}
+              <strong>&quot;{schoolToDelete?.name}&quot;</strong>? Esta ação não
+              pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
