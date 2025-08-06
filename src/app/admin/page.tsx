@@ -1,14 +1,15 @@
 "use client";
 
-// ✅ 1. Importa os hooks e a função da API
+// 1. Importa os hooks e as funções da API necessárias
 import { useState, useEffect } from "react";
-import { Book, PlusCircle, Users, BoxIcon, ArrowRight } from "lucide-react";
+import { Book, PlusCircle, Users, BoxIcon, ArrowRight, Layers } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "./contexts/AuthContext";
-import { getBooks } from "./books/services/api";
+import { getBooks, getLicenseBatches, getSecretaries } from "./licenses/services/api";
+import { getUsers } from "./users/services/api";
+
 
 /**
- * 🎨 StatCard: Modificado para mostrar um estado de carregamento.
+ * StatCard: Mostra um estado de carregamento.
  */
 function StatCard({
   title,
@@ -30,7 +31,6 @@ function StatCard({
         <Icon className="h-5 w-5 text-slate-400 dark:text-slate-500" />
       </div>
       <div className="mt-4">
-        {/* Mostra '...' enquanto carrega, depois o valor */}
         <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">
           {isLoading ? "..." : value}
         </p>
@@ -43,7 +43,7 @@ function StatCard({
 }
 
 /**
- * 🚀 ActionCard: Nenhuma alteração necessária aqui.
+ * ActionCard: Nenhuma alteração necessária.
  */
 function ActionCard({
   title,
@@ -81,51 +81,64 @@ function ActionCard({
 }
 
 export default function Home() {
-  // ✅ 2. Adiciona estado para as estatísticas e para o carregamento
+  // 2. Adiciona estado para todas as estatísticas e para o carregamento
   const [stats, setStats] = useState({
     books: 0,
-    secretaries: "4", // Valor fixo
-    users: "12", // Valor fixo
+    secretaries: 0,
+    users: 0,
+    licenseBatches: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ 3. Usa o useEffect para buscar os dados quando a página carregar
+  // 3. Usa o useEffect para buscar todos os dados de forma concorrente
   useEffect(() => {
-    const fetchBookCount = async () => {
+    const fetchAllStats = async () => {
       try {
-        const booksData = await getBooks(); // Chama a API
-        const bookCount = booksData.length; // Calcula a quantidade
+        // Busca todos os dados em paralelo para mais eficiência
+        const [
+          booksData,
+          secretariesData,
+          usersData,
+          licenseBatchesData,
+        ] = await Promise.all([
+          getBooks(),
+          getSecretaries(),
+          getUsers(),
+          getLicenseBatches(),
+        ]);
 
-        // Atualiza o estado apenas com a contagem de livros
-        setStats((prevStats) => ({
-          ...prevStats,
-          books: bookCount,
-        }));
+        // Atualiza o estado com os dados dinâmicos
+        setStats({
+          books: booksData.length,
+          secretaries: secretariesData.length,
+          users: usersData.length,
+          licenseBatches: licenseBatchesData.length,
+        });
+
       } catch (error) {
-        console.error("Falha ao buscar contagem de livros:", error);
-        // Em caso de erro, mantém o valor como 0 ou pode definir uma mensagem
-        setStats((prevStats) => ({ ...prevStats, books: 0 }));
+        console.error("Falha ao buscar estatísticas do dashboard:", error);
+        // Em caso de erro, pode-se definir um estado de erro para exibir na UI
       } finally {
-        setIsLoading(false); // Finaliza o carregamento
+        setIsLoading(false); // Finaliza o carregamento, com sucesso ou erro
       }
     };
 
-    fetchBookCount();
+    fetchAllStats();
   }, []); // O array vazio [] garante que isso rode apenas uma vez
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8 bg-slate-50 dark:bg-slate-950/95">
       <div className="mb-4">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Bem-vindo(a) de volta!{" "}
+          Bem-vindo(a) de volta!
         </h1>
         <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">
           Aqui está um resumo do seu sistema.
         </p>
       </div>
 
-      {/* ✅ 4. Grid de Estatísticas agora usa os dados do estado */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/* 4. Grid de Estatísticas agora usa os dados dinâmicos */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total de Livros"
           value={stats.books}
@@ -136,8 +149,20 @@ export default function Home() {
           title="Secretarias"
           value={stats.secretaries}
           icon={BoxIcon}
+          isLoading={isLoading}
         />
-        <StatCard title="Usuários Ativos" value={stats.users} icon={Users} />
+        <StatCard
+          title="Usuários Ativos"
+          value={stats.users}
+          icon={Users}
+          isLoading={isLoading}
+        />
+        <StatCard
+          title="Lotes de Lotes de Licenças"
+          value={stats.licenseBatches}
+          icon={Layers} // Ícone para lotes/camadas
+          isLoading={isLoading}
+        />
       </div>
 
       <div className="mt-8">
