@@ -49,7 +49,6 @@ import {
 } from "./services/api";
 import { toast } from "sonner";
 
-
 // --- TIPOS ---
 type LicenseBatchViewData = LicenseBatchApiResponse & {
   formattedCreatedAt: string;
@@ -63,19 +62,28 @@ const LicenseBatchCard: FC<{
   batch: LicenseBatchViewData;
   onViewDetails: (id: number) => void;
   onDelete: (batch: LicenseBatchViewData) => void;
-  statusVariant: (status: LicenseBatchApiResponse["status"]) => "default" | "secondary" | "destructive" | "outline";
+  statusVariant: (
+    status: LicenseBatchApiResponse["status"]
+  ) => "default" | "secondary" | "destructive" | "outline";
 }> = ({ batch, onViewDetails, onDelete, statusVariant }) => {
   return (
     <div className="w-full bg-white border border-slate-200 rounded-lg p-4 transition-shadow hover:shadow-md flex flex-col">
       {/* Cabeçalho do Card */}
       <div className="flex items-start justify-between pb-3 mb-3 border-b border-slate-100">
         <div className="space-y-1.5 pr-2">
-          <h3 className="text-base font-bold text-slate-800 leading-tight">{batch.book.title}</h3>
-          <p className="text-sm text-slate-500 truncate">{batch.customerName}</p>
+          <h3 className="text-base font-bold text-slate-800 leading-tight">
+            {batch.book.title}
+          </h3>
+          <p className="text-sm text-slate-500 truncate">
+            {batch.customerName}
+          </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0 -mr-2 -mt-1 text-slate-500 shrink-0">
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0 -mr-2 -mt-1 text-slate-500 shrink-0"
+            >
               <MoreHorizontal className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
@@ -116,16 +124,17 @@ const LicenseBatchCard: FC<{
   );
 };
 
-
 // --- COMPONENTE PRINCIPAL ---
 export default function LicenseBatchesPage() {
   const router = useRouter();
   const [allBatches, setAllBatches] = useState<LicenseBatchViewData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [customerTypeFilter, setCustomerTypeFilter] = useState<CustomerTypeFilter>("all");
+  const [customerTypeFilter, setCustomerTypeFilter] =
+    useState<CustomerTypeFilter>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [batchToDelete, setBatchToDelete] = useState<LicenseBatchViewData | null>(null);
+  const [batchToDelete, setBatchToDelete] =
+    useState<LicenseBatchViewData | null>(null);
 
   useEffect(() => {
     const fetchBatches = async () => {
@@ -134,8 +143,11 @@ export default function LicenseBatchesPage() {
         const apiData = await getLicenseBatches();
         const viewData: LicenseBatchViewData[] = apiData.map((batch) => ({
           ...batch,
-          formattedCreatedAt: new Date(batch.createdAt).toLocaleDateString("pt-BR"),
-          customerName: batch.secretary?.name || batch.school?.name || "Não atribuído",
+          formattedCreatedAt: new Date(batch.createdAt).toLocaleDateString(
+            "pt-BR"
+          ),
+          customerName:
+            batch.secretary?.name || batch.school?.name || "Não atribuído",
         }));
         setAllBatches(viewData);
         setError(null);
@@ -154,19 +166,22 @@ export default function LicenseBatchesPage() {
     const toastId = toast.loading("Excluindo lote...");
     try {
       await deleteLicenseBatch(batchToDelete.id);
-      setAllBatches((current) => current.filter((batch) => batch.id !== batchToDelete.id));
+      setAllBatches((current) =>
+        current.filter((batch) => batch.id !== batchToDelete.id)
+      );
       toast.success("Lote excluído com sucesso.", { id: toastId });
     } catch (err) {
-      toast.error((err as Error).message || "Erro ao excluir o lote.", { id: toastId });
+      toast.error((err as Error).message || "Erro ao excluir o lote.", {
+        id: toastId,
+      });
     } finally {
       setBatchToDelete(null);
     }
   };
 
   const handleViewDetails = (id: number) => {
-    router.push(`/admin/licenses/${id}`);
+    router.push(`/admin/licenses/resume?id=${id}`);
   };
-
   const filteredBatches = useMemo(() => {
     let batches = allBatches;
 
@@ -212,9 +227,17 @@ export default function LicenseBatchesPage() {
     }
   };
 
-  const FeedbackComponent = ({ message, showLoader = false }: { message: string, showLoader?: boolean }) => (
+  const FeedbackComponent = ({
+    message,
+    showLoader = false,
+  }: {
+    message: string;
+    showLoader?: boolean;
+  }) => (
     <div className="flex flex-col items-center justify-center text-center h-48 gap-4 text-slate-500">
-      {showLoader && <Loader2 className="h-8 w-8 animate-spin text-slate-400" />}
+      {showLoader && (
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      )}
       <p>{message}</p>
     </div>
   );
@@ -241,7 +264,10 @@ export default function LicenseBatchesPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button onClick={() => router.push("/admin/licenses/form")} className="shrink-0">
+          <Button
+            onClick={() => router.push("/admin/licenses/form")}
+            className="shrink-0"
+          >
             <PlusCircle className="mr-2 h-4 w-4" />
             Criar Lote
           </Button>
@@ -265,7 +291,10 @@ export default function LicenseBatchesPage() {
 
       <div>
         {isLoading ? (
-          <FeedbackComponent message="Carregando lotes de licenças..." showLoader />
+          <FeedbackComponent
+            message="Carregando lotes de licenças..."
+            showLoader
+          />
         ) : error ? (
           <FeedbackComponent message={error} />
         ) : filteredBatches.length > 0 ? (
@@ -290,25 +319,37 @@ export default function LicenseBatchesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Livro</TableHead>
-                      <TableHead className="hidden sm:table-cell">Cliente</TableHead>
+                      <TableHead className="hidden sm:table-cell">
+                        Cliente
+                      </TableHead>
                       <TableHead className="text-center">Quantidade</TableHead>
                       <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="hidden md:table-cell">Data de Criação</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Data de Criação
+                      </TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredBatches.map((batch) => (
                       <TableRow key={batch.id}>
-                        <TableCell className="font-medium">{batch.book.title}</TableCell>
-                        <TableCell className="hidden sm:table-cell">{batch.customerName}</TableCell>
-                        <TableCell className="text-center">{batch.quantity}</TableCell>
+                        <TableCell className="font-medium">
+                          {batch.book.title}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {batch.customerName}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {batch.quantity}
+                        </TableCell>
                         <TableCell className="text-center">
                           <Badge variant={statusVariant(batch.status)}>
                             {batch.status.replace("_", " ")}
                           </Badge>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">{batch.formattedCreatedAt}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {batch.formattedCreatedAt}
+                        </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -318,8 +359,11 @@ export default function LicenseBatchesPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleViewDetails(batch.id)}>
-                                <BookOpen className="mr-2 h-4 w-4" /> Ver Detalhes
+                              <DropdownMenuItem
+                                onClick={() => handleViewDetails(batch.id)}
+                              >
+                                <BookOpen className="mr-2 h-4 w-4" /> Ver
+                                Detalhes
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => setBatchToDelete(batch)}

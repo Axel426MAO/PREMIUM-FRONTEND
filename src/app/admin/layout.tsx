@@ -31,6 +31,7 @@ const protectedRoutes = [
   "/admin/schools/form",
   "/admin/licenses",
   "/admin/licenses/form",
+  "/admin/licenses/resume",
 ];
 
 function AdminPanelLayout({ children }: { children: React.ReactNode }) {
