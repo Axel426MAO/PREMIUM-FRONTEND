@@ -30,9 +30,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Book,
-  Landmark, // Ícone revisado para Secretarias
-  School,   // Ícone novo para Escolas
-  KeyRound, // Ícone novo para Licenças
+  Landmark,
+  School,
+  KeyRound,
 } from "lucide-react";
 
 interface NavItem {
@@ -41,7 +41,6 @@ interface NavItem {
   icon: LucideIcon;
 }
 
-// Lista de navegação atualizada com os novos itens e ícones revisados
 const navItems: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/secretary", label: "Secretarias", icon: Landmark },
@@ -55,14 +54,16 @@ interface NavLinksProps {
   isCollapsed: boolean;
 }
 
-function NavLinks({ isCollapsed }: NavLinksProps) {
+export function NavLinks({ isCollapsed }: NavLinksProps) {
   const pathname = usePathname();
 
   return (
     <TooltipProvider delayDuration={0}>
       <nav className="grid gap-2 px-2">
         {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href) && (item.href !== "/admin" || pathname === "/admin");
+          const isActive =
+            pathname.startsWith(item.href) &&
+            (item.href !== "/admin" || pathname === "/admin");
           return (
             <Tooltip key={item.href}>
               <TooltipTrigger asChild>
@@ -101,7 +102,7 @@ interface UserProfileProps {
   isCollapsed: boolean;
 }
 
-function UserProfile({ isCollapsed }: UserProfileProps) {
+export function UserProfile({ isCollapsed }: UserProfileProps) {
   const router = useRouter();
 
   function logout() {
@@ -114,7 +115,10 @@ function UserProfile({ isCollapsed }: UserProfileProps) {
       <DropdownMenuTrigger asChild>
         <div className="flex w-full cursor-pointer items-center gap-3 border-t p-2 transition-colors hover:bg-accent">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="https://github.com/shadcn.png" alt="Avatar do usuário" />
+            <AvatarImage
+              src="https://github.com/shadcn.png"
+              alt="Avatar do usuário"
+            />
             <AvatarFallback>AD</AvatarFallback>
           </Avatar>
           {!isCollapsed && (
@@ -152,7 +156,6 @@ function UserProfile({ isCollapsed }: UserProfileProps) {
   );
 }
 
-// --- COMPONENTE PRINCIPAL ---
 export function SideMenu({
   isCollapsed,
   toggleCollapse,
@@ -183,12 +186,10 @@ export function SideMenu({
             <span className="sr-only">Toggle sidebar</span>
           </Button>
         </div>
-
         <div className="mt-4">
           <NavLinks isCollapsed={isCollapsed} />
         </div>
       </div>
-
       <div>
         <UserProfile isCollapsed={isCollapsed} />
       </div>

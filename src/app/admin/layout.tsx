@@ -9,19 +9,16 @@ import "../globals.css";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-import { SideMenu } from "./components/SideMenu";
 import { AuthProvider } from "./contexts/AuthContext";
 import RouteGuard from "./auth/guard";
 import { Toaster } from "sonner";
+import { SideMenu, NavLinks, UserProfile } from "./components/SideMenu";
 
 const fontSans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
 });
 
-// ===================================================================
-// CONFIGURAÇÃO CENTRALIZADA DAS ROTAS PROTEGIDAS
-// ===================================================================
 const protectedRoutes = [
   "/admin",
   "/admin/books",
@@ -35,10 +32,7 @@ const protectedRoutes = [
   "/admin/licenses",
   "/admin/licenses/form",
 ];
-// ===================================================================
 
-// Componente interno para o layout do painel de admin
-// Isso ajuda a manter o código limpo, separando a lógica do layout protegido.
 function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
@@ -46,6 +40,7 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full bg-white dark:bg-gray-950">
       <SideMenu isCollapsed={isCollapsed} toggleCollapse={toggleCollapse} />
+
       <div
         className={cn(
           "flex flex-col flex-1 transition-all duration-300 ease-in-out",
@@ -60,8 +55,18 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
                 <span className="sr-only">Abrir menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left">
-              {/* Conteúdo do menu móvel pode ser adicionado aqui */}
+            <SheetContent side="left" className="flex flex-col p-0">
+              <div className="flex-1">
+                <div className="flex items-center border-b p-2 justify-between">
+                  <span className="pl-2 text-lg font-bold">Premium Admin</span>
+                </div>
+                <div className="mt-4">
+                  <NavLinks isCollapsed={false} />
+                </div>
+              </div>
+              <div>
+                <UserProfile isCollapsed={false} />
+              </div>
             </SheetContent>
           </Sheet>
           <h1 className="font-semibold text-lg">Dashboard</h1>
