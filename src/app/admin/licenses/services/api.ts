@@ -23,7 +23,7 @@ export interface LicenseBatchApiResponse {
   };
 }
 
-const API_URL = 'http://localhost:4000/api/license'; // Ajuste se a sua URL base for diferente
+const API_URL = 'http://212.85.14.247:4000/api/license'; // Ajuste se a sua URL base for diferente
 
 export async function getLicenseBatches(): Promise<LicenseBatchApiResponse[]> {
   const response = await fetch(API_URL);
@@ -71,7 +71,7 @@ export interface CreateBatchPayload {
   school_id?: number;
 }
 
-const API_BASE_URL = 'http://localhost:4000/api'; // Sua URL base da API
+const API_BASE_URL = 'http://212.85.14.247:4000/api'; // Sua URL base da API
 
 // --- Funções para buscar dados para os dropdowns ---
 

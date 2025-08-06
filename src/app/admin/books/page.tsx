@@ -33,7 +33,7 @@ import {
 } from "./services/api";
 
 // --- CONSTANTES E FUNÇÕES AUXILIARES ---
-const API_DOMAIN = "http://localhost:4000";
+const API_DOMAIN = "http://212.85.14.247:4000";
 
 // Função para verificar se um arquivo é uma imagem
 const isImageFile = (fileName: string): boolean => {

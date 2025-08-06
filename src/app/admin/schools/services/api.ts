@@ -76,7 +76,7 @@ export interface SecretarySelectItem {
  * @returns {Promise<SchoolApiResponse[]>} Uma promessa que resolve para um array de escolas.
  */
 export const getSchools = async (): Promise<SchoolApiResponse[]> => {
-    const response = await fetch("http://localhost:4000/api/schools");
+    const response = await fetch("http://212.85.14.247:4000/api/schools");
 
     if (!response.ok) {
         throw new Error("Falha ao buscar os dados das escolas.");
@@ -90,7 +90,7 @@ export const getSchools = async (): Promise<SchoolApiResponse[]> => {
  * @returns {Promise<SecretarySelectItem[]>}
  */
 export async function getSecretariesForSelect(): Promise<SecretarySelectItem[]> {
-    const response = await fetch("http://localhost:4000/api/secretaries");
+    const response = await fetch("http://212.85.14.247:4000/api/secretaries");
     if (!response.ok) {
         throw new Error("Não foi possível carregar as secretarias.");
     }
@@ -99,7 +99,7 @@ export async function getSecretariesForSelect(): Promise<SecretarySelectItem[]> 
 }
 
 export const deleteSchool = async (id: number): Promise<void> => {
-    const response = await fetch(`http://localhost:4000/api/schools/${id}`, {
+    const response = await fetch(`http://212.85.14.247:4000/api/schools/${id}`, {
         method: "DELETE",
     });
 
@@ -127,7 +127,7 @@ export async function createFullSchoolWorkflow(payload: FullSchoolCreationPayloa
         user: payload.user,
     };
 
-    const response = await fetch("http://localhost:4000/api/schools", {
+    const response = await fetch("http://212.85.14.247:4000/api/schools", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // Enviando o payload corrigido e "achatado"
