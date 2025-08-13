@@ -159,7 +159,8 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
                   variant="ghost"
                   className="w-full justify-start mt-4"
                   onClick={() => {
-                    /* Lógica de logout */
+                    
+                    window.location.href = './'
                   }}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
