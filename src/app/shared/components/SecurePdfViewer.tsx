@@ -46,17 +46,7 @@ export default function SecurePdfViewer({
 
   // --- HOOKS ---
 
-  // Efeito para responsividade e ajuste de layout
-  useEffect(() => {
-    const checkDevice = () => {
-      const isMobileDevice = window.innerWidth < 768;
-      setIsMobile(isMobileDevice);
-      setLayout(window.innerWidth > 1024 ? "double" : "single");
-    };
-    checkDevice();
-    window.addEventListener('resize', checkDevice);
-    return () => window.removeEventListener('resize', checkDevice);
-  }, []);
+
 
   // Efeito para salvar e carregar o progresso da leitura
   useEffect(() => {
