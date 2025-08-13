@@ -30,7 +30,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// A importação do Card foi ajustada, pois CardHeader e CardTitle não são mais usados
 import { Card, CardContent } from "@/components/ui/card";
 import {
   MoreHorizontal,
@@ -43,13 +42,8 @@ import {
   Phone,
   Loader2,
 } from "lucide-react";
-import {
-  getSecretaries,
-  deleteSecretary,
-  type SecretaryApiResponse,
-} from "./services/api";
+import { getSecretaries, deleteSecretary } from "./services/api";
 import { toast } from "sonner";
-
 
 // --- TIPOS ---
 interface SecretaryViewData {
@@ -73,14 +67,19 @@ const SecretaryCard: FC<{
       {/* Cabeçalho do Card */}
       <div className="flex items-start justify-between pb-3 mb-3 border-b border-slate-100">
         <div className="space-y-1.5">
-          <h3 className="text-base font-bold text-slate-800 leading-tight">{secretary.name}</h3>
+          <h3 className="text-base font-bold text-slate-800 leading-tight">
+            {secretary.name}
+          </h3>
           <Badge variant={secretary.is_state_level ? "secondary" : "outline"}>
             {secretary.is_state_level ? "Estadual" : "Municipal"}
           </Badge>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0 -mr-2 -mt-1 text-slate-500">
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0 -mr-2 -mt-1 text-slate-500"
+            >
               <MoreHorizontal className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
@@ -117,7 +116,9 @@ const SecretaryCard: FC<{
 
       {/* Rodapé do Card */}
       <div className="pt-4 mt-auto">
-        <Badge variant={secretary.status === "Ativa" ? "default" : "destructive"}>
+        <Badge
+          variant={secretary.status === "Ativa" ? "default" : "destructive"}
+        >
           {secretary.status}
         </Badge>
       </div>
@@ -125,16 +126,18 @@ const SecretaryCard: FC<{
   );
 };
 
-
 // --- COMPONENTE PRINCIPAL ---
 export default function SecretaryPage() {
   const router = useRouter();
   const [allSecretaries, setAllSecretaries] = useState<SecretaryViewData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [levelFilter, setLevelFilter] = useState<"all" | "municipal" | "state">("all");
+  const [levelFilter, setLevelFilter] = useState<"all" | "municipal" | "state">(
+    "all"
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [secretaryToDelete, setSecretaryToDelete] = useState<SecretaryViewData | null>(null);
+  const [secretaryToDelete, setSecretaryToDelete] =
+    useState<SecretaryViewData | null>(null);
 
   useEffect(() => {
     const fetchSecretaries = async () => {
@@ -171,10 +174,14 @@ export default function SecretaryPage() {
     const toastId = toast.loading("Excluindo secretaria...");
     try {
       await deleteSecretary(secretaryToDelete.id);
-      setAllSecretaries((current) => current.filter((sec) => sec.id !== secretaryToDelete.id));
+      setAllSecretaries((current) =>
+        current.filter((sec) => sec.id !== secretaryToDelete.id)
+      );
       toast.success("Secretaria excluída com sucesso.", { id: toastId });
     } catch (err) {
-      toast.error((err as Error).message || "Erro ao excluir secretaria.", { id: toastId });
+      toast.error((err as Error).message || "Erro ao excluir secretaria.", {
+        id: toastId,
+      });
       console.error("Erro ao deletar:", err);
     } finally {
       setSecretaryToDelete(null);
@@ -182,7 +189,7 @@ export default function SecretaryPage() {
   };
 
   const handleEdit = (id: number) => {
-    router.push(`/admin/secretary/form?id=${id}`);
+    router.push(`/admin/secretary/edit?id=${id}`);
   };
 
   const filteredSecretaries = useMemo(() => {
@@ -202,29 +209,21 @@ export default function SecretaryPage() {
     return secretaries;
   }, [allSecretaries, searchQuery, levelFilter]);
 
-  // --- COMPONENTE DE FEEDBACK (LOADING, ERRO, VAZIO) ---
-  const FeedbackComponent = ({ message, showLoader = false }: { message: string, showLoader?: boolean }) => (
-    <div className="flex flex-col items-center justify-center text-center h-48 gap-4 text-slate-500">
-      {showLoader && <Loader2 className="h-8 w-8 animate-spin text-slate-400" />}
-      <p>{message}</p>
-    </div>
-  );
-
   return (
-    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-slate-50 min-h-screen">
+    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 min-h-screen">
       {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             Secretarias
           </h1>
-          <p className="text-slate-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Gerencie as secretarias e seus responsáveis.
           </p>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Buscar por nome ou responsável..."
@@ -233,7 +232,10 @@ export default function SecretaryPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button onClick={() => router.push("/admin/secretary/form")} className="shrink-0">
+          <Button
+            onClick={() => router.push("/admin/secretary/form")}
+            className="shrink-0"
+          >
             <PlusCircle className="mr-2 h-4 w-4" />
             Adicionar
           </Button>
@@ -241,24 +243,24 @@ export default function SecretaryPage() {
       </div>
 
       {/* FILTRO DE ABAS */}
-      <div className="flex items-center gap-2 bg-slate-200/60 p-1 rounded-lg w-full sm:w-fit overflow-x-auto">
+      <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-full sm:w-fit overflow-x-auto">
         <Button
           variant={levelFilter === "all" ? "default" : "ghost"}
-          className="rounded-md shrink-0"
+          className="rounded-md"
           onClick={() => setLevelFilter("all")}
         >
           Todas
         </Button>
         <Button
           variant={levelFilter === "municipal" ? "default" : "ghost"}
-          className="rounded-md shrink-0"
+          className="rounded-md"
           onClick={() => setLevelFilter("municipal")}
         >
           Municipais
         </Button>
         <Button
           variant={levelFilter === "state" ? "default" : "ghost"}
-          className="rounded-md shrink-0"
+          className="rounded-md"
           onClick={() => setLevelFilter("state")}
         >
           Estaduais
@@ -266,84 +268,123 @@ export default function SecretaryPage() {
       </div>
 
       {/* Conteúdo Principal: Cards ou Tabela */}
-      <div>
-        {isLoading ? (
-          <FeedbackComponent message="Carregando secretarias..." showLoader />
-        ) : error ? (
-          <FeedbackComponent message={error} />
-        ) : filteredSecretaries.length > 0 ? (
-          <>
-            {/* Visão de Cards para Mobile */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:hidden">
-              {filteredSecretaries.map((secretary) => (
+      <Card>
+        <CardContent className="p-0">
+          {/* Visão de Tabela para Desktop */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead>Contato</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      Carregando...
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="h-24 text-center text-red-600"
+                    >
+                      {error}
+                    </TableCell>
+                  </TableRow>
+                ) : filteredSecretaries.length > 0 ? (
+                  filteredSecretaries.map((secretary) => (
+                    <TableRow key={secretary.id}>
+                      <TableCell className="font-medium">
+                        {secretary.name}
+                      </TableCell>
+                      <TableCell>{secretary.responsible}</TableCell>
+                      <TableCell>
+                        <div className="text-sm">{secretary.email}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {secretary.phone}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          variant={
+                            secretary.status === "Ativa"
+                              ? "default"
+                              : "destructive"
+                          }
+                        >
+                          {secretary.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(secretary.id)}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => setSecretaryToDelete(secretary)}
+                              className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      Nenhuma secretaria encontrada.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Visão de Cards para Mobile */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden p-4">
+            {isLoading ? (
+              <div className="col-span-full h-24 flex items-center justify-center text-muted-foreground">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando...
+              </div>
+            ) : error ? (
+              <div className="col-span-full h-24 flex items-center justify-center text-red-600">
+                {error}
+              </div>
+            ) : filteredSecretaries.length > 0 ? (
+              filteredSecretaries.map((secretary) => (
                 <SecretaryCard
                   key={secretary.id}
                   secretary={secretary}
                   onEdit={handleEdit}
                   onDelete={setSecretaryToDelete}
                 />
-              ))}
-            </div>
-
-            {/* Visão de Tabela para Desktop */}
-            <Card className="hidden md:block">
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Responsável</TableHead>
-                      <TableHead>Contato</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSecretaries.map((secretary) => (
-                      <TableRow key={secretary.id}>
-                        <TableCell className="font-medium">{secretary.name}</TableCell>
-                        <TableCell>{secretary.responsible}</TableCell>
-                        <TableCell>
-                          <div className="text-sm">{secretary.email}</div>
-                          <div className="text-xs text-slate-500">{secretary.phone}</div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={secretary.status === "Ativa" ? "default" : "destructive"}>
-                            {secretary.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleEdit(secretary.id)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => setSecretaryToDelete(secretary)}
-                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </>
-        ) : (
-          <FeedbackComponent message="Nenhuma secretaria encontrada para os filtros aplicados." />
-        )}
-      </div>
+              ))
+            ) : (
+              <div className="col-span-full h-24 flex items-center justify-center text-muted-foreground">
+                Nenhuma secretaria encontrada.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO */}
       <AlertDialog

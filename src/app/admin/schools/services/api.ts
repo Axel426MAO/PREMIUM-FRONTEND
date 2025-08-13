@@ -26,7 +26,6 @@ export interface SchoolApiResponse {
     }[];
 }
 
-
 // --- TIPOS DE DADOS PARA O FORMULÁRIO DE CRIAÇÃO ---
 
 /**
@@ -60,6 +59,65 @@ export interface FullSchoolCreationPayload {
     };
 }
 
+// --- NOVOS TIPOS PARA EDIÇÃO ---
+
+/**
+ * Define o payload completo para ATUALIZAR uma escola e seus dados relacionados.
+ */
+export interface FullSchoolUpdatePayload {
+    school: {
+        name: string;
+        is_private: boolean;
+        secretary_id?: number | null;
+    };
+    address: {
+        street: string;
+        number: string;
+        neighborhood: string;
+        city: string;
+        state: string;
+        cep: string;
+    };
+    responsible: {
+        name: string;
+        role: string;
+        whatsapp?: string;
+        phone?: string;
+    };
+    user: {
+        email: string;
+        password?: string; // Senha é opcional na atualização
+    };
+}
+
+/**
+ * Define a estrutura de dados completa de uma escola para a página de edição.
+ */
+export interface SchoolDetailApiResponse extends SchoolApiResponse {
+    address: {
+        id: number;
+        street: string;
+        number: string | null;
+        neighborhood: string;
+        city: string;
+        state: string;
+        cep: string;
+    };
+    responsibles: {
+        id: number;
+        name: string;
+        role: string;
+        whatsapp: string | null;
+        phone: string | null;
+        user: {
+            id: number;
+            email: string;
+            status: boolean;
+        };
+    }[];
+}
+
+
 /**
  * Define o tipo de dado para o combobox de seleção de secretarias.
  */
@@ -73,24 +131,32 @@ export interface SecretarySelectItem {
 
 /**
  * Busca a lista completa de escolas da API para a página de listagem.
- * @returns {Promise<SchoolApiResponse[]>} Uma promessa que resolve para um array de escolas.
  */
 export const getSchools = async (): Promise<SchoolApiResponse[]> => {
-    const response = await fetch("http://212.85.14.247:4000/api/schools");
-
+    const response = await fetch("http://localhost:4000/api/schools");
     if (!response.ok) {
         throw new Error("Falha ao buscar os dados das escolas.");
     }
-
     return response.json();
 };
 
 /**
+ * Busca os dados detalhados de uma única escola pelo ID.
+ */
+export const getSchoolById = async (id: number): Promise<SchoolDetailApiResponse> => {
+    const response = await fetch(`http://localhost:4000/api/schools/${id}`);
+    if (!response.ok) {
+        throw new Error("Falha ao buscar os dados da escola.");
+    }
+    return response.json();
+};
+
+
+/**
  * Busca a lista de secretarias para preencher o combobox de seleção no formulário.
- * @returns {Promise<SecretarySelectItem[]>}
  */
 export async function getSecretariesForSelect(): Promise<SecretarySelectItem[]> {
-    const response = await fetch("http://212.85.14.247:4000/api/secretaries");
+    const response = await fetch("http://localhost:4000/api/secretaries");
     if (!response.ok) {
         throw new Error("Não foi possível carregar as secretarias.");
     }
@@ -99,44 +165,53 @@ export async function getSecretariesForSelect(): Promise<SecretarySelectItem[]> 
 }
 
 export const deleteSchool = async (id: number): Promise<void> => {
-    const response = await fetch(`http://212.85.14.247:4000/api/schools/${id}`, {
+    const response = await fetch(`http://localhost:4000/api/schools/${id}`, {
         method: "DELETE",
     });
-
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({})); // Tenta pegar o erro, se não, usa objeto vazio
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Falha ao excluir a escola.");
     }
-
-    // Não precisa retornar nada em caso de sucesso
 };
 
 /**
  * Envia todos os dados do formulário para o backend para criar a escola.
- * @param {FullSchoolCreationPayload} payload - Os dados completos do formulário.
+ * (Função original mantida sem alterações)
  */
 export async function createFullSchoolWorkflow(payload: FullSchoolCreationPayload) {
-    // --- CORREÇÃO APLICADA AQUI ---
-    // O backend espera os dados da escola no nível principal do JSON.
-    // Esta nova constante 'flattenedPayload' desestrutura o objeto 'school'
-    // e o mescla com o restante dos dados, criando o formato correto.
     const flattenedPayload = {
-        ...payload.school, // Espalha name, is_private, secretary_id
+        ...payload.school,
         address: payload.address,
         responsible: payload.responsible,
         user: payload.user,
     };
 
-    const response = await fetch("http://212.85.14.247:4000/api/schools", {
+    const response = await fetch("http://localhost:4000/api/schools", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Enviando o payload corrigido e "achatado"
         body: JSON.stringify(flattenedPayload),
     });
 
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Falha ao criar a escola.");
+    }
+
+    return response.json();
+}
+/**
+ * Envia todos os dados do formulário para o backend para ATUALIZAR uma escola.
+ */
+export async function updateFullSchoolWorkflow(id: number, payload: FullSchoolUpdatePayload) {
+    const response = await fetch(`http://localhost:4000/api/schools/full/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Falha ao atualizar a escola.");
     }
 
     return response.json();

@@ -112,7 +112,6 @@ export default function SchoolsPage() {
       setAllSchools((currentSchools) =>
         currentSchools.filter((school) => school.id !== schoolToDelete.id)
       );
-
     } catch (err) {
       // Exibe um alerta em caso de erro na exclusão
       alert((err as Error).message || "Ocorreu um erro ao tentar excluir.");
@@ -124,7 +123,7 @@ export default function SchoolsPage() {
   };
 
   const handleEdit = (id: number) => {
-    router.push(`/admin/schools/form?id=${id}`);
+    router.push(`/admin/schools/edit?id=${id}`);
   };
 
   // Lógica de filtragem combinada
@@ -152,7 +151,7 @@ export default function SchoolsPage() {
   }, [allSchools, searchQuery, typeFilter]);
 
   return (
-    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
+    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8  min-h-screen">
       {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
         <div>
@@ -267,7 +266,9 @@ export default function SchoolsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleEdit(school.id)}>
+                          <DropdownMenuItem
+                            onClick={() => handleEdit(school.id)}
+                          >
                             <Pencil className="mr-2 h-4 w-4" /> Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem

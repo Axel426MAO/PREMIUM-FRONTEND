@@ -1,15 +1,19 @@
 // Local: /app/admin/licenses/services/api.ts
 
 // --- CONSTANTES ---
-const API_BASE_URL = 'http://212.85.14.247:4000/api';
+const API_BASE_URL = 'http://localhost:4000/api';
 
 // --- INTERFACES E TIPOS ---
+
+// <-- CORREÇÃO: O tipo de status DEVE corresponder aos enums do backend
+type BackendBatchStatus = 'CRIADO' | 'ENVIADO' | 'RECEBIDO' | 'PENDENTE' | 'ATIVO' | 'EXPIRADO';
+type BackendKeyStatus = 'CRIADO' | 'ENVIADO' | 'RECEBIDO' | 'PENDENTE' | 'ATIVO' | 'EXPIRADO';
 
 // Interface para a lista de lotes (visão resumida)
 export interface LicenseBatchApiResponse {
   id: number;
   quantity: number;
-  status: 'PENDING_PAYMENT' | 'PAID' | 'SENT' | 'RECEIVED' | 'PARTITIONED' | 'CANCELLED';
+  status: BackendBatchStatus; // <-- Usando o tipo corrigido
   createdAt: string;
   book: {
     id: number;
@@ -32,124 +36,72 @@ export interface LicenseBatchApiResponse {
 export interface LicenseBatchDetails {
   id: number;
   quantity: number;
-  status: 'PENDING_PAYMENT' | 'PAID' | 'SENT' | 'RECEIVED' | 'PARTITIONED' | 'CANCELLED';
-  createdAt: string;
-  updatedAt: string;
-  paidAt: string | null;
-  sentAt: string | null;
-  receivedAt: string | null;
-  book_id: number;
-  customer_type: string;
-  secretary_id: number | null;
-  school_id: number | null;
-  parent_batch_id: number | null;
-  book: {
-    id: number;
-    title: string;
-  };
-  secretary: {
-    id: number;
-    name: string;
-  } | null;
-  school: {
-    id: number;
-    name: string;
-  } | null;
+  status: BackendBatchStatus; // <-- Usando o tipo corrigido
+  // ... resto dos campos
   license_keys: Array<{
     id: number;
     code: string;
-    status: 'AVAILABLE' | 'ACTIVATED' | 'EXPIRED' | 'REVOKED';
+    status: BackendKeyStatus; // <-- Tipo para o status da chave
     createdAt: string;
     activatedAt: string | null;
   }>;
 }
 
+// ... (Resto do seu arquivo api.ts pode continuar igual)
+export interface Book { id: number; title: string; }
+export interface Secretary { id: number; name: string; }
+export interface School { id: number; name: string; is_private: boolean; }
+export interface CreateBatchPayload { book_id: number; quantity: number; secretary_id?: number; school_id?: number; }
 
-// Tipos para os dados dos dropdowns do formulário
-export interface Book {
-  id: number;
-  title: string;
-}
-
-export interface Secretary {
-  id: number;
-  name: string;
-}
-
-export interface School {
-  id: number;
-  name: string;
-  is_private: boolean;
-}
-
-// Payload para a criação de um novo lote
-export interface CreateBatchPayload {
-  book_id: number;
-  quantity: number;
-  secretary_id?: number;
-  school_id?: number;
-}
-
-
-// --- FUNÇÕES DA API ---
-
-/**
- * Busca a lista de todos os lotes de licenças.
- */
 export async function getLicenseBatches(): Promise<LicenseBatchApiResponse[]> {
   const response = await fetch(`${API_BASE_URL}/license`);
-  if (!response.ok) {
-    throw new Error('Falha ao buscar os lotes de licenças.');
-  }
+  if (!response.ok) throw new Error('Falha ao buscar os lotes de licenças.');
   return response.json();
 }
 
-/**
- * Busca os detalhes completos de um lote de licenças específico pelo ID.
- */
 export async function getLicenseBatchById(id: number): Promise<LicenseBatchDetails> {
   const response = await fetch(`${API_BASE_URL}/license/${id}`);
-  if (!response.ok) {
-    throw new Error('Falha ao buscar os detalhes do lote de licenças.');
-  }
+  if (!response.ok) throw new Error('Falha ao buscar os detalhes do lote.');
   return response.json();
 }
 
-/**
- * Cria um novo lote de licenças.
- */
 export async function createLicenseBatch(payload: CreateBatchPayload): Promise<LicenseBatchApiResponse> {
   const response = await fetch(`${API_BASE_URL}/license`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-
   const responseData = await response.json();
-
-  if (!response.ok) {
-    throw new Error(responseData.error || 'Falha ao criar o lote de licenças.');
-  }
-
+  if (!response.ok) throw new Error(responseData.error || 'Falha ao criar o lote.');
   return responseData;
 }
 
-/**
- * Exclui um lote de licenças pelo ID.
- */
 export async function deleteLicenseBatch(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/license/${id}`, {
-    method: 'DELETE',
-  });
+  const response = await fetch(`${API_BASE_URL}/license/${id}`, { method: 'DELETE' });
   if (!response.ok && response.status !== 204) {
     const responseData = await response.json().catch(() => ({}));
-    throw new Error(responseData.error || 'Falha ao excluir o lote de licenças.');
+    throw new Error(responseData.error || 'Falha ao excluir o lote.');
   }
 }
 
-// --- Funções para popular os formulários ---
+/**
+ * @description Atualiza o status de um lote de licenças.
+ * @param id O ID do lote de licenças.
+ * @param status O novo status a ser aplicado (e.g., 'SENT').
+ * @returns O lote de licenças atualizado.
+ */
+export async function updateLicenseBatchStatus(id: number, status: BackendBatchStatus): Promise<LicenseBatchApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/license/${id}/status`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  const responseData = await response.json();
+  if (!response.ok) {
+    throw new Error(responseData.error || 'Falha ao atualizar o status do lote.');
+  }
+  return responseData;
+}
 
 export async function getBooks(): Promise<Book[]> {
   const response = await fetch(`${API_BASE_URL}/books`);
@@ -168,3 +120,5 @@ export async function getSchools(): Promise<School[]> {
   if (!response.ok) throw new Error('Falha ao buscar as escolas.');
   return response.json();
 }
+
+

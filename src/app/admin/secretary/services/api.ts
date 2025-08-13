@@ -2,8 +2,9 @@
 'use strict';
 
 // --- CONFIGURAÇÃO DA API ---
-const API_BASE_URL = 'http://212.85.14.247:4000/api';
+const API_BASE_URL = 'http://localhost:4000/api';
 
+// --- TIPOS DE DADOS (INPUT) ---
 
 interface AddressInput {
     street: string;
@@ -14,13 +15,12 @@ interface AddressInput {
     cep: string;
 }
 
-// Dados para criar uma secretaria
+// Dados para criar/atualizar uma secretaria
 interface SecretaryInput {
     name: string;
     is_state_level: boolean;
     municipality?: string | null;
     state: string;
-    address: AddressInput;
 }
 
 // Dados para criar um usuário
@@ -30,14 +30,12 @@ interface UserInput {
     user_type: string;
 }
 
-// Dados para criar um responsável
+// Dados para criar/atualizar um responsável
 interface ResponsibleInput {
     name: string;
     role: string;
     whatsapp?: string;
     phone?: string;
-    user_id: number;
-    secretary_id: number;
 }
 
 // Objeto completo para o formulário de criação
@@ -48,7 +46,17 @@ export interface FullSecretaryCreationPayload {
     responsible: Omit<ResponsibleInput, 'user_id' | 'secretary_id'>;
 }
 
-// Tipos para a resposta da API (conforme o schema Prisma)
+// Objeto completo para o formulário de ATUALIZAÇÃO
+export interface FullSecretaryUpdatePayload {
+    secretary: SecretaryInput;
+    address: AddressInput;
+    responsible: ResponsibleInput;
+    user: Omit<UserInput, 'password' | 'user_type'> & { password?: string };
+}
+
+
+// --- TIPOS DE RESPOSTA DA API ---
+
 export interface SecretaryApiResponse {
     id: number;
     name: string;
@@ -61,6 +69,8 @@ export interface SecretaryApiResponse {
     address: {
         id: number;
         street: string;
+        number: string | null;
+        neighborhood: string;
         city: string;
         state: string;
         cep: string;
@@ -83,7 +93,6 @@ export interface SecretaryApiResponse {
 
 /**
  * Busca todas as secretarias no backend.
- * @returns Uma promessa com a lista de secretarias.
  */
 export const getSecretaries = async (): Promise<SecretaryApiResponse[]> => {
     const response = await fetch(`${API_BASE_URL}/secretaries`);
@@ -94,8 +103,18 @@ export const getSecretaries = async (): Promise<SecretaryApiResponse[]> => {
 };
 
 /**
+ * Busca uma única secretaria pelo seu ID.
+ */
+export const getSecretaryById = async (id: number): Promise<SecretaryApiResponse> => {
+    const response = await fetch(`${API_BASE_URL}/secretaries/${id}`);
+    if (!response.ok) {
+        throw new Error('Falha ao buscar os dados da secretaria.');
+    }
+    return response.json();
+};
+
+/**
  * Deleta uma secretaria pelo ID.
- * @param id - O ID da secretaria a ser deletada.
  */
 export const deleteSecretary = async (id: number): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/secretaries/${id}`, {
@@ -106,7 +125,6 @@ export const deleteSecretary = async (id: number): Promise<void> => {
         throw new Error(errorData.error || 'Falha ao deletar a secretaria.');
     }
 };
-
 
 /**
  * Função principal que orquestra a criação completa de uma secretaria,
@@ -162,6 +180,37 @@ export const createFullSecretaryWorkflow = async (data: FullSecretaryCreationPay
     } catch (error) {
         console.error("Falha no fluxo de criação da secretaria:", error);
         // Re-lança o erro para que o componente que chamou a função possa tratá-lo (ex: mostrar um toast de erro)
+        throw error;
+    }
+};
+
+
+/**
+ * Orquestra a atualização completa de uma secretaria, seu endereço e responsável.
+ * @param id O ID da secretaria a ser atualizada.
+ * @param data O objeto contendo todos os dados a serem atualizados.
+ */
+export const updateFullSecretaryWorkflow = async (id: number, data: FullSecretaryUpdatePayload) => {
+    try {
+        // Remove a senha do payload se estiver vazia, para não alterá-la desnecessariamente
+        if (data.user && (!data.user.password || data.user.password.trim() === '')) {
+            delete data.user.password;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/secretaries/full/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`Erro ao atualizar secretaria: ${error.error || 'Erro desconhecido'}`);
+        }
+        return response.json();
+
+    } catch (error) {
+        console.error("Falha no fluxo de atualização da secretaria:", error);
         throw error;
     }
 };

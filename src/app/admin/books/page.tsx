@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo, type FC } from "react";
 import { useRouter } from "next/navigation";
+
+// --- COMPONENTES UI ---
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,48 +15,54 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+
+// --- ÍCONES ---
 import {
-  MoreHorizontal,
-  PlusCircle,
-  Trash2,
-  Pencil,
   Search,
   BookText,
   Calendar,
   Building,
+  BookOpen,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  PlusCircle,
 } from "lucide-react";
-// Importações de API atualizadas
-import {
-  getBooks,
-  deleteBook,
-  getFiles,
-  type Book,
-  type ApiFile,
-} from "./services/api";
 
-// --- CONSTANTES E FUNÇÕES AUXILIARES ---
-const API_DOMAIN = "http://212.85.14.247:4000";
+// --- API ---
+import { getBooks, deleteBook, getFiles, type Book } from "./services/api";
+import SecurePdfViewer from "@/app/shared/components/SecurePdfViewer";
 
-// Função para verificar se um arquivo é uma imagem
+// --- CONFIGURAÇÃO E CONSTANTES ---
+const API_DOMAIN = "http://localhost:4000";
+
+// --- FUNÇÕES AUXILIARES ---
 const isImageFile = (fileName: string): boolean => {
   return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
 };
 
-// --- COMPONENTE DO CARD DE LIVRO ---
+const isPdfFile = (fileName: string): boolean => {
+  return /\.pdf$/i.test(fileName);
+};
+
+// =================================================================
+//  COMPONENTE DO CARD DE LIVRO
+// =================================================================
 const BookCard: FC<{
   book: Book;
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
-}> = ({ book, onEdit, onDelete }) => {
-  // ✅ Lógica de URL atualizada para usar a 'coverUrl' ou um placeholder
-  const placeholderUrl = `https://placehold.co/400x400/1e293b/ffffff?text=${encodeURIComponent(
+  onStartReading: (book: Book) => void;
+}> = ({ book, onEdit, onDelete, onStartReading }) => {
+  const placeholderUrl = `https://placehold.co/400x400/1e29b/ffffff?text=${encodeURIComponent(
     book.title
   )}`;
   const displayUrl = book.coverUrl || placeholderUrl;
 
   return (
-    <Card className="group flex  flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
+    <Card className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
       <div className="relative">
+        {/* Imagem de Fundo */}
         <div className="aspect-square w-full overflow-hidden bg-muted">
           <img
             src={displayUrl}
@@ -65,7 +73,21 @@ const BookCard: FC<{
             }}
           />
         </div>
-        <div className="absolute top-2 right-2">
+
+        {/* Camada de Hover para "Iniciar Leitura" */}
+        <div className="absolute inset-0 z-10 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <Button
+            variant="secondary"
+            className="h-12 px-6 font-semibold text-base"
+            onClick={() => onStartReading(book)}
+          >
+            <BookOpen className="mr-2 h-5 w-5" />
+            Iniciar Leitura
+          </Button>
+        </div>
+        
+        {/* Menu de Ações (Editar/Excluir) */}
+        <div className="absolute top-2 right-2 z-20">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -97,6 +119,7 @@ const BookCard: FC<{
         </div>
       </div>
 
+      {/* Conteúdo do Card */}
       <CardContent className="p-4 flex-grow flex flex-col">
         <div className="flex-grow">
           <h3
@@ -133,49 +156,44 @@ const BookCard: FC<{
   );
 };
 
-// --- COMPONENTE PRINCIPAL (PÁGINA DA LISTA) ---
+// =================================================================
+// COMPONENTE PRINCIPAL DA PÁGINA
+// =================================================================
 export default function BookListPage() {
   const router = useRouter();
   const [allBooks, setAllBooks] = useState<Book[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // <-- Estado para controlar o leitor de PDF
+  const [readingBook, setReadingBook] = useState<{url: string; title: string;} | null>(null);
 
   useEffect(() => {
     const fetchBooksAndCovers = async () => {
       try {
         setIsLoading(true);
-        // 1. Busca a lista inicial de livros
         const initialBooks = await getBooks();
-
-        // 2. Para cada livro, busca a sua imagem de capa em paralelo
         const booksWithCovers = await Promise.all(
           initialBooks.map(async (book) => {
             try {
               const files = await getFiles("books", book.id);
               const coverFile = files.find((file) => isImageFile(file.name));
-
               if (coverFile) {
-                // Adiciona a URL da capa ao objeto do livro
                 return {
                   ...book,
-                  coverUrl: new URL(
-                    coverFile.file_path,
-                    "http://212.85.14.247:4000/"
-                  ).href,
+                  coverUrl: new URL(coverFile.file_path, API_DOMAIN).href,
                 };
               }
             } catch (fileError) {
               console.error(
-                `Falha ao buscar arquivos para o livro ${book.id}:`,
+                `Falha ao buscar capa para o livro ${book.id}:`,
                 fileError
               );
             }
-            // Retorna o livro original se não encontrar capa ou se houver erro
             return book;
           })
         );
-
         setAllBooks(booksWithCovers);
         setError(null);
       } catch (err) {
@@ -191,7 +209,7 @@ export default function BookListPage() {
   }, []);
 
   const handleDeleteBook = async (id: number) => {
-    if (window.confirm("Tem certeza que deseja excluir este livro?")) {
+    if (confirm("Tem certeza que deseja excluir este livro?")) {
       try {
         await deleteBook(id);
         setAllBooks(allBooks.filter((book) => book.id !== id));
@@ -205,11 +223,30 @@ export default function BookListPage() {
   const handleEditBook = (id: number) => {
     router.push(`/admin/books/form?id=${id}`);
   };
+
+  // <-- Função para abrir o leitor de PDF
+  const handleStartReading = async (book: Book) => {
+    try {
+      const files = await getFiles("books", book.id);
+      const pdfFile = files.find((file) => isPdfFile(file.name));
+      if (pdfFile) {
+        const url = new URL(pdfFile.file_path, API_DOMAIN).href;
+        setReadingBook({ url: url, title: book.title });
+      } else {
+        alert("Nenhum arquivo PDF de leitura foi encontrado para este livro.");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar o arquivo do livro:", error);
+      alert("Não foi possível carregar o arquivo do livro.");
+    }
+  };
+
   const FullScreenLoader = () => (
-    <div className="flex items-center justify-center w-full bg-white">
+    <div className="flex items-center justify-center w-full h-full p-20">
       <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-gray-900"></div>
     </div>
   );
+
   const filteredBooks = useMemo(() => {
     if (!searchQuery) return allBooks;
     return allBooks.filter(
@@ -219,88 +256,74 @@ export default function BookListPage() {
     );
   }, [allBooks, searchQuery]);
 
-  if (isLoading)
-    return (
-    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
-        <div className="flex flex-col md:flex-row items-center justify-between mb-8 pb-4 border-b gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">
-              Acervo da Biblioteca
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Navegue, adicione e gerencie os livros do seu acervo.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Buscar por título ou autor..."
-                className="pl-8 w-full"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button onClick={() => router.push("/admin/books/form")}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Adicionar
-            </Button>
-          </div>
+  const Header = () => (
+    <div className="flex flex-col md:flex-row items-center justify-between mb-8 pb-4 border-b gap-4">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Acervo da Biblioteca
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Navegue, adicione e gerencie os livros do seu acervo.
+        </p>
+      </div>
+      <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="relative w-full md:w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Buscar por título ou autor..."
+            className="pl-8 w-full"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
-        <FullScreenLoader />
-      </main>
-    );
+        <Button onClick={() => router.push("/admin/books/form")}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Adicionar
+        </Button>
+      </div>
+    </div>
+  );
+
   if (error) return <p className="text-center text-red-500 p-8">{error}</p>;
 
   return (
-    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
-      <div className="flex flex-col md:flex-row items-center justify-between mb-8 pb-4 border-b gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Acervo da Biblioteca
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Navegue, adicione e gerencie os livros do seu acervo.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Buscar por título ou autor..."
-              className="pl-8 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button onClick={() => router.push("/admin/books/form")}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar
-          </Button>
-        </div>
-      </div>
+    <>
+      <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
+        <Header />
 
-      {filteredBooks.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredBooks.map((book) => (
-            <BookCard
-              key={book.id}
-              book={book}
-              onEdit={handleEditBook}
-              onDelete={handleDeleteBook}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16">
-          <h2 className="text-xl font-semibold">Nenhum livro encontrado</h2>
-          <p className="text-muted-foreground mt-2">
-            Tente uma busca diferente ou adicione um novo livro.
-          </p>
-        </div>
+        {isLoading ? (
+          <FullScreenLoader />
+        ) : filteredBooks.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredBooks.map((book) => (
+              <BookCard
+                key={book.id}
+                book={book}
+                onEdit={handleEditBook}
+                onDelete={handleDeleteBook}
+                onStartReading={handleStartReading}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <h2 className="text-xl font-semibold">Nenhum livro encontrado</h2>
+            <p className="text-muted-foreground mt-2">
+              Tente uma busca diferente ou adicione um novo livro.
+            </p>
+          </div>
+        )}
+      </main>
+
+      {/* <-- Renderização condicional do leitor de PDF --> */}
+      {readingBook && (
+        <SecurePdfViewer
+          pdfUrl={readingBook.url}
+          title={readingBook.title}
+          onClose={() => setReadingBook(null)}
+        />
       )}
-    </main>
+    </>
   );
 }

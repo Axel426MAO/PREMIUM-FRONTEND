@@ -112,12 +112,41 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* src/app/globals.css */
+
+/* Estilos para o visualizador seguro */
+.secure-viewer {
+  /* Impede a seleção de texto */
+  user-select: none;
+  -webkit-user-select: none; /* Para Safari */
+  -moz-user-select: none; /* Para Firefox */
+  -ms-user-select: none; /* Para Internet Explorer/Edge */
+}
+
+/* Oculta tudo ao tentar imprimir a página */
+@media print {
+  /* Esconde o corpo da página, exceto a nossa mensagem */
+  body * {
+    display: none;
+  }
+
+  /* Mostra uma mensagem personalizada quando a impressão é tentada */
+  body::after {
+    content: "A impressão de conteúdo é desativada por motivos de segurança.";
+    display: block;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 50px;
+    color: black;
   }
 }

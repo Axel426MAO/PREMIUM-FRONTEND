@@ -2,20 +2,23 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Inter } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { cn } from "@/lib/utils";
 
 import "../globals.css";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
-import { AuthProvider } from "./contexts/AuthContext";
-import RouteGuard from "./auth/guard";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Menu, LogOut } from "lucide-react";
 import { Toaster } from "sonner";
-import { SideMenu, NavLinks, UserProfile } from "./components/SideMenu";
+import { SideMenu, NavLinks } from "../shared/components/SideMenu";
+import RouteGuard from "../utils/auth/guard";
+import { AuthProvider } from "../utils/contexts/AuthContext";
+import { useUserStore } from "../store/userStore";
 
-const fontSans = Inter({
+const fontSans = Poppins({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
 });
 
@@ -27,12 +30,93 @@ const protectedRoutes = [
   "/admin/users/form",
   "/admin/secretary",
   "/admin/secretary/form",
+  "/admin/secretary/edit",
   "/admin/schools",
   "/admin/schools/form",
+  "/admin/schools/edit",
   "/admin/licenses",
   "/admin/licenses/form",
   "/admin/licenses/resume",
 ];
+
+// Componente de cabeçalho para o desktop, agora posicionado corretamente
+const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
+  // 2. Obter o usuário e a função de logout do store
+  const { user, logout } = useUserStore();
+
+  // 3. Lógica para definir o nome de exibição e email dinamicamente
+  let displayName = "Usuário";
+  let displayEmail = "Não autenticado";
+  let initials = "U";
+
+  if (user) {
+    displayEmail = user.email; // O email sempre existe se o usuário estiver logado
+
+    // Se não houver perfil de responsável, o nome de exibição é o próprio email
+    if (!user.responsible) {
+      displayName = user.email;
+    } else {
+      // Lógica baseada no user_type
+      switch (user.user_type) {
+        case "admin":
+          displayName = "Responsável Editoria Premium";
+          break;
+        case "responsible_secretary":
+          // Verifica se a secretaria é estadual. A verificação `is_state_level` é mais robusta.
+          if (user.responsible.secretary?.is_state_level) {
+            displayName = "Responsável da Secretaria Estadual";
+          } else {
+            displayName = "Responsável da Secretaria Municipal";
+          }
+          break;
+        default:
+          // Um fallback caso existam outros tipos de usuário
+          displayName = user.responsible.name;
+          break;
+      }
+    }
+
+    // 4. Lógica para gerar as iniciais para o Avatar
+    // Pega as iniciais do nome do responsável, se existir, senão do email.
+    const nameForInitials = user.responsible?.name || user.email;
+    initials = nameForInitials
+      .split(" ")
+      .slice(0, 2)
+      .map((n: any) => n[0])
+      .join("")
+      .toUpperCase();
+  }
+
+  return (
+    <header
+      className={cn(
+        "hidden md:flex items-center justify-end border-b bg-white px-6 py-2 dark:bg-gray-950",
+        "fixed top-0 z-30 transition-all duration-300 ease-in-out",
+        isCollapsed
+          ? "left-16 w-[calc(100%-4rem)]"
+          : "left-64 w-[calc(100%-16rem)]"
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex flex-col text-right">
+          {" "}
+          {/* Alinhado à direita para melhor visual */}
+          {/* 5. Usar as variáveis dinâmicas no JSX */}
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+            {displayName}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {displayEmail}
+          </span>
+        </div>
+        <Avatar className="h-9 w-9">
+          <AvatarImage src="" alt="Foto do usuário" />
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
+      </div>
+    </header>
+  );
+};
 
 function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -42,12 +126,17 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen w-full bg-white dark:bg-gray-950">
       <SideMenu isCollapsed={isCollapsed} toggleCollapse={toggleCollapse} />
 
+      {/* O header do desktop agora é um irmão do conteúdo principal para ser fixado corretamente */}
+      <DesktopHeader isCollapsed={isCollapsed} />
+
+      {/* O container do conteúdo principal que recebe a margem da barra lateral */}
       <div
         className={cn(
-          "flex flex-col flex-1 transition-all duration-300 ease-in-out",
+          "flex flex-1 flex-col transition-all duration-300 ease-in-out",
           isCollapsed ? "md:ml-16" : "md:ml-64"
         )}
       >
+        {/* O header do mobile não é fixo e permanece no fluxo normal */}
         <header className="md:hidden flex h-14 items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
           <Sheet>
             <SheetTrigger asChild>
@@ -57,7 +146,7 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0">
-              <div className="flex-1">
+              <div className="flex-1 overflow-y-auto">
                 <div className="flex items-center border-b p-2 justify-between">
                   <span className="pl-2 text-lg font-bold">Premium Admin</span>
                 </div>
@@ -65,14 +154,25 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
                   <NavLinks isCollapsed={false} />
                 </div>
               </div>
-              <div>
-                <UserProfile isCollapsed={false} />
+              <div className="mt-auto border-t p-4">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start mt-4"
+                  onClick={() => {
+                    /* Lógica de logout */
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </Button>
               </div>
             </SheetContent>
           </Sheet>
           <h1 className="font-semibold text-lg">Dashboard</h1>
         </header>
-        <main className="flex-1 p-4 md:p-8">{children}</main>
+
+        {/* O conteúdo principal precisa de padding no topo para não ficar atrás do header fixo do desktop */}
+        <main className="flex-1 bg-gray-50/50   md:pt-[4%]">{children}</main>
       </div>
       <Toaster richColors />
     </div>

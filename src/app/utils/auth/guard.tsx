@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext'; // Verifique se o caminho está correto
+import { useAuth } from '../contexts/AuthContext';
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
   // 1. Buscamos também o estado de 'isLoading' do nosso contexto.
