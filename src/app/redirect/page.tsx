@@ -54,7 +54,7 @@ export default function RedirectPage() {
       localStorage.setItem("authToken", token);
 
       try {
-        const response = await fetch("http://localhost:4000/api/users/me", {
+        const response = await fetch("http://212.85.14.247:4000/api/users/me", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

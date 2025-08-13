@@ -34,7 +34,7 @@ import { getBooks, deleteBook, getFiles, type Book } from "./services/api";
 import SecurePdfViewer from "@/app/shared/components/SecurePdfViewer";
 
 // --- CONFIGURAÇÃO E CONSTANTES ---
-const API_DOMAIN = "http://localhost:4000";
+const API_DOMAIN = "http://212.85.14.247:4000";
 
 // --- FUNÇÕES AUXILIARES ---
 const isImageFile = (fileName: string): boolean => {

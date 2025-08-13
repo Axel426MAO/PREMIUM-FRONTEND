@@ -1,7 +1,7 @@
 // Local: /app/admin/licenses/services/api.ts
 
 // --- CONSTANTES ---
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = 'http://212.85.14.247:4000/api';
 
 // --- INTERFACES E TIPOS ---
 
