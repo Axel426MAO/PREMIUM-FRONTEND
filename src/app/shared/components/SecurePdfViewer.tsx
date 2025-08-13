@@ -219,7 +219,7 @@ export default function SecurePdfViewer({
 
           <div className="relative overflow-auto max-w-full max-h-full">
             <Document
-              file={{ url: pdfUrl }}
+              file={{ url: pdfUrl } }
               onLoadSuccess={onDocumentLoadSuccess}
               loading={<p className="text-lg">Carregando livro...</p>}
               error={<p className="text-red-500">Falha ao carregar o PDF.</p>}
