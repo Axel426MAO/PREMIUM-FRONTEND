@@ -148,7 +148,7 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
             <SheetContent side="left" className="flex flex-col p-0">
               <div className="flex-1 overflow-y-auto">
                 <div className="flex items-center border-b p-2 justify-between">
-                  <span className="pl-2 text-lg font-bold">Premium Admin</span>
+                  <span className="pl-2 text-lg font-bold">Editora Premium</span>
                 </div>
                 <div className="mt-4">
                   <NavLinks isCollapsed={false} />
