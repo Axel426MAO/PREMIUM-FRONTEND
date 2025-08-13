@@ -203,9 +203,9 @@ export default function Home() {
               theme={themeColors.schools}
             />
             <ActionCard
-              title="Enviar Licença"
-              description="Distribua licenças para as escolas."
-              href="/admin/licenses/form"
+              title="Gerenciar Licenças"
+              description="Visualize suas Licenças Recebidas"
+              href="/admin/licenses"
               icon={Layers}
               theme={themeColors.licenses}
             />
