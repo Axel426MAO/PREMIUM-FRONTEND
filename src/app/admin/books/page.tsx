@@ -74,17 +74,7 @@ const BookCard: FC<{
           />
         </div>
 
-        {/* Camada de Hover para "Iniciar Leitura" */}
-        <div className="absolute inset-0 z-10 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
-            variant="secondary"
-            className="h-12 px-6 font-semibold text-base"
-            onClick={() => onStartReading(book)}
-          >
-            <BookOpen className="mr-2 h-5 w-5" />
-            Iniciar Leitura
-          </Button>
-        </div>
+      
         
         {/* Menu de Ações (Editar/Excluir) */}
         <div className="absolute top-2 right-2 z-20">
@@ -149,7 +139,18 @@ const BookCard: FC<{
               <BookText className="h-3 w-3" />
               <span>{book.pages} páginas</span>
             </div>
+            
           </div>
+
+           <div
+            className="flex justify-center items-center bg-gray-100 rounded text-black border py-2 shadow  px-6 text  mt-4"
+            onClick={() => onStartReading(book)}
+          >
+            <BookOpen className="mr-2 h-5 w-5" />
+            Iniciar Leitura
+          </div>
+
+          
         </div>
       </CardContent>
     </Card>

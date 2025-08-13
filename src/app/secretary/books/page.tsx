@@ -62,16 +62,7 @@ const BookCard: FC<{
           />
         </div>
 
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
-            variant="secondary"
-            className="h-12 px-6 font-semibold text-base"
-            onClick={() => onStartReading(book.id)}
-          >
-            <BookOpen className="mr-2 h-5 w-5" />
-            Iniciar Leitura
-          </Button>
-        </div>
+       
       </div>
 
       <CardContent className="p-4 flex-grow flex flex-col">
@@ -103,6 +94,14 @@ const BookCard: FC<{
               <BookText className="h-3 w-3" />
               <span>{book.pages} páginas</span>
             </div>
+          </div>
+
+          <div
+            className="flex justify-center items-center bg-gray-100 rounded text-black border py-2 shadow  px-6 text  mt-4"
+            onClick={() => onStartReading(book.id)}
+          >
+            <BookOpen className="mr-2 h-5 w-5" />
+            Iniciar Leitura
           </div>
         </div>
       </CardContent>
