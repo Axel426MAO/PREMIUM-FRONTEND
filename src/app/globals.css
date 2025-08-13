@@ -150,3 +150,8 @@
     color: black;
   }
 }
+
+
+.__next-dev-overlay {
+  display: none !important;
+}
