@@ -189,10 +189,7 @@ export default function LicenseBatchesPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button onClick={handleAdd}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar
-          </Button>
+     
         </div>
       </div>
 
