@@ -31,15 +31,6 @@ interface SecurePdfViewerProps {
 const iconButtonClasses =
   "p-2 rounded-full transition-colors duration-200 hover:bg-black/20 disabled:opacity-40 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-white/50";
 
-if (!(URL as any).parse) {
-  (URL as any).parse = function (val: string) {
-    try {
-      return new window.URL(val, window.location.href);
-    } catch {
-      return null;
-    }
-  };
-}
 // Componente Principal
 export default function SecurePdfViewer({
   pdfUrl,
@@ -81,6 +72,16 @@ export default function SecurePdfViewer({
   }, []);
 
   // --- FUNÇÕES ---
+
+  if (!(URL as any).parse) {
+    (URL as any).parse = function (val: string) {
+      try {
+        return new window.URL(val, window.location.href);
+      } catch {
+        return null;
+      }
+    };
+  }
 
   // Callback executado quando o documento PDF é carregado com sucesso
   const onDocumentLoadSuccess = useCallback(
@@ -228,7 +229,7 @@ export default function SecurePdfViewer({
 
           <div className="relative overflow-auto max-w-full max-h-full">
             <Document
-              file={{ url: pdfUrl }}
+              file={pdfUrl}
               onLoadSuccess={onDocumentLoadSuccess}
               loading={<p className="text-lg">Carregando livro...</p>}
               error={<p className="text-red-500">Falha ao carregar o PDF.</p>}
