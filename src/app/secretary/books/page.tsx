@@ -20,7 +20,7 @@ import SecurePdfViewer from "@/app/shared/components/SecurePdfViewer";
 // Supondo que você salvou o arquivo em 'src/components/SecurePdfViewer.tsx'
 
 // --- CONFIGURAÇÃO E CONSTANTES ---
-const API_DOMAIN = "http://212.85.14.247:4000";
+const API_DOMAIN = "http://localhost:4000";
 
 // --- FUNÇÕES AUXILIARES ---
 const isImageFile = (fileName: string): boolean => {

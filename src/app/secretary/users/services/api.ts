@@ -1,9 +1,7 @@
-// src/app/admin/users/services/api.ts
 'use strict';
 
-const API_BASE_URL = 'http://212.85.14.247:4000/api';
+const API_BASE_URL = 'http://localhost:4000/api';
 
-// Tipo para a resposta da API, incluindo o responsável opcional
 export interface UserApiResponse {
     id: number;
     email: string;
@@ -21,12 +19,11 @@ export interface UserApiResponse {
     } | null;
 }
 
-// Tipo para os dados do formulário de usuário (criação/edição)
 export interface UserFormData {
     email: string;
     user_type: string;
     status: boolean;
-    password?: string; // Senha é opcional na atualização
+    password?: string; 
 }
 
 

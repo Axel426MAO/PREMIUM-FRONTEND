@@ -4,7 +4,7 @@
 import type { SecretaryApiResponse } from "../../secretary/services/api";
 import type { UserApiResponse, UserFormData } from "./api";
 
-const API_BASE_URL = 'http://212.85.14.247:4000/api';
+const API_BASE_URL = 'http://localhost:4000/api';
 
 // --- TIPOS DE DADOS ---
 
