@@ -2,11 +2,10 @@
 
 import { useState, useEffect, type FormEvent, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion"; // Importação para animações
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -30,8 +29,7 @@ import {
 import { ArrowLeft, Check, ChevronsUpDown } from "lucide-react";
 import {
   getSecretariesForSelect,
-  createSimpleUser,
-  createResponsibleUser,
+  createResponsibleUser, // Usaremos esta função para ambos os casos
 } from "../services/formApi";
 import type { SecretaryApiResponse } from "../../secretary/services/api";
 
@@ -43,7 +41,6 @@ export default function UserFormPage() {
   const searchParams = useSearchParams();
   const userId = searchParams.get("id");
 
-  // Estados do formulário
   const [selectedUserType, setSelectedUserType] = useState<UserType | "">("");
   const [userLevel, setUserLevel] = useState<UserLevel>("admin");
 
@@ -51,7 +48,8 @@ export default function UserFormPage() {
   const [responsibleData, setResponsibleData] = useState({
     name: "",
     role: "",
-    secretary_id: 0,
+    // MODIFICAÇÃO: Iniciar com null para clareza
+    secretary_id: null as number | null,
   });
 
   const [secretaries, setSecretaries] = useState<SecretaryApiResponse[]>([]);
@@ -61,6 +59,7 @@ export default function UserFormPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Esta lógica continua a mesma, pois só buscamos secretarias para o tipo 'responsible'
     if (selectedUserType === "responsible") {
       getSecretariesForSelect()
         .then(setSecretaries)
@@ -75,23 +74,37 @@ export default function UserFormPage() {
     setIsLoading(true);
     setError(null);
 
-    try {
-      if (selectedUserType === "premium") {
-        await createSimpleUser({
+    if (selectedUserType === "premium" || selectedUserType === "responsible") {
+      try {
+        const userPayload = {
           ...userData,
-          user_type: userLevel,
+          // Define o tipo de usuário corretamente
+          user_type: selectedUserType === "premium" ? userLevel : "responsible_secretary",
           status: true,
-        });
-      } else if (selectedUserType === "responsible") {
+        };
+
+        const finalResponsibleData = {
+          ...responsibleData,
+          secretary_id:
+            selectedUserType === "responsible"
+              ? responsibleData.secretary_id
+              : null,
+        };
+
         await createResponsibleUser({
-          user: { ...userData, user_type: "responsible", status: true },
-          responsible: responsibleData,
+          user: userPayload,
+          responsible: finalResponsibleData,
         });
+
+        router.push("/admin/users");
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setIsLoading(false);
       }
-      router.push("/admin/users");
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
+    } else {
+      // Lógica para outros tipos de usuário (student, teacher) se necessário no futuro
+      setError("Tipo de usuário selecionado não é válido para criação.");
       setIsLoading(false);
     }
   };
@@ -105,12 +118,11 @@ export default function UserFormPage() {
     const { name, value } = e.target;
     setResponsibleData((prev) => ({ ...prev, [name]: value }));
   };
-  
-  // Variantes para as animações dos cards
+
   const cardAnimation = {
-      initial: { opacity: 0, y: 20 },
-      animate: { opacity: 1, y: 0 },
-      exit: { opacity: 0, y: -20 },
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
   };
 
   return (
@@ -136,7 +148,7 @@ export default function UserFormPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="grid gap-8">
-          {/* Passo 1: Seleção de Tipo */}
+          {/* Passo 1: Seleção de Tipo (Sem alterações) */}
           <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 grid gap-4">
             <Label htmlFor="userType" className="font-semibold text-lg">
               Passo 1: Tipo de Usuário
@@ -152,7 +164,10 @@ export default function UserFormPage() {
               <SelectContent>
                 <SelectItem value="premium">Premium (Admin)</SelectItem>
                 <SelectItem value="responsible">
-                  Responsável (Secretaria/Escola)
+                  Responsável de Secretaria
+                </SelectItem>
+                <SelectItem value="student" disabled>
+                  Responsável de Escola (Em breve)
                 </SelectItem>
                 <SelectItem value="student" disabled>
                   Aluno (Em breve)
@@ -165,9 +180,8 @@ export default function UserFormPage() {
           </div>
 
           <AnimatePresence>
-            {/* Passo 2: Nível de Acesso (Condicional e Animado) */}
-            {(selectedUserType === "premium" ||
-              selectedUserType === "responsible") && (
+            {/* Passo 2: Nível de Acesso (Aparece apenas para Premium) */}
+            {selectedUserType === "premium" && (
               <motion.div
                 key="step2"
                 variants={cardAnimation}
@@ -195,8 +209,9 @@ export default function UserFormPage() {
               </motion.div>
             )}
 
-            {/* Passo 3: Dados do Usuário e Responsável (Condicional e Animado) */}
-            {selectedUserType && (
+            {/* Passo 3: Dados de Acesso e Responsável */}
+            {(selectedUserType === "premium" ||
+              selectedUserType === "responsible") && (
               <motion.div
                 key="step3"
                 variants={cardAnimation}
@@ -207,38 +222,86 @@ export default function UserFormPage() {
                 className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 grid gap-6"
               >
                 <h3 className="font-semibold text-lg">
-                  Passo 3: Dados de Acesso
+                  {selectedUserType === "premium"
+                    ? "Passo 3: Dados do Admin"
+                    : "Passo 2: Dados de Acesso"}
                 </h3>
                 <div className="grid gap-2">
                   <Label htmlFor="email">E-mail de Acesso</Label>
-                  <Input id="email" name="email" type="email" value={userData.email} onChange={handleUserInputChange} required disabled={isLoading} />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={userData.email}
+                    onChange={handleUserInputChange}
+                    required
+                    disabled={isLoading}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="password">Senha</Label>
-                  <Input id="password" name="password" type="password" value={userData.password} onChange={handleUserInputChange} required disabled={isLoading} />
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={userData.password}
+                    onChange={handleUserInputChange}
+                    required
+                    disabled={isLoading}
+                  />
                 </div>
 
-                {selectedUserType === "responsible" && (
-                  <div className="border-t pt-6 grid gap-6">
-                    <h3 className="font-semibold text-lg">
-                      Dados do Responsável
-                    </h3>
-                    <div className="grid gap-2">
-                      <Label htmlFor="responsibleName">
-                        Nome Completo do Responsável
-                      </Label>
-                      <Input id="responsibleName" name="name" value={responsibleData.name} onChange={handleResponsibleInputChange} required disabled={isLoading} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="responsibleRole">Cargo</Label>
-                      <Input id="responsibleRole" name="role" value={responsibleData.role} onChange={handleResponsibleInputChange} required disabled={isLoading} />
-                    </div>
+                {/* MODIFICAÇÃO: Dados do responsável agora aparecem para ambos */}
+                <div className="border-t pt-6 grid gap-6">
+                  <h3 className="font-semibold text-lg">
+                    Dados do Responsável
+                  </h3>
+                  <div className="grid gap-2">
+                    <Label htmlFor="responsibleName">
+                      Nome Completo do Responsável
+                    </Label>
+                    <Input
+                      id="responsibleName"
+                      name="name"
+                      value={responsibleData.name}
+                      onChange={handleResponsibleInputChange}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="responsibleRole">Cargo</Label>
+                    <Input
+                      id="responsibleRole"
+                      name="role"
+                      value={responsibleData.role}
+                      onChange={handleResponsibleInputChange}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  {/* MODIFICAÇÃO: Campo de Secretaria só aparece para 'responsible' */}
+                  {selectedUserType === "responsible" && (
                     <div className="grid gap-2">
                       <Label>Secretaria Vinculada</Label>
-                      <Popover open={openSecretaryPopover} onOpenChange={setOpenSecretaryPopover}>
+                      <Popover
+                        open={openSecretaryPopover}
+                        onOpenChange={setOpenSecretaryPopover}
+                      >
                         <PopoverTrigger asChild>
-                          <Button variant="outline" role="combobox" aria-expanded={openSecretaryPopover} className="w-full justify-between" disabled={!secretaries.length}>
-                            {responsibleData.secretary_id ? secretaries.find((s) => s.id === responsibleData.secretary_id)?.name : "Selecione uma secretaria..."}
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openSecretaryPopover}
+                            className="w-full justify-between"
+                            disabled={!secretaries.length}
+                          >
+                            {responsibleData.secretary_id
+                              ? secretaries.find(
+                                  (s) => s.id === responsibleData.secretary_id
+                                )?.name
+                              : "Selecione uma secretaria..."}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
@@ -246,14 +309,30 @@ export default function UserFormPage() {
                           <Command>
                             <CommandInput placeholder="Buscar secretaria..." />
                             <CommandList>
-                              <CommandEmpty>Nenhuma secretaria encontrada.</CommandEmpty>
+                              <CommandEmpty>
+                                Nenhuma secretaria encontrada.
+                              </CommandEmpty>
                               <CommandGroup>
                                 {secretaries.map((secretary) => (
-                                  <CommandItem key={secretary.id} value={secretary.name} onSelect={() => {
-                                      setResponsibleData((prev) => ({...prev, secretary_id: secretary.id}));
+                                  <CommandItem
+                                    key={secretary.id}
+                                    value={secretary.name}
+                                    onSelect={() => {
+                                      setResponsibleData((prev) => ({
+                                        ...prev,
+                                        secretary_id: secretary.id,
+                                      }));
                                       setOpenSecretaryPopover(false);
-                                    }}>
-                                    <Check className={`mr-2 h-4 w-4 ${responsibleData.secretary_id === secretary.id ? "opacity-100" : "opacity-0"}`} />
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        responsibleData.secretary_id ===
+                                        secretary.id
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      }`}
+                                    />
                                     {secretary.name}
                                   </CommandItem>
                                 ))}
@@ -263,12 +342,12 @@ export default function UserFormPage() {
                         </PopoverContent>
                       </Popover>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
-          
+
           {error && (
             <p className="text-center text-destructive bg-destructive/10 p-3 rounded-md">
               {error}
@@ -276,7 +355,12 @@ export default function UserFormPage() {
           )}
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              disabled={isLoading}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={isLoading || !selectedUserType}>

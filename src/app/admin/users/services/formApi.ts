@@ -8,13 +8,14 @@ const API_BASE_URL = 'http://212.85.14.247:4000/api';
 
 // --- TIPOS DE DADOS ---
 
-// Dados para criar um responsável (sem o user_id, que será criado no fluxo)
+// Dados para criar um responsável
 interface ResponsibleFormData {
   name: string;
   role: string;
   whatsapp?: string;
   phone?: string;
-  secretary_id: number;
+  // MODIFICAÇÃO: Tornamos o secretary_id opcional para acomodar o admin
+  secretary_id?: number | null;
 }
 
 // Payload completo para o fluxo de criação de um usuário responsável
@@ -37,9 +38,9 @@ export const getSecretariesForSelect = async (): Promise<SecretaryApiResponse[]>
 };
 
 /**
- * Cria um usuário simples (sem vínculo de responsável).
+ * Cria um usuário simples (helper interno, agora createResponsibleUser é o principal)
  */
-export const createSimpleUser = async (data: UserFormData): Promise<UserApiResponse> => {
+const createSimpleUser = async (data: UserFormData): Promise<UserApiResponse> => {
     const response = await fetch(`${API_BASE_URL}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,6 +55,7 @@ export const createSimpleUser = async (data: UserFormData): Promise<UserApiRespo
 
 /**
  * Orquestra a criação de um usuário e, em seguida, de um responsável vinculado a ele.
+ * Agora esta função serve tanto para 'responsible' quanto para 'premium'.
  */
 export const createResponsibleUser = async (data: ResponsibleUserPayload) => {
     // Passo 1: Criar o usuário
@@ -80,3 +82,7 @@ export const createResponsibleUser = async (data: ResponsibleUserPayload) => {
 
     return responsibleResponse.json();
 };
+
+// A função createSimpleUser não é mais exportada diretamente se toda a lógica passa por createResponsibleUser
+// mas mantemos aqui para referência ou uso futuro.
+export { createSimpleUser };
