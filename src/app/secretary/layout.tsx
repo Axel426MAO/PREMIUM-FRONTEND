@@ -15,6 +15,7 @@ import { AuthProvider } from "../utils/contexts/AuthContext";
 import RouteGuard from "../utils/auth/guard";
 import { NavLinks, SideMenu } from "../shared/components/SideMenu";
 import { useUserStore } from "../store/userStore";
+import { ThemeToggleButton } from "../shared/components/ThemeToggleButton";
 
 // 1. Importar o store do Zustand
 
@@ -89,7 +90,7 @@ const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
   return (
     <header
       className={cn(
-        "hidden md:flex items-center justify-end border-b bg-white px-6 py-2 dark:bg-gray-950",
+        "hidden md:flex items-center justify-end border-b  px-6 py-2 ",
         "fixed top-0 z-30 transition-all duration-300 ease-in-out",
         isCollapsed
           ? "left-16 w-[calc(100%-4rem)]"
@@ -97,10 +98,9 @@ const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
       )}
     >
       <div className="flex items-center gap-3">
+        <ThemeToggleButton />
+
         <div className="flex flex-col text-right">
-          {" "}
-          {/* Alinhado à direita para melhor visual */}
-          {/* 5. Usar as variáveis dinâmicas no JSX */}
           <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
             {displayName}
           </span>
@@ -123,7 +123,7 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useUserStore(); // Pega o logout para o menu mobile
 
   return (
-    <div className="flex min-h-screen w-full bg-white dark:bg-gray-950">
+    <div className="flex min-h-screen w-full ">
       <SideMenu isCollapsed={isCollapsed} toggleCollapse={toggleCollapse} />
 
       <DesktopHeader isCollapsed={isCollapsed} />
@@ -134,7 +134,7 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
           isCollapsed ? "md:ml-16" : "md:ml-64"
         )}
       >
-        <header className="md:hidden flex h-14 items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
+        <header className="md:hidden flex h-14 items-center gap-4 border-b  px-6 ">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
@@ -145,7 +145,9 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
             <SheetContent side="left" className="flex flex-col p-0">
               <div className="flex-1 overflow-y-auto">
                 <div className="flex items-center border-b p-2 justify-between">
-                  <span className="pl-2 text-lg font-bold">Editora Premium</span>
+                  <span className="pl-2 text-lg font-bold">
+                    Editora Premium
+                  </span>
                 </div>
                 <div className="mt-4">
                   <NavLinks isCollapsed={false} />
@@ -165,41 +167,30 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
           </Sheet>
           <h1 className="font-semibold text-lg">Dashboard</h1>
         </header>
-        <main className="flex-1 bg-gray-50/50 md:pt-16">{children}</main>{" "}
-        {/* Ajustei o padding-top */}
+        <main className="flex-1 md:pt-16">{children}</main>
       </div>
       <Toaster richColors />
     </div>
   );
 }
 
-export default function RootLayout({
+export default function SecretaryAreaLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const pathname = usePathname();
   const isProtectedRoute = protectedRoutes.includes(pathname);
 
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
-      <head />
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable
-        )}
-      >
-        <AuthProvider>
-          {isProtectedRoute ? (
-            <RouteGuard>
-              <AdminPanelLayout>{children}</AdminPanelLayout>
-            </RouteGuard>
-          ) : (
-            children
-          )}
-        </AuthProvider>
-      </body>
-    </html>
+    <AuthProvider>
+      {isProtectedRoute ? (
+        <RouteGuard>
+          <AdminPanelLayout>{children}</AdminPanelLayout>
+        </RouteGuard>
+      ) : (
+        children
+      )}
+    </AuthProvider>
   );
 }

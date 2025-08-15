@@ -1,9 +1,7 @@
-// src/app/admin/users/services/api.ts
 'use strict';
 
-const API_BASE_URL = 'http://212.85.14.247:4000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// Tipo para a resposta da API, incluindo o responsável opcional
 export interface UserApiResponse {
     id: number;
     email: string;

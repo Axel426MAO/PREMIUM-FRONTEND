@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation";
 import { Poppins } from "next/font/google";
 import { cn } from "@/lib/utils";
 
+// --- Importações de Tema ---
+import { ThemeProvider } from "../utils/contexts/ThemeProvider"; // ✨ NOVO
+
 import "../globals.css";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -15,6 +18,7 @@ import { SideMenu, NavLinks } from "../shared/components/SideMenu";
 import RouteGuard from "../utils/auth/guard";
 import { AuthProvider } from "../utils/contexts/AuthContext";
 import { useUserStore } from "../store/userStore";
+import { ThemeToggleButton } from "../shared/components/ThemeToggleButton";
 
 const fontSans = Poppins({
   subsets: ["latin"],
@@ -39,30 +43,24 @@ const protectedRoutes = [
   "/admin/licenses/resume",
 ];
 
-// Componente de cabeçalho para o desktop, agora posicionado corretamente
+// Componente de cabeçalho para o desktop, agora com o botão de tema
 const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
-  // 2. Obter o usuário e a função de logout do store
   const { user, logout } = useUserStore();
 
-  // 3. Lógica para definir o nome de exibição e email dinamicamente
   let displayName = "Usuário";
   let displayEmail = "Não autenticado";
   let initials = "U";
 
   if (user) {
-    displayEmail = user.email; // O email sempre existe se o usuário estiver logado
-
-    // Se não houver perfil de responsável, o nome de exibição é o próprio email
+    displayEmail = user.email;
     if (!user.responsible) {
       displayName = user.email;
     } else {
-      // Lógica baseada no user_type
       switch (user.user_type) {
         case "admin":
           displayName = "Responsável Editoria Premium";
           break;
         case "responsible_secretary":
-          // Verifica se a secretaria é estadual. A verificação `is_state_level` é mais robusta.
           if (user.responsible.secretary?.is_state_level) {
             displayName = "Responsável da Secretaria Estadual";
           } else {
@@ -70,14 +68,10 @@ const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
           }
           break;
         default:
-          // Um fallback caso existam outros tipos de usuário
           displayName = user.responsible.name;
           break;
       }
     }
-
-    // 4. Lógica para gerar as iniciais para o Avatar
-    // Pega as iniciais do nome do responsável, se existir, senão do email.
     const nameForInitials = user.responsible?.name || user.email;
     initials = nameForInitials
       .split(" ")
@@ -90,29 +84,32 @@ const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
   return (
     <header
       className={cn(
-        "hidden md:flex items-center justify-end border-b bg-white px-6 py-2 dark:bg-gray-950",
+        "hidden md:flex items-center justify-between border-b bg-background px-6 py-2", // Removido bg-white para usar a cor do tema
         "fixed top-0 z-30 transition-all duration-300 ease-in-out",
         isCollapsed
           ? "left-16 w-[calc(100%-4rem)]"
           : "left-64 w-[calc(100%-16rem)]"
       )}
     >
-      <div className="flex items-center gap-3">
-        <div className="flex flex-col text-right">
-          {" "}
-          {/* Alinhado à direita para melhor visual */}
-          {/* 5. Usar as variáveis dinâmicas no JSX */}
-          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-            {displayName}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {displayEmail}
-          </span>
+      <div />
+
+      <div className="flex items-center gap-4">
+        <ThemeToggleButton />
+
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col text-right">
+            <span className="text-sm font-medium text-foreground">
+              {displayName}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {displayEmail}
+            </span>
+          </div>
+          <Avatar className="h-9 w-9">
+            <AvatarImage src="" alt="Foto do usuário" />
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
         </div>
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="" alt="Foto do usuário" />
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
       </div>
     </header>
   );
@@ -123,21 +120,16 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
   return (
-    <div className="flex min-h-screen w-full bg-white dark:bg-gray-950">
+    <div className="flex min-h-screen w-full bg-background">
       <SideMenu isCollapsed={isCollapsed} toggleCollapse={toggleCollapse} />
-
-      {/* O header do desktop agora é um irmão do conteúdo principal para ser fixado corretamente */}
       <DesktopHeader isCollapsed={isCollapsed} />
-
-      {/* O container do conteúdo principal que recebe a margem da barra lateral */}
       <div
         className={cn(
           "flex flex-1 flex-col transition-all duration-300 ease-in-out",
           isCollapsed ? "md:ml-16" : "md:ml-64"
         )}
       >
-        {/* O header do mobile não é fixo e permanece no fluxo normal */}
-        <header className="md:hidden flex h-14 items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
+        <header className="md:hidden flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-6">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
@@ -148,7 +140,9 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
             <SheetContent side="left" className="flex flex-col p-0">
               <div className="flex-1 overflow-y-auto">
                 <div className="flex items-center border-b p-2 justify-between">
-                  <span className="pl-2 text-lg font-bold">Editora Premium</span>
+                  <span className="pl-2 text-lg font-bold">
+                    Editora Premium
+                  </span>
                 </div>
                 <div className="mt-4">
                   <NavLinks isCollapsed={false} />
@@ -159,8 +153,7 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
                   variant="ghost"
                   className="w-full justify-start mt-4"
                   onClick={() => {
-                    
-                    window.location.href = './'
+                    window.location.href = "./";
                   }}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -170,43 +163,29 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
             </SheetContent>
           </Sheet>
           <h1 className="font-semibold text-lg">Dashboard</h1>
+          <ThemeToggleButton />
         </header>
 
-        {/* O conteúdo principal precisa de padding no topo para não ficar atrás do header fixo do desktop */}
-        <main className="flex-1 bg-gray-50/50   md:pt-[4%]">{children}</main>
+        <main className="flex-1  md:pt-[4%]">{children}</main>
       </div>
       <Toaster richColors />
     </div>
   );
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function AdminAreaLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isProtectedRoute = protectedRoutes.includes(pathname);
 
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
-      <head />
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable
-        )}
-      >
-        <AuthProvider>
-          {isProtectedRoute ? (
-            <RouteGuard>
-              <AdminPanelLayout>{children}</AdminPanelLayout>
-            </RouteGuard>
-          ) : (
-            children
-          )}
-        </AuthProvider>
-      </body>
-    </html>
+    <AuthProvider>
+      {isProtectedRoute ? (
+        <RouteGuard>
+          <AdminPanelLayout>{children}</AdminPanelLayout>
+        </RouteGuard>
+      ) : (
+        children
+      )}
+    </AuthProvider>
   );
 }

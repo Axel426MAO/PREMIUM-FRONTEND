@@ -28,7 +28,7 @@ import {
 } from "../services/api";
 
 // --- TIPOS E CONSTANTES INTERNAS ---
-const API_DOMAIN = "http://212.85.14.247:4000/";
+const API_DOMAIN = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 interface UnifiedPreview {
   key: string;
@@ -288,7 +288,7 @@ export default function BookFormPage() {
   if (error) return <p className="text-center text-red-500 p-8">{error}</p>;
 
   return (
-    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-slate-50 dark:bg-slate-950 min-h-screen">
+    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8  min-h-screen">
       <div className="flex items-center gap-4 mb-8 pb-4 border-b">
         <Button variant="outline" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4" />

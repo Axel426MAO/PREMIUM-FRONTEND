@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Library, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import React, { useState, type FC, type FormEvent } from "react";
-import { useUserStore } from "../store/userStore";// Importe o seu store Zustand
+import { useUserStore } from "../store/userStore"; // Importe o seu store Zustand
 
 // --- Componente de Input Genérico (Estilo Atualizado) ---
 const FormInput: FC<
@@ -16,7 +16,7 @@ const FormInput: FC<
     <div className="relative">
       <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
       <input
-        className={`w-full rounded-lg border bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors placeholder:text-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 ${
+        className={`w-full rounded-lg border  py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors placeholder:text-gray-500 focus:outline-none focus:ring-2  dark:text-white dark:placeholder:text-gray-400 ${
           error
             ? "border-red-500 focus:border-red-500 focus:ring-red-500"
             : "border-gray-300 focus:border-gray-900 focus:ring-gray-900/50 dark:border-gray-600 dark:focus:border-gray-400 dark:focus:ring-gray-400/50"
@@ -39,6 +39,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
@@ -74,7 +76,7 @@ export default function LoginPage() {
 
     try {
       // Substitua pela URL da sua API de produção
-      const response = await fetch("http://212.85.14.247:4000/api/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -103,7 +105,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-white dark:bg-gray-900 font-sans">
+    <div className="flex min-h-screen w-full  font-sans">
       {/* Coluna do Formulário */}
       <div className="flex w-full flex-col items-center justify-center p-6 lg:w-1/2">
         <div className="w-full max-w-sm">
@@ -160,7 +162,7 @@ export default function LoginPage() {
                   placeholder="Senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full rounded-lg border bg-white py-3 pl-12 pr-12 text-gray-900 shadow-sm transition-colors placeholder:text-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 ${
+                  className={`w-full rounded-lg border  py-3 pl-12 pr-12 text-gray-900 shadow-sm transition-colors placeholder:text-gray-500 focus:outline-none focus:ring-2  dark:text-white dark:placeholder:text-gray-400 ${
                     errors.password
                       ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:border-gray-900 focus:ring-gray-900/50 dark:border-gray-600 dark:focus:border-gray-400 dark:focus:ring-gray-400/50"
@@ -213,7 +215,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex w-full items-center justify-center rounded-lg bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 disabled:pointer-events-none disabled:opacity-60 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-200"
+              className="flex w-full items-center justify-center rounded-lg  px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 disabled:pointer-events-none disabled:opacity-60  dark:text-white dark:bg-gray-900  dark:border dark:hover:bg-gray-200"
             >
               {isSubmitting ? (
                 <>

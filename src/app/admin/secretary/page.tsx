@@ -63,7 +63,7 @@ const SecretaryCard: FC<{
   onDelete: (secretary: SecretaryViewData) => void;
 }> = ({ secretary, onEdit, onDelete }) => {
   return (
-    <div className="w-full bg-white border border-slate-200 rounded-lg p-4 transition-shadow hover:shadow-md flex flex-col">
+    <div className="w-full bg-background border border-slate-200 rounded-lg p-4 transition-shadow hover:shadow-md flex flex-col">
       {/* Cabeçalho do Card */}
       <div className="flex items-start justify-between pb-3 mb-3 border-b border-slate-100">
         <div className="space-y-1.5">
@@ -274,7 +274,7 @@ export default function SecretaryPage() {
           <div className="hidden md:block">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow >
                   <TableHead>Nome</TableHead>
                   <TableHead>Responsável</TableHead>
                   <TableHead>Contato</TableHead>
@@ -300,7 +300,7 @@ export default function SecretaryPage() {
                   </TableRow>
                 ) : filteredSecretaries.length > 0 ? (
                   filteredSecretaries.map((secretary) => (
-                    <TableRow key={secretary.id}>
+                    <TableRow key={secretary.id} className="odd:bg-muted/50">
                       <TableCell className="font-medium">
                         {secretary.name}
                       </TableCell>

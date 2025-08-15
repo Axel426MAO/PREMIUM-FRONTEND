@@ -3,26 +3,16 @@
 import { useState, useEffect, useMemo, type FC } from "react";
 import { useRouter } from "next/navigation";
 
-// --- COMPONENTES UI ---
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
-// --- ÍCONES ---
 import { Search, BookText, Calendar, Building, BookOpen } from "lucide-react";
 
-// --- API ---
 import { getBooks, deleteBook, getFiles, type Book } from "./services/api";
 import SecurePdfViewer from "@/app/shared/components/SecurePdfViewer";
 
-// --- COMPONENTE DO VISUALIZADOR DE PDF ---
-// Importamos o componente corrigido que está no Canvas.
-// Supondo que você salvou o arquivo em 'src/components/SecurePdfViewer.tsx'
+const API_DOMAIN = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// --- CONFIGURAÇÃO E CONSTANTES ---
-const API_DOMAIN = "http://212.85.14.247:4000";
-
-// --- FUNÇÕES AUXILIARES ---
 const isImageFile = (fileName: string): boolean => {
   return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
 };
@@ -31,9 +21,6 @@ const isPdfFile = (fileName: string): boolean => {
   return /\.pdf$/i.test(fileName);
 };
 
-// =================================================================
-//  COMPONENTE DO CARD DE LIVRO
-// =================================================================
 const BookCard: FC<{
   book: Book;
   onEdit: (id: number) => void;
@@ -61,8 +48,6 @@ const BookCard: FC<{
             }}
           />
         </div>
-
-       
       </div>
 
       <CardContent className="p-4 flex-grow flex flex-col">

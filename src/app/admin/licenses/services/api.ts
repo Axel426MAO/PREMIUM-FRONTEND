@@ -1,13 +1,13 @@
 // Local: /app/admin/licenses/services/api.ts
 
 // --- CONSTANTES ---
-const API_BASE_URL = 'http://212.85.14.247:4000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // --- INTERFACES E TIPOS ---
 
 // <-- CORREÇÃO: O tipo de status DEVE corresponder aos enums do backend
-type BackendBatchStatus = 'CRIADO' | 'ENVIADO' | 'RECEBIDO' | 'PENDENTE' | 'ATIVO' | 'EXPIRADO';
-type BackendKeyStatus = 'CRIADO' | 'ENVIADO' | 'RECEBIDO' | 'PENDENTE' | 'ATIVO' | 'EXPIRADO';
+export type BackendBatchStatus = 'CRIADO' | 'ENVIADO' | 'RECEBIDO' | 'PENDENTE' | 'ATIVO' | 'EXPIRADO';
+export type BackendKeyStatus = 'CRIADO' | 'ENVIADO' | 'RECEBIDO' | 'PENDENTE' | 'ATIVO' | 'EXPIRADO';
 
 // Interface para a lista de lotes (visão resumida)
 export interface LicenseBatchApiResponse {
@@ -36,8 +36,17 @@ export interface LicenseBatchApiResponse {
 export interface LicenseBatchDetails {
   id: number;
   quantity: number;
-  status: BackendBatchStatus; // <-- Usando o tipo corrigido
-  // ... resto dos campos
+  status: BackendBatchStatus; 
+  createdAt: string
+  book: {
+    title: string
+  }
+  secretary: {
+    name: string
+  }
+  school: {
+    name: string
+  }
   license_keys: Array<{
     id: number;
     code: string;

@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 
 // --- Icons ---
-import { Loader2, ArrowLeft, Building, Home, User, Lock } from "lucide-react";
+import { Loader2, ArrowLeft, Building, Home, User } from "lucide-react";
 
 // --- Data ---
 const brazilianStates = [
@@ -61,20 +61,20 @@ const brazilianStates = [
 
 type Municipality = { id: number; nome: string };
 
-// Componente para agrupar seções do formulário
+// Componente para agrupar seções do formulário (Redesenhado)
 const FormSection: FC<{
   title: string;
   description: string;
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, description, icon, children }) => (
-  <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
-    <div className="p-5 border-b border-slate-200">
+  <div className="bg-card rounded-xl border shadow-sm">
+    <div className="p-5 border-b bg-muted/50 rounded-t-xl">
       <div className="flex items-center gap-3">
         {icon}
-        <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
       </div>
-      <p className="text-sm text-slate-500 mt-1 ml-9">{description}</p>
+      <p className="text-sm text-muted-foreground mt-1 ml-9">{description}</p>
     </div>
     <div className="p-6">{children}</div>
   </div>
@@ -230,48 +230,47 @@ const EditSecretaryPage = () => {
 
   if (isFetchingData) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (!formData) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50 text-red-600">
+      <div className="flex items-center justify-center min-h-screen bg-background text-destructive">
         Não foi possível carregar o formulário de edição.
       </div>
     );
   }
 
   return (
-    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-slate-50 min-h-screen">
-      <div className=" mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.back()}
-            className="shrink-0"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
-              Editar Secretaria
-            </h1>
-            <p className="text-muted-foreground">
-              Altere os dados necessários e salve as modificações.
-            </p>
-          </div>
+    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
+      <div className="flex items-center gap-4 mb-8">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => router.back()}
+          className="shrink-0"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+            Editar Secretaria
+          </h1>
+          <p className="text-muted-foreground">
+            Altere os dados necessários e salve as modificações.
+          </p>
         </div>
-
+      </div>
+      <div className="max-w-4xl mx-auto">
         <form onSubmit={handleUpdate} className="space-y-8">
           <fieldset disabled={isLoading}>
             <FormSection
               title="Dados da Secretaria"
               description="Informações principais sobre a entidade e sua abrangência."
-              icon={<Building className="h-6 w-6 text-slate-500" />}
+              icon={<Building className="h-6 w-6 text-primary" />}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="grid gap-2 sm:col-span-2">
@@ -367,7 +366,7 @@ const EditSecretaryPage = () => {
             <FormSection
               title="Endereço"
               description="Localização física onde a secretaria está estabelecida."
-              icon={<Home className="h-6 w-6 text-slate-500" />}
+              icon={<Home className="h-6 w-6 text-primary" />}
             >
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
@@ -429,7 +428,7 @@ const EditSecretaryPage = () => {
             <FormSection
               title="Responsável e Acesso"
               description="Dados do gestor principal e suas credenciais de acesso ao sistema."
-              icon={<User className="h-6 w-6 text-slate-500" />}
+              icon={<User className="h-6 w-6 text-primary" />}
             >
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -476,7 +475,7 @@ const EditSecretaryPage = () => {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t">
                   <div className="grid gap-2">
                     <Label htmlFor="user.email">E-mail de Acesso</Label>
                     <Input

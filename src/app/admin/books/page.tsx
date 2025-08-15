@@ -34,7 +34,7 @@ import { getBooks, deleteBook, getFiles, type Book } from "./services/api";
 import SecurePdfViewer from "@/app/shared/components/SecurePdfViewer";
 
 // --- CONFIGURAÇÃO E CONSTANTES ---
-const API_DOMAIN = "http://212.85.14.247:4000";
+const API_DOMAIN = process.env.NEXT_PUBLIC_API_BASE_URL_WITHOUTH_SUFIX;
 
 // --- FUNÇÕES AUXILIARES ---
 const isImageFile = (fileName: string): boolean => {
@@ -60,10 +60,10 @@ const BookCard: FC<{
   const displayUrl = book.coverUrl || placeholderUrl;
 
   return (
-    <Card className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
+    <Card  className="group py-0 pb-6 flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
       <div className="relative">
         {/* Imagem de Fundo */}
-        <div className="aspect-square w-full overflow-hidden bg-muted">
+        <div className="aspect-square w-full h-full overflow-hidden bg-muted">
           <img
             src={displayUrl}
             alt={`Capa de ${book.title}`}
@@ -76,7 +76,6 @@ const BookCard: FC<{
 
       
         
-        {/* Menu de Ações (Editar/Excluir) */}
         <div className="absolute top-2 right-2 z-20">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -109,8 +108,7 @@ const BookCard: FC<{
         </div>
       </div>
 
-      {/* Conteúdo do Card */}
-      <CardContent className="p-4 flex-grow flex flex-col">
+      <CardContent className="px-4 flex-grow flex flex-col">
         <div className="flex-grow">
           <h3
             className="font-semibold text-base leading-tight line-clamp-2"
@@ -290,7 +288,7 @@ export default function BookListPage() {
 
   return (
     <>
-      <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
+      <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8  min-h-screen">
         <Header />
 
         {isLoading ? (

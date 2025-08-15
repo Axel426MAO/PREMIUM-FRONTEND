@@ -6,11 +6,11 @@ import Link from "next/link";
 import { Library } from "lucide-react";
 import { useUserStore } from "../store/userStore";
 
-// --- Componente de Spinner de Carregamento ---
+// --- Componente de Spinner de Carregamento (Corrigido para o tema) ---
 const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center gap-4">
-    <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-gray-900 dark:border-gray-600 dark:border-t-gray-200" />
-    <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+    <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-primary" />
+    <p className="text-lg font-medium text-muted-foreground">
       Verificando sua sessão...
     </p>
   </div>
@@ -32,20 +32,18 @@ export default function RedirectPage() {
   const { token, login, logout } = useUserStore();
 
   const [isMounted, setIsMounted] = useState(false);
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    // **CORREÇÃO**: A verificação só roda depois que o componente foi montado
-    // e o Zustand teve a chance de reidratar o estado do localStorage.
     if (!isMounted) {
       return;
     }
 
     const verifyAndFetchUser = async () => {
-      console.log(token);
       if (!token) {
         router.push("/onboard");
         return;
@@ -54,7 +52,7 @@ export default function RedirectPage() {
       localStorage.setItem("authToken", token);
 
       try {
-        const response = await fetch("http://212.85.14.247:4000/api/users/me", {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -87,21 +85,25 @@ export default function RedirectPage() {
     };
 
     verifyAndFetchUser();
-  }, [isMounted, token, router, login, logout]); // Adicionado 'isMounted' às dependências
+  }, [isMounted, token, router, login, logout, API_BASE_URL]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-white dark:bg-gray-900 font-sans p-6">
+    // ✨ CORREÇÃO: Usando bg-background para se adaptar ao tema
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background font-sans p-6">
       <div className="flex flex-col items-center gap-6 text-center">
         <Link
           href="/"
-          className="flex items-center justify-center gap-3 text-2xl font-bold text-gray-900 dark:text-white"
+          // ✨ CORREÇÃO: Usando text-foreground para o texto
+          className="flex items-center justify-center gap-3 text-2xl font-bold text-foreground"
         >
-          <Library className="h-8 w-8 text-gray-800 dark:text-gray-200" />
+          {/* ✨ CORREÇÃO: Usando text-muted-foreground para o ícone */}
+          <Library className="h-8 w-8 text-muted-foreground" />
           <span>Editora Premium</span>
         </Link>
 
         {error ? (
-          <p className="text-lg font-medium text-red-600 dark:text-red-400">
+          // ✨ CORREÇÃO: Usando text-destructive para a mensagem de erro
+          <p className="text-lg font-medium text-destructive">
             {error} Redirecionando para o login...
           </p>
         ) : (

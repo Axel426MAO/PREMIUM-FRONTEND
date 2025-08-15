@@ -175,7 +175,7 @@ export default function Home() {
 
 
   return (
-    <main className="flex flex-1 flex-col bg-muted/20 dark:bg-background/95 p-6 md:p-10">
+    <main className="flex flex-1 flex-col  p-6 md:p-10">
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Bem-vindo(a) de volta

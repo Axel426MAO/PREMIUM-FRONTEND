@@ -88,18 +88,20 @@ type Municipality = {
   nome: string;
 };
 
-// --- COMPONENTES AUXILIARES ---
+// --- COMPONENTES AUXILIARES (COM TEMA RESPONSIVO) ---
 const ReviewCard: FC<{
   title: string;
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, icon, children }) => (
-  <div className="rounded-xl border bg-white shadow-sm">
-    <div className="flex items-center gap-3 border-b bg-slate-50/50 p-4">
+  <div className="rounded-xl border bg-card shadow-sm text-card-foreground">
+    <div className="flex items-center gap-3 border-b bg-muted/50 p-4">
       {icon}
-      <h4 className="text-md font-semibold text-slate-800">{title}</h4>
+      <h4 className="text-md font-semibold">{title}</h4>
     </div>
-    <div className="p-4 space-y-2 text-sm text-slate-600">{children}</div>
+    <div className="p-4 space-y-2 text-sm text-muted-foreground">
+      {children}
+    </div>
   </div>
 );
 
@@ -108,9 +110,13 @@ const ReviewItem: FC<{ label: string; value: string | React.ReactNode }> = ({
   value,
 }) => (
   <div className="flex flex-col sm:flex-row sm:items-center">
-    <span className="font-semibold text-slate-800 w-28 shrink-0">{label}:</span>
+    <span className="font-semibold text-foreground w-28 shrink-0">
+      {label}:
+    </span>
     <span className="break-words">
-      {value || <span className="text-slate-400">Não preenchido</span>}
+      {value || (
+        <span className="text-muted-foreground/80">Não preenchido</span>
+      )}
     </span>
   </div>
 );
@@ -136,11 +142,9 @@ const SecretaryFormPage: FC = () => {
     responsible: { name: "", role: "", whatsapp: "", phone: "" },
     user: { email: "", password: "", user_type: "responsible_secretary" },
   });
-  
-  // States para os campos de confirmação
+
   const [confirmEmail, setConfirmEmail] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
   const [isFetchingMunicipalities, setIsFetchingMunicipalities] =
     useState(false);
@@ -157,9 +161,7 @@ const SecretaryFormPage: FC = () => {
         const response = await fetch(
           `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${formData.secretary.state}/municipios`
         );
-        if (!response.ok) {
-          throw new Error("Falha ao buscar municípios");
-        }
+        if (!response.ok) throw new Error("Falha ao buscar municípios");
         const data: Municipality[] = await response.json();
         setMunicipalities(data);
       } catch (error) {
@@ -203,14 +205,11 @@ const SecretaryFormPage: FC = () => {
           address.cep
         );
       case 3:
-        // Validação da etapa 3, incluindo confirmação de e-mail e senha
         return !!(
           responsible.name &&
           responsible.role &&
           user.email &&
           user.password &&
-          confirmEmail &&
-          confirmPassword &&
           user.email === confirmEmail &&
           user.password === confirmPassword
         );
@@ -225,13 +224,9 @@ const SecretaryFormPage: FC = () => {
       keyof FullSecretaryCreationPayload,
       string
     ];
-
     setFormData((prev) => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
+      [section]: { ...prev[section], [field]: value },
     }));
   };
 
@@ -243,77 +238,51 @@ const SecretaryFormPage: FC = () => {
       secretary: {
         ...prev.secretary,
         is_state_level: isStateLevel,
-        municipality: "", // Limpa o município ao trocar de nível
-        state: isStateLevel ? prev.secretary.state : "", // Limpa o estado se voltar para municipal sem um selecionado
+        municipality: "",
+        state: isStateLevel ? prev.secretary.state : "",
       },
     }));
-    if (isStateLevel) {
-      setMunicipalities([]);
-    }
+    if (isStateLevel) setMunicipalities([]);
   };
 
   const handleStateSelectChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      secretary: {
-        ...prev.secretary,
-        state: value,
-        municipality: "", // Limpa o município ao trocar de estado
-      },
+      secretary: { ...prev.secretary, state: value, municipality: "" },
     }));
   };
 
   const handleMunicipalitySelectChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      secretary: {
-        ...prev.secretary,
-        municipality: value,
-      },
+      secretary: { ...prev.secretary, municipality: value },
     }));
   };
 
   const nextStep = () => {
-    // Validações específicas para a etapa 3 antes de avançar
-    if (currentStep === 3) {
-      if (!isStepValid) {
-        if (formData.user.email !== confirmEmail) {
-            toast.error("Os e-mails não coincidem. Verifique e tente novamente.");
-            return;
-        }
-        if (formData.user.password !== confirmPassword) {
-            toast.error("As senhas não coincidem. Verifique e tente novamente.");
-            return;
-        }
-        toast.warning("Por favor, preencha todos os campos obrigatórios.");
-        return;
+    if (!isStepValid) {
+      if (currentStep === 3) {
+        if (formData.user.email !== confirmEmail)
+          return toast.error("Os e-mails não coincidem.");
+        if (formData.user.password !== confirmPassword)
+          return toast.error("As senhas não coincidem.");
       }
-    } else if (!isStepValid) {
-         toast.warning("Por favor, preencha todos os campos obrigatórios.");
-         return;
+      return toast.warning("Por favor, preencha todos os campos obrigatórios.");
     }
-
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-    }
+    if (currentStep < steps.length) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const handleSubmit = async () => {
     setIsLoading(true);
     const toastId = toast.loading("Salvando informações...");
-
     try {
       await createFullSecretaryWorkflow(formData);
       toast.success("Secretaria cadastrada com sucesso!", { id: toastId });
-      setTimeout(() => {
-        router.push("/admin/secretary");
-      }, 1500);
+      setTimeout(() => router.push("/admin/secretary"), 1500);
     } catch (err) {
       toast.error((err as Error).message || "Ocorreu um erro desconhecido.", {
         id: toastId,
@@ -329,8 +298,8 @@ const SecretaryFormPage: FC = () => {
   };
 
   return (
-    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-slate-50 min-h-screen">
-      <div className="w-full  mx-auto">
+    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
+      <div className="w-full mx-auto">
         <div className="flex items-center gap-4 mb-4">
           <Button
             variant="outline"
@@ -341,7 +310,7 @@ const SecretaryFormPage: FC = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               {secretaryId ? "Editar Secretaria" : "Adicionar Nova Secretaria"}
             </h1>
             <p className="text-muted-foreground mt-1 text-sm md:text-base">
@@ -350,11 +319,11 @@ const SecretaryFormPage: FC = () => {
           </div>
         </div>
 
-        <div className="mb-8 mt-8 ">
+        <div className="mb-8 mt-8">
           <div className="relative">
-            <div className="absolute left-0 top-1/2 h-1 w-full -translate-y-1/2 bg-slate-200">
+            <div className="absolute left-0 top-1/2 h-1 w-full -translate-y-1/2 bg-border">
               <motion.div
-                className="h-full bg-slate-800"
+                className="h-full bg-primary"
                 animate={{
                   width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
                 }}
@@ -370,8 +339,8 @@ const SecretaryFormPage: FC = () => {
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full text-lg font-semibold transition-all duration-300 ${
                       currentStep >= step.id
-                        ? "bg-slate-800 text-white"
-                        : "bg-slate-200 text-slate-500"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {currentStep > step.id ? (
@@ -383,8 +352,8 @@ const SecretaryFormPage: FC = () => {
                   <span
                     className={`hidden sm:block text-xs font-medium ${
                       currentStep >= step.id
-                        ? "text-slate-800"
-                        : "text-slate-500"
+                        ? "text-foreground"
+                        : "text-muted-foreground"
                     }`}
                   >
                     {step.name}
@@ -396,7 +365,7 @@ const SecretaryFormPage: FC = () => {
         </div>
 
         <div className="flex justify-center">
-          <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border w-full">
+          <div className="bg-card text-card-foreground p-6 sm:p-8 rounded-2xl shadow-lg border w-full">
             <form onSubmit={(e) => e.preventDefault()}>
               <fieldset disabled={isLoading}>
                 <AnimatePresence mode="wait">
@@ -411,10 +380,10 @@ const SecretaryFormPage: FC = () => {
                     {currentStep === 1 && (
                       <div className="space-y-8">
                         <div>
-                          <Label className="text-base font-semibold text-gray-800">
+                          <Label className="text-base font-semibold text-foreground">
                             Qual o nível da secretaria?
                           </Label>
-                          <p className="text-sm text-gray-500 mb-4">
+                          <p className="text-sm text-muted-foreground mb-4">
                             Selecione uma das opções abaixo para continuar.
                           </p>
                           <RadioGroup
@@ -435,8 +404,8 @@ const SecretaryFormPage: FC = () => {
                               className={`flex flex-col items-center justify-center rounded-lg border-2 p-6 cursor-pointer transition-all ${
                                 !formData.secretary.is_state_level &&
                                 levelSelected
-                                  ? "border-slate-800 bg-slate-50"
-                                  : "border-gray-200"
+                                  ? "border-primary bg-muted"
+                                  : "border"
                               }`}
                             >
                               <RadioGroupItem
@@ -444,7 +413,7 @@ const SecretaryFormPage: FC = () => {
                                 id="r-municipal"
                                 className="sr-only"
                               />
-                              <Map className="h-8 w-8 mb-2 text-slate-600" />
+                              <Map className="h-8 w-8 mb-2 text-muted-foreground" />
                               <span className="font-semibold">Municipal</span>
                             </Label>
                             <Label
@@ -452,8 +421,8 @@ const SecretaryFormPage: FC = () => {
                               className={`flex flex-col items-center justify-center rounded-lg border-2 p-6 cursor-pointer transition-all ${
                                 formData.secretary.is_state_level &&
                                 levelSelected
-                                  ? "border-slate-800 bg-slate-50"
-                                  : "border-gray-200"
+                                  ? "border-primary bg-muted"
+                                  : "border"
                               }`}
                             >
                               <RadioGroupItem
@@ -461,7 +430,7 @@ const SecretaryFormPage: FC = () => {
                                 id="r-state"
                                 className="sr-only"
                               />
-                              <Globe className="h-8 w-8 mb-2 text-slate-600" />
+                              <Globe className="h-8 w-8 mb-2 text-muted-foreground" />
                               <span className="font-semibold">Estadual</span>
                             </Label>
                           </RadioGroup>
@@ -671,66 +640,73 @@ const SecretaryFormPage: FC = () => {
                             />
                           </div>
                         </div>
-                        {/* Seção de Acesso Atualizada */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-6 mt-2">
-                            <div className="grid gap-2">
-                                <Label htmlFor="user.email">E-mail de Acesso</Label>
-                                <Input
-                                id="user.email"
-                                name="user.email"
-                                type="email"
-                                value={formData.user.email}
-                                onChange={handleInputChange}
-                                required
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="confirm.email">Confirmar E-mail</Label>
-                                <Input
-                                id="confirm.email"
-                                name="confirm.email"
-                                type="email"
-                                value={confirmEmail}
-                                onChange={(e) => setConfirmEmail(e.target.value)}
-                                required
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="user.password">Senha de Acesso</Label>
-                                <Input
-                                id="user.password"
-                                name="user.password"
-                                type="password"
-                                value={formData.user.password}
-                                onChange={handleInputChange}
-                                required
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="confirm.password">Confirmar Senha</Label>
-                                <Input
-                                id="confirm.password"
-                                name="confirm.password"
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                />
-                            </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="user.email">E-mail de Acesso</Label>
+                            <Input
+                              id="user.email"
+                              name="user.email"
+                              type="email"
+                              value={formData.user.email}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="confirm.email">
+                              Confirmar E-mail
+                            </Label>
+                            <Input
+                              id="confirm.email"
+                              name="confirm.email"
+                              type="email"
+                              value={confirmEmail}
+                              onChange={(e) => setConfirmEmail(e.target.value)}
+                              required
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="user.password">
+                              Senha de Acesso
+                            </Label>
+                            <Input
+                              id="user.password"
+                              name="user.password"
+                              type="password"
+                              value={formData.user.password}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="confirm.password">
+                              Confirmar Senha
+                            </Label>
+                            <Input
+                              id="confirm.password"
+                              name="confirm.password"
+                              type="password"
+                              value={confirmPassword}
+                              onChange={(e) =>
+                                setConfirmPassword(e.target.value)
+                              }
+                              required
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
 
                     {currentStep === 4 && (
                       <div className="space-y-6">
-                        <h3 className="text-xl font-semibold text-slate-800 text-center md:text-left">
+                        <h3 className="text-xl font-semibold text-foreground text-center md:text-left">
                           Revise as Informações
                         </h3>
                         <div className="space-y-4">
                           <ReviewCard
                             title="Dados da Secretaria"
                             icon={
-                              <Building className="h-5 w-5 text-slate-600" />
+                              <Building className="h-5 w-5 text-muted-foreground" />
                             }
                           >
                             <ReviewItem
@@ -759,7 +735,9 @@ const SecretaryFormPage: FC = () => {
 
                           <ReviewCard
                             title="Endereço"
-                            icon={<Home className="h-5 w-5 text-slate-600" />}
+                            icon={
+                              <Home className="h-5 w-5 text-muted-foreground" />
+                            }
                           >
                             <ReviewItem
                               label="Logradouro"
@@ -783,7 +761,9 @@ const SecretaryFormPage: FC = () => {
 
                           <ReviewCard
                             title="Responsável e Acesso"
-                            icon={<User className="h-5 w-5 text-slate-600" />}
+                            icon={
+                              <User className="h-5 w-5 text-muted-foreground" />
+                            }
                           >
                             <ReviewItem
                               label="Nome"
@@ -807,7 +787,7 @@ const SecretaryFormPage: FC = () => {
                             />
                           </ReviewCard>
                         </div>
-                        <p className="text-xs text-slate-500 text-center !mt-8">
+                        <p className="text-xs text-muted-foreground text-center !mt-8">
                           Ao clicar em "Salvar Secretaria", você confirma que
                           todas as informações estão corretas.
                         </p>

@@ -28,7 +28,7 @@ import {
 } from "../services/api";
 
 // --- TIPOS E CONSTANTES INTERNAS ---
-const API_DOMAIN = "http://212.85.14.247:4000/";
+const API_DOMAIN = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 interface UnifiedPreview {
   key: string;

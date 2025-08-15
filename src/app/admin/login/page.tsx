@@ -95,6 +95,7 @@ export default function Login() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const base_url = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -105,7 +106,7 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://212.85.14.247:4000/api/auth/login", {
+      const response = await fetch(`${base_url}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -144,7 +145,7 @@ export default function Login() {
         </div>
 
         {/* Card Component */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-[#030712] rounded-lg shadow-md border border-gray-200 dark:border-gray-800">
           {/* Card Header */}
           <div className="p-6 text-center">
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-50">

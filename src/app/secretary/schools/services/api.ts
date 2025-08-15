@@ -1,11 +1,6 @@
-// src/app/admin/schools/services/api.ts
 
-// --- TIPOS DE DADOS PARA A PÁGINA DE LISTAGEM ---
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-/**
- * Define a estrutura de dados retornada pela API para um único item da lista de escolas.
- * Usado na página de listagem (page.tsx).
- */
 export interface SchoolApiResponse {
     id: number;
     name: string;
@@ -133,7 +128,7 @@ export interface SecretarySelectItem {
  * Busca a lista completa de escolas da API para a página de listagem.
  */
 export const getSchools = async (): Promise<SchoolApiResponse[]> => {
-    const response = await fetch("http://212.85.14.247:4000/api/schools");
+    const response = await fetch(`${API_BASE_URL}/schools`);
     if (!response.ok) {
         throw new Error("Falha ao buscar os dados das escolas.");
     }
@@ -144,7 +139,7 @@ export const getSchools = async (): Promise<SchoolApiResponse[]> => {
  * Busca os dados detalhados de uma única escola pelo ID.
  */
 export const getSchoolById = async (id: number): Promise<SchoolDetailApiResponse> => {
-    const response = await fetch(`http://212.85.14.247:4000/api/schools/${id}`);
+    const response = await fetch(`${API_BASE_URL}/schools/${id}`);
     if (!response.ok) {
         throw new Error("Falha ao buscar os dados da escola.");
     }
@@ -158,7 +153,7 @@ export const getSchoolsBySecretaryId = async (
     secretaryId: number
 ): Promise<SchoolApiResponse[]> => {
     const response = await fetch(
-        `http://212.85.14.247:4000/api/schools/by-secretary/${secretaryId}`
+        `${API_BASE_URL}/schools/by-secretary/${secretaryId}`
     );
     if (!response.ok) {
         throw new Error(
@@ -173,7 +168,7 @@ export const getSchoolsBySecretaryId = async (
  * Busca a lista de secretarias para preencher o combobox de seleção no formulário.
  */
 export async function getSecretariesForSelect(): Promise<SecretarySelectItem[]> {
-    const response = await fetch("http://212.85.14.247:4000/api/secretaries");
+    const response = await fetch(`${API_BASE_URL}/secretaries`);
     if (!response.ok) {
         throw new Error("Não foi possível carregar as secretarias.");
     }
@@ -182,7 +177,7 @@ export async function getSecretariesForSelect(): Promise<SecretarySelectItem[]> 
 }
 
 export const deleteSchool = async (id: number): Promise<void> => {
-    const response = await fetch(`http://212.85.14.247:4000/api/schools/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/schools/${id}`, {
         method: "DELETE",
     });
     if (!response.ok) {
@@ -203,7 +198,7 @@ export async function createFullSchoolWorkflow(payload: FullSchoolCreationPayloa
         user: payload.user,
     };
 
-    const response = await fetch("http://212.85.14.247:4000/api/schools", {
+    const response = await fetch(`${API_BASE_URL}/schools`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(flattenedPayload),
@@ -220,7 +215,7 @@ export async function createFullSchoolWorkflow(payload: FullSchoolCreationPayloa
  * Envia todos os dados do formulário para o backend para ATUALIZAR uma escola.
  */
 export async function updateFullSchoolWorkflow(id: number, payload: FullSchoolUpdatePayload) {
-    const response = await fetch(`http://212.85.14.247:4000/api/schools/full/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/schools/full/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
