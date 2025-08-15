@@ -173,7 +173,11 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function AdminAreaLayout({ children }: { children: React.ReactNode }) {
+export default function AdminAreaLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const isProtectedRoute = protectedRoutes.includes(pathname);
 
