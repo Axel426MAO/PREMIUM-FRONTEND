@@ -106,6 +106,29 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen w-full  font-sans">
+      {/* Coluna da Imagem */}
+      <div className="relative hidden lg:block lg:w-1/2">
+        <img
+          src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?q=80&w=2128&auto=format&fit=crop"
+          alt="Pessoa lendo um livro em uma biblioteca"
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src =
+              "https://placehold.co/1064x1200/374151/FFFFFF?text=Imagem+Indispon%C3%ADvel";
+            (e.target as HTMLImageElement).alt = "Imagem de fallback";
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div className="relative flex h-full flex-col items-start justify-end p-12">
+          <h2 className="text-4xl font-bold text-white leading-tight">
+            O conhecimento que abre portas para o futuro.
+          </h2>
+          <p className="mt-4 max-w-md text-lg text-gray-200">
+            Nossa plataforma une conteúdo de qualidade e tecnologia para
+            transformar a educação.
+          </p>
+        </div>
+      </div>
       {/* Coluna do Formulário */}
       <div className="flex w-full flex-col items-center justify-center p-6 lg:w-1/2">
         <div className="w-full max-w-sm">
@@ -250,30 +273,6 @@ export default function LoginPage() {
           <p className="mt-10 text-center text-sm text-gray-600 dark:text-gray-400">
             &copy; {new Date().getFullYear()} Editora Premium. Todos os direitos
             reservados.
-          </p>
-        </div>
-      </div>
-
-      {/* Coluna da Imagem */}
-      <div className="relative hidden lg:block lg:w-1/2">
-        <img
-          src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?q=80&w=2128&auto=format&fit=crop"
-          alt="Pessoa lendo um livro em uma biblioteca"
-          className="absolute inset-0 h-full w-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              "https://placehold.co/1064x1200/374151/FFFFFF?text=Imagem+Indispon%C3%ADvel";
-            (e.target as HTMLImageElement).alt = "Imagem de fallback";
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-        <div className="relative flex h-full flex-col items-start justify-end p-12">
-          <h2 className="text-4xl font-bold text-white leading-tight">
-            O conhecimento que abre portas para o futuro.
-          </h2>
-          <p className="mt-4 max-w-md text-lg text-gray-200">
-            Nossa plataforma une conteúdo de qualidade e tecnologia para
-            transformar a educação.
           </p>
         </div>
       </div>

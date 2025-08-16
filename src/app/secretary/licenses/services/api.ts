@@ -4,12 +4,14 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // --- INTERFACES E TIPOS ---
+export type BackendBatchStatus = 'CRIADO' | 'ENVIADO' | 'RECEBIDO' | 'PENDENTE' | 'ATIVO' | 'EXPIRADO';
+export type BackendKeyStatus = 'CRIADO' | 'ENVIADO' | 'RECEBIDO' | 'PENDENTE' | 'ATIVO' | 'EXPIRADO';
 
 // Interface para a lista de lotes (visão resumida)
 export interface LicenseBatchApiResponse {
   id: number;
   quantity: number;
-  status: 'PENDING_PAYMENT' | 'PAID' | 'SENT' | 'RECEIVED' | 'PARTITIONED' | 'CANCELLED';
+  status: BackendBatchStatus; // <-- Usando o tipo corrigido
   createdAt: string;
   book: {
     id: number;
@@ -32,7 +34,7 @@ export interface LicenseBatchApiResponse {
 export interface LicenseBatchDetails {
   id: number;
   quantity: number;
-  status: 'PENDING_PAYMENT' | 'PAID' | 'SENT' | 'RECEIVED' | 'PARTITIONED' | 'CANCELLED';
+  status: BackendBatchStatus; // <-- Usando o tipo corrigido
   createdAt: string;
   updatedAt: string;
   paidAt: string | null;

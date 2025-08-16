@@ -30,16 +30,9 @@ import {
 // --- TIPOS E CONSTANTES INTERNAS ---
 const API_DOMAIN = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-interface UnifiedPreview {
-  key: string;
-  id?: number;
-  index?: number;
-  url: string;
-  name: string;
-  isNew: boolean;
-  isImage: boolean;
-  type: "cover" | "doc";
-}
+// MODIFICAÇÃO 1: Definindo as extensões permitidas
+const ALLOWED_IMAGE_EXTENSIONS = ["svg", "png", "jpg", "jpeg"];
+const ALLOWED_DOC_EXTENSIONS = ["pdf", "epub"];
 
 const isImageFile = (fileName: string): boolean => {
   return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
@@ -72,7 +65,6 @@ export default function BookFormPage() {
     (ApiFile & { url: string }) | null
   >(null);
   const [docsToUpload, setDocsToUpload] = useState<File[]>([]);
-  // ✅ CORREÇÃO 1: Removido o 'type' daqui, pois não era necessário.
   const [newDocPreviews, setNewDocPreviews] = useState<
     Array<{ url: string; name: string }>
   >([]);
@@ -87,7 +79,7 @@ export default function BookFormPage() {
     if (bookId) {
       const fetchBookData = async () => {
         setIsLoading(true);
-        setError(null); // Limpa erros anteriores
+        setError(null);
         try {
           const [bookData, filesFromApi] = await Promise.all([
             getBookById(Number(bookId)),
@@ -115,7 +107,6 @@ export default function BookFormPage() {
           setExistingDocs(docs);
         } catch (err) {
           console.error("Erro ao buscar dados:", err);
-          // Define um erro amigável para o usuário
           setError(
             "Falha na comunicação com o servidor. Verifique se ele está ativo."
           );
@@ -142,28 +133,50 @@ export default function BookFormPage() {
     }));
   };
 
+  // MODIFICAÇÃO 2: Adicionando validação de extensão de arquivo
   const handleFileChange = (
     e: ChangeEvent<HTMLInputElement>,
     fileType: "cover" | "doc"
   ) => {
     if (!e.target.files) return;
+    const files = Array.from(e.target.files);
 
-    if (fileType === "cover" && e.target.files[0]) {
-      const file = e.target.files[0];
+    if (fileType === "cover") {
+      const file = files[0];
+      if (!file) return;
+
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      if (!extension || !ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
+        alert(`Arquivo inválido. Apenas imagens (${ALLOWED_IMAGE_EXTENSIONS.join(", ")}) são permitidas.`);
+        e.target.value = ""; // Limpa o input
+        return;
+      }
       setCoverImageToUpload(file);
       if (coverImagePreview) URL.revokeObjectURL(coverImagePreview);
       setCoverImagePreview(URL.createObjectURL(file));
     } else {
-      const newFiles = Array.from(e.target.files);
-      setDocsToUpload((prev) => [...prev, ...newFiles]);
-      // ✅ CORREÇÃO 2: Removido o 'type' daqui para corresponder ao estado.
-      const newPreviews = newFiles.map((file) => ({
-        url: URL.createObjectURL(file),
-        name: file.name,
-      }));
-      setNewDocPreviews((prev) => [...prev, ...newPreviews]);
+      const validDocs = files.filter(file => {
+        const extension = file.name.split(".").pop()?.toLowerCase();
+        return extension && ALLOWED_DOC_EXTENSIONS.includes(extension);
+      });
+      
+      const invalidCount = files.length - validDocs.length;
+      if (invalidCount > 0) {
+        alert(`${invalidCount} arquivo(s) foram ignorados por não serem PDF ou EPUB.`);
+      }
+
+      if (validDocs.length > 0) {
+        setDocsToUpload((prev) => [...prev, ...validDocs]);
+        const newPreviews = validDocs.map((file) => ({
+          url: URL.createObjectURL(file),
+          name: file.name,
+        }));
+        setNewDocPreviews((prev) => [...prev, ...newPreviews]);
+      }
+      e.target.value = ""; // Limpa o input para permitir re-seleção
     }
   };
+
 
   const removeNewFile = (index: number, fileType: "cover" | "doc") => {
     if (fileType === "cover") {
@@ -443,7 +456,7 @@ export default function BookFormPage() {
                     <span className="font-semibold">Adicionar Capa</span>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Apenas uma imagem
+                    SVG, PNG, ou JPG
                   </p>
                 </div>
                 <Input
@@ -451,7 +464,8 @@ export default function BookFormPage() {
                   type="file"
                   className="hidden"
                   onChange={(e) => handleFileChange(e, "cover")}
-                  accept="image/*"
+                  // MODIFICAÇÃO 3: Especificando os tipos de imagem aceitos
+                  accept=".svg, .png, .jpg, .jpeg"
                   disabled={
                     isLoading || !!existingCoverImage || !!coverImageToUpload
                   }
@@ -466,7 +480,7 @@ export default function BookFormPage() {
                   <p className="mb-2 text-sm text-muted-foreground">
                     <span className="font-semibold">Adicionar Documentos</span>
                   </p>
-                  <p className="text-xs text-muted-foreground">PDFs, etc.</p>
+                  <p className="text-xs text-muted-foreground">PDF ou EPUB</p>
                 </div>
                 <Input
                   id="doc-input"
@@ -474,6 +488,8 @@ export default function BookFormPage() {
                   className="hidden"
                   onChange={(e) => handleFileChange(e, "doc")}
                   multiple
+                  // MODIFICAÇÃO 4: Especificando os tipos de documento aceitos
+                  accept=".pdf, .epub"
                   disabled={isLoading}
                 />
               </label>
@@ -490,7 +506,7 @@ export default function BookFormPage() {
               Cancelar
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "A guardar..." : "Guardar Livro"}
+              {isLoading ? "Carregando..." : "Criar Livro"}
             </Button>
           </div>
         </form>

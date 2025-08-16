@@ -1,4 +1,3 @@
-// app/admin/schools/form/page.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect, type FormEvent, type ChangeEvent } from "react";
@@ -18,7 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+// O Switch não é mais necessário
+// import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
@@ -33,7 +33,8 @@ export default function SchoolFormPage() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FullSchoolCreationPayload>({
-    school: { name: "", is_private: true, secretary_id: null },
+    // MODIFICAÇÃO 1: 'is_private' definido como 'false' por padrão.
+    school: { name: "", is_private: false, secretary_id: null },
     address: { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" },
     responsible: { name: "", role: "Diretor(a)", whatsapp: "", phone: "" },
     user: { email: "", password: "", user_type: "responsible_school" },
@@ -69,17 +70,7 @@ export default function SchoolFormPage() {
     }));
   };
 
-  const handleSwitchChange = (isPrivate: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      school: {
-        ...prev.school,
-        is_private: isPrivate,
-        // Limpa o ID da secretaria se a escola for marcada como privada
-        secretary_id: isPrivate ? null : prev.school.secretary_id,
-      },
-    }));
-  };
+  // MODIFICAÇÃO 2: A função handleSwitchChange foi removida pois não há mais o Switch.
   
   const handleSecretarySelect = (secretaryId: number) => {
     setFormData((prev) => ({
@@ -99,7 +90,7 @@ export default function SchoolFormPage() {
     try {
       await createFullSchoolWorkflow(formData);
       toast.success("Escola cadastrada com sucesso!", { id: toastId });
-      setTimeout(() => router.push("/admin/schools"), 1500);
+      setTimeout(() => router.push("/secretary/schools"), 1500);
     } catch (err) {
       toast.error((err as Error).message, { id: toastId });
       setIsLoading(false);
@@ -125,7 +116,7 @@ export default function SchoolFormPage() {
               {schoolId ? "Editar Escola" : "Adicionar Nova Escola"}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Preencha os dados para cadastrar uma nova escola no sistema.
+              Preencha os dados para cadastrar uma nova escola pública no sistema.
             </p>
           </div>
         </div>
@@ -167,123 +158,117 @@ export default function SchoolFormPage() {
                         <Label htmlFor="school.name">Nome da Escola</Label>
                         <Input id="school.name" name="school.name" value={formData.school.name} onChange={handleInputChange} required />
                       </div>
-                      <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 bg-slate-50">
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium leading-none">Escola Privada</p>
-                          <p className="text-sm text-slate-500">Marque se for uma instituição de ensino privada.</p>
-                        </div>
-                        <Switch id="school.is_private" checked={formData.school.is_private} onCheckedChange={handleSwitchChange} />
+
+                      {/* MODIFICAÇÃO 3: O bloco do Switch para "Escola Privada" foi completamente removido daqui. */}
+                      
+                      {/* MODIFICAÇÃO 4: O seletor de secretaria agora é exibido diretamente, sem condicionais. */}
+                      <div className="grid gap-2">
+                        <Label>Secretaria Vinculada</Label>
+                        <Popover open={openSecretaryPopover} onOpenChange={setOpenSecretaryPopover}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" role="combobox" className="w-full justify-between">
+                              {formData.school.secretary_id ? secretaries.find(s => s.id === formData.school.secretary_id)?.name : "Selecione uma secretaria..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                              <CommandInput placeholder="Buscar secretaria..." />
+                              <CommandList>
+                                <CommandEmpty>Nenhuma secretaria encontrada.</CommandEmpty>
+                                <CommandGroup>
+                                  {secretaries.map((s) => (
+                                    <CommandItem key={s.id} value={s.name} onSelect={() => handleSecretarySelect(s.id)}>
+                                      <Check className={`mr-2 h-4 w-4 ${formData.school.secretary_id === s.id ? "opacity-100" : "opacity-0"}`} />
+                                      {s.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
-                      {!formData.school.is_private && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.3 }}>
-                          <div className="grid gap-2">
-                            <Label>Secretaria Vinculada (Obrigatório para escolas públicas)</Label>
-                            <Popover open={openSecretaryPopover} onOpenChange={setOpenSecretaryPopover}>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" role="combobox" className="w-full justify-between">
-                                  {formData.school.secretary_id ? secretaries.find(s => s.id === formData.school.secretary_id)?.name : "Selecione uma secretaria..."}
-                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                <Command>
-                                  <CommandInput placeholder="Buscar secretaria..." />
-                                  <CommandList>
-                                    <CommandEmpty>Nenhuma secretaria encontrada.</CommandEmpty>
-                                    <CommandGroup>
-                                      {secretaries.map((s) => (
-                                        <CommandItem key={s.id} value={s.name} onSelect={() => handleSecretarySelect(s.id)}>
-                                          <Check className={`mr-2 h-4 w-4 ${formData.school.secretary_id === s.id ? "opacity-100" : "opacity-0"}`} />
-                                          {s.name}
-                                        </CommandItem>
-                                      ))}
-                                    </CommandGroup>
-                                  </CommandList>
-                                </Command>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        </motion.div>
-                      )}
                     </div>
                   )}
 
                   {/* Etapa 2: Endereço */}
                   {currentStep === 2 && (
-                     <div className="space-y-6">
-                       <div className="grid sm:grid-cols-4 gap-4">
-                         <div className="grid gap-2 sm:col-span-3">
-                           <Label htmlFor="address.street">Rua / Avenida</Label>
-                           <Input id="address.street" name="address.street" value={formData.address.street} onChange={handleInputChange} required />
-                         </div>
-                         <div className="grid gap-2">
-                           <Label htmlFor="address.number">Número</Label>
-                           <Input id="address.number" name="address.number" value={formData.address.number} onChange={handleInputChange} />
-                         </div>
+                       <div className="space-y-6">
+                           <div className="grid sm:grid-cols-4 gap-4">
+                             <div className="grid gap-2 sm:col-span-3">
+                               <Label htmlFor="address.street">Rua / Avenida</Label>
+                               <Input id="address.street" name="address.street" value={formData.address.street} onChange={handleInputChange} required />
+                             </div>
+                             <div className="grid gap-2">
+                               <Label htmlFor="address.number">Número</Label>
+                               <Input id="address.number" name="address.number" value={formData.address.number} onChange={handleInputChange} />
+                             </div>
+                           </div>
+                           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                             <div className="grid gap-2">
+                               <Label htmlFor="address.neighborhood">Bairro</Label>
+                               <Input id="address.neighborhood" name="address.neighborhood" value={formData.address.neighborhood} onChange={handleInputChange} required />
+                             </div>
+                             <div className="grid gap-2">
+                               <Label htmlFor="address.city">Cidade</Label>
+                               <Input id="address.city" name="address.city" value={formData.address.city} onChange={handleInputChange} required />
+                             </div>
+                             <div className="grid gap-2">
+                               <Label htmlFor="address.state">Estado (UF)</Label>
+                               <Input id="address.state" name="address.state" value={formData.address.state} onChange={handleInputChange} required maxLength={2}/>
+                             </div>
+                             <div className="grid gap-2">
+                               <Label htmlFor="address.cep">CEP</Label>
+                               <Input id="address.cep" name="address.cep" value={formData.address.cep} onChange={handleInputChange} required />
+                             </div>
+                           </div>
                        </div>
-                       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                         <div className="grid gap-2">
-                           <Label htmlFor="address.neighborhood">Bairro</Label>
-                           <Input id="address.neighborhood" name="address.neighborhood" value={formData.address.neighborhood} onChange={handleInputChange} required />
-                         </div>
-                         <div className="grid gap-2">
-                           <Label htmlFor="address.city">Cidade</Label>
-                           <Input id="address.city" name="address.city" value={formData.address.city} onChange={handleInputChange} required />
-                         </div>
-                         <div className="grid gap-2">
-                           <Label htmlFor="address.state">Estado (UF)</Label>
-                           <Input id="address.state" name="address.state" value={formData.address.state} onChange={handleInputChange} required maxLength={2}/>
-                         </div>
-                         <div className="grid gap-2">
-                           <Label htmlFor="address.cep">CEP</Label>
-                           <Input id="address.cep" name="address.cep" value={formData.address.cep} onChange={handleInputChange} required />
-                         </div>
-                       </div>
-                     </div>
                   )}
                   
                   {/* Etapa 3: Acesso */}
                   {currentStep === 3 && (
-                     <div className="space-y-6">
-                       <h3 className="text-lg font-medium border-b pb-2">Dados do Responsável Principal</h3>
-                       <div className="grid sm:grid-cols-2 gap-4">
-                         <div className="grid gap-2">
-                           <Label htmlFor="responsible.name">Nome do Responsável</Label>
-                           <Input id="responsible.name" name="responsible.name" value={formData.responsible.name} onChange={handleInputChange} required />
-                         </div>
-                         <div className="grid gap-2">
-                           <Label htmlFor="responsible.role">Cargo</Label>
-                           <Input id="responsible.role" name="responsible.role" value={formData.responsible.role} onChange={handleInputChange} required />
-                         </div>
+                       <div className="space-y-6">
+                           <h3 className="text-lg font-medium border-b pb-2">Dados do Responsável Principal</h3>
+                           <div className="grid sm:grid-cols-2 gap-4">
+                             <div className="grid gap-2">
+                               <Label htmlFor="responsible.name">Nome do Responsável</Label>
+                               <Input id="responsible.name" name="responsible.name" value={formData.responsible.name} onChange={handleInputChange} required />
+                             </div>
+                             <div className="grid gap-2">
+                               <Label htmlFor="responsible.role">Cargo</Label>
+                               <Input id="responsible.role" name="responsible.role" value={formData.responsible.role} onChange={handleInputChange} required />
+                             </div>
+                           </div>
+                           
+                           <h3 className="text-lg font-medium border-b pb-2 pt-4">Credenciais de Acesso</h3>
+                           <div className="grid sm:grid-cols-2 gap-4">
+                             <div className="grid gap-2">
+                               <Label htmlFor="user.email">E-mail de Acesso</Label>
+                               <Input id="user.email" name="user.email" type="email" value={formData.user.email} onChange={handleInputChange} required />
+                             </div>
+                             <div className="grid gap-2">
+                               <Label htmlFor="user.password">Senha de Acesso</Label>
+                               <Input id="user.password" name="user.password" type="password" value={formData.user.password} onChange={handleInputChange} required />
+                             </div>
+                           </div>
                        </div>
-                       
-                       <h3 className="text-lg font-medium border-b pb-2 pt-4">Credenciais de Acesso</h3>
-                       <div className="grid sm:grid-cols-2 gap-4">
-                         <div className="grid gap-2">
-                           <Label htmlFor="user.email">E-mail de Acesso</Label>
-                           <Input id="user.email" name="user.email" type="email" value={formData.user.email} onChange={handleInputChange} required />
-                         </div>
-                         <div className="grid gap-2">
-                           <Label htmlFor="user.password">Senha de Acesso</Label>
-                           <Input id="user.password" name="user.password" type="password" value={formData.user.password} onChange={handleInputChange} required />
-                         </div>
-                       </div>
-                     </div>
                   )}
 
                   {/* Etapa 4: Revisão */}
                   {currentStep === 4 && (
-                     <div className="space-y-6">
-                       <h3 className="text-xl font-semibold text-slate-800">Revise as Informações</h3>
-                       <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/50 p-4 text-sm">
-                         <p><strong>Escola:</strong> {formData.school.name || 'Não preenchido'}</p>
-                         <p><strong>Tipo:</strong> {formData.school.is_private ? 'Privada' : 'Pública'}</p>
-                         {!formData.school.is_private && <p><strong>Secretaria:</strong> {secretaries.find(s=>s.id === formData.school.secretary_id)?.name || 'Nenhuma'}</p>}
-                         <p><strong>Endereço:</strong> {`${formData.address.street}, ${formData.address.number}` || 'Não preenchido'}</p>
-                         <p><strong>Responsável:</strong> {formData.responsible.name || 'Não preenchido'} ({formData.user.email || 'N/A'})</p>
+                       <div className="space-y-6">
+                           <h3 className="text-xl font-semibold text-slate-800">Revise as Informações</h3>
+                           <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/50 p-4 text-sm">
+                             <p><strong>Escola:</strong> {formData.school.name || 'Não preenchido'}</p>
+                             {/* MODIFICAÇÃO 5: Removido o campo "Tipo" e a condicional para "Secretaria" */}
+                             <p><strong>Tipo:</strong> Pública</p>
+                             <p><strong>Secretaria:</strong> {secretaries.find(s=>s.id === formData.school.secretary_id)?.name || 'Não preenchido'}</p>
+                             <p><strong>Endereço:</strong> {`${formData.address.street}, ${formData.address.number}` || 'Não preenchido'}</p>
+                             <p><strong>Responsável:</strong> {formData.responsible.name || 'Não preenchido'} ({formData.user.email || 'N/A'})</p>
+                           </div>
+                           <p className="text-xs text-slate-500 text-center">Ao clicar em "Salvar Escola", você confirma que todas as informações estão corretas.</p>
                        </div>
-                       <p className="text-xs text-slate-500 text-center">Ao clicar em "Salvar Escola", você confirma que todas as informações estão corretas.</p>
-                     </div>
                   )}
                 </motion.div>
               </AnimatePresence>

@@ -12,11 +12,10 @@ import {
   PlusCircle,
   ArrowRight,
   UserCheck,
-  Loader2, // Importar ícone de loading
+  Loader2,
+  Building2, // MODIFICAÇÃO: Ícone para escolas privadas
 } from "lucide-react";
 import { getSchoolsBySecretaryId } from "./schools/services/api";
-
-// 2. Importar a função da API de escolas
 
 // Paleta de cores (sem alterações)
 const themeColors = {
@@ -121,41 +120,48 @@ function ActionCard({
   );
 }
 
-
 // Componente Principal Home (com a nova lógica)
 export default function Home() {
   const { user } = useUserStore();
   const responsibleName = user?.responsible?.name;
 
-  // 3. Adicionar estados para os dados do dashboard
-  const [schoolCount, setSchoolCount] = useState(0);
+  // MODIFICAÇÃO: Estado unificado para as estatísticas
+  const [stats, setStats] = useState({
+    publicSchools: 0,
+    privateSchools: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 4. Adicionar useEffect para buscar os dados
   useEffect(() => {
     const fetchDashboardData = async () => {
-      // Impede a chamada da API se o usuário ainda não estiver carregado
       if (!user) {
         setIsLoading(false);
         return;
       }
 
-      // Apenas busca dados se for um responsável de secretaria
       if (user.user_type === "responsible_secretary") {
         try {
-          // Valida se o ID da secretaria existe
           if (!user.responsible?.secretary?.id) {
             throw new Error("ID da secretaria não encontrado.");
           }
-          
-          // Chama a API com o ID da secretaria do usuário
+
           const schools = await getSchoolsBySecretaryId(
             user.responsible.secretary.id
           );
-          
-          // Atualiza o estado com o número de escolas
-          setSchoolCount(schools.length);
+
+          // MODIFICAÇÃO: Lógica para contar escolas públicas e privadas
+          const publicSchoolsCount = schools.filter(
+            (school) => !school.is_private
+          ).length;
+          const privateSchoolsCount = schools.filter(
+            (school) => school.is_private
+          ).length;
+
+          setStats({
+            publicSchools: publicSchoolsCount,
+            privateSchools: privateSchoolsCount,
+          });
 
         } catch (err) {
           console.error("Erro ao buscar dados do dashboard:", err);
@@ -164,29 +170,27 @@ export default function Home() {
           setIsLoading(false);
         }
       } else {
-        // Para outros tipos de usuário (ex: admin), para o loading
         setIsLoading(false);
-        // Aqui você poderia adicionar a lógica para buscar os dados de admin
       }
     };
 
     fetchDashboardData();
-  }, [user]); // A busca é refeita se o objeto 'user' mudar
-
+  }, [user]);
 
   return (
-    <main className="flex flex-1 flex-col  p-6 md:p-10">
-      <header className="mb-8">
+    <main className="flex flex-1 flex-col  p-6 md:p-10 md:py-6">
+      <header className="mb-4">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Bem-vindo(a) de volta
+          Bem-vindo(a)
           {responsibleName ? `, ${responsibleName}` : ""}!
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Aqui está um resumo das escolas, livros e licenças relacionados à sua secretaria.
+          Aqui está um resumo das escolas, livros e licenças relacionados à sua
+          secretaria.
         </p>
       </header>
 
-      <div className="space-y-10">
+      <div className="">
         <section aria-labelledby="acoes-rapidas-heading">
           <h2
             id="acoes-rapidas-heading"
@@ -215,22 +219,43 @@ export default function Home() {
         <section aria-labelledby="visao-geral-heading">
           <h2
             id="visao-geral-heading"
-            className="text-xl font-semibold tracking-tight text-foreground mb-4"
+            className="text-xl font-semibold tracking-tight text-foreground mb-4 mt-4"
           >
             Visão Geral
           </h2>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* MODIFICAÇÃO: Grid ajustado para 5 colunas para melhor encaixe */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {/* MODIFICAÇÃO: Card de Escolas Públicas */}
             <StatCard
               href="/admin/schools"
-              title="Suas Escolas"
-              value={schoolCount}
+              title="Escolas Públicas"
+              value={stats.publicSchools}
               icon={School}
               colorClass={themeColors.schools.text}
-              isLoading={isLoading} // 5. Passar o estado de loading
+              isLoading={isLoading}
+            />
+            {/* MODIFICAÇÃO: Card de Escolas Privadas */}
+            <StatCard
+              href="/admin/schools"
+              title="Escolas Privadas"
+              value={stats.privateSchools}
+              icon={Building2}
+              colorClass={themeColors.schools.text}
+              isLoading={isLoading}
             />
             <StatCard
               href="/admin/licenses"
               title="Licenças Recebidas"
+              value={0} // TODO: Conectar com o backend
+              icon={Layers}
+              colorClass={themeColors.licenses.text}
+              isLoading={isLoading}
+            />
+
+
+            <StatCard
+              href="/admin/licenses"
+              title="Licenças Enviadas"
               value={0} // TODO: Conectar com o backend
               icon={Layers}
               colorClass={themeColors.licenses.text}

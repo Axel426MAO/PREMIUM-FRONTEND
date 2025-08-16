@@ -45,12 +45,11 @@ const LoginDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       {/* Botão principal do Dropdown */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={()=>{window.location.href = './onboard'}}
         className="flex items-center gap-2 bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 font-semibold px-4 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-200 transition-all"
       >
         <LogIn className="h-4 w-4" />
         Acessar Plataforma
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Menu do Dropdown */}

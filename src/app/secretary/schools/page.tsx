@@ -141,7 +141,7 @@ export default function SchoolsPage() {
   };
 
   const handleEdit = (id: number) => {
-    router.push(`/admin/schools/edit?id=${id}`);
+    router.push(`/secretary/schools/edit?id=${id}`);
   };
 
   // Lógica de filtragem simplificada, apenas com a busca por texto
@@ -181,7 +181,7 @@ export default function SchoolsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button onClick={() => router.push("/admin/schools/form")}>
+          <Button onClick={() => router.push("/secretary/schools/form")}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Adicionar
           </Button>

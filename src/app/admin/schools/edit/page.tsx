@@ -52,13 +52,14 @@ const FormSection: FC<{
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, description, icon, children }) => (
-  <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
-    <div className="p-5 border-b border-slate-200">
+  // MODIFICADO: Cores adaptadas para tema escuro/claro
+  <div className="bg-card rounded-lg border shadow-sm">
+    <div className="p-5 border-b">
       <div className="flex items-center gap-3">
         {icon}
-        <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
+        <h3 className="text-lg font-semibold text-card-foreground">{title}</h3>
       </div>
-      <p className="text-sm text-slate-500 mt-1 ml-9">{description}</p>
+      <p className="text-sm text-muted-foreground mt-1 ml-9">{description}</p>
     </div>
     <div className="p-6">{children}</div>
   </div>
@@ -186,22 +187,25 @@ export default function EditSchoolPage() {
 
   if (isFetchingData) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
+      // MODIFICADO: Cores adaptadas
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (!formData) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50 text-red-600">
+      // MODIFICADO: Cores adaptadas
+      <div className="flex items-center justify-center h-screen bg-background text-destructive">
         Não foi possível carregar o formulário de edição.
       </div>
     );
   }
 
   return (
-    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-slate-50 min-h-screen">
+    // MODIFICADO: Cor de fundo principal
+    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
       <div className=" mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Button
@@ -213,7 +217,8 @@ export default function EditSchoolPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+            {/* MODIFICADO: Cor do texto do título */}
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               Editar Escola
             </h1>
             <p className="text-muted-foreground">
@@ -228,7 +233,7 @@ export default function EditSchoolPage() {
             <FormSection
               title="Dados da Escola"
               description="Informações principais sobre a instituição de ensino."
-              icon={<Building2 className="h-6 w-6 text-slate-500" />}
+              icon={<Building2 className="h-6 w-6 text-muted-foreground" />}
             >
               <div className="space-y-6">
                 <div className="grid gap-2">
@@ -241,12 +246,13 @@ export default function EditSchoolPage() {
                     required
                   />
                 </div>
-                <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 bg-slate-50/80">
+                {/* MODIFICADO: Cores adaptadas */}
+                <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 bg-muted/50">
                   <div className="space-y-1">
                     <p className="text-sm font-medium leading-none">
                       Escola Privada
                     </p>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-muted-foreground">
                       Marque se for uma instituição de ensino privada.
                     </p>
                   </div>
@@ -321,7 +327,7 @@ export default function EditSchoolPage() {
             <FormSection
               title="Endereço"
               description="Localização física onde a escola está estabelecida."
-              icon={<Home className="h-6 w-6 text-slate-500" />}
+              icon={<Home className="h-6 w-6 text-muted-foreground" />}
             >
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
@@ -395,7 +401,7 @@ export default function EditSchoolPage() {
             <FormSection
               title="Responsável e Acesso"
               description="Dados do gestor principal e suas credenciais de acesso ao sistema."
-              icon={<User className="h-6 w-6 text-slate-500" />}
+              icon={<User className="h-6 w-6 text-muted-foreground" />}
             >
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -422,7 +428,8 @@ export default function EditSchoolPage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-200">
+                {/* MODIFICADO: Cor da borda adaptada */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t">
                   <div className="grid gap-2">
                     <Label htmlFor="user.email">E-mail de Acesso</Label>
                     <Input

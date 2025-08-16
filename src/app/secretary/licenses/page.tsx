@@ -33,9 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   MoreHorizontal,
-  PlusCircle, // Ícone adicionado
   Trash2,
-  Pencil, // Ícone adicionado
   Search,
   BookOpen,
 } from "lucide-react";
@@ -48,11 +46,40 @@ import {
 import { toast } from "sonner";
 import { useUserStore } from "@/app/store/userStore";
 
-// --- TIPOS ---
+// --- MODIFICAÇÃO 1: TIPAGEM E MAPEAMENTO DE STATUS ---
+type LicenseBatchStatus = LicenseBatchApiResponse["status"];
 type LicenseBatchViewData = LicenseBatchApiResponse & {
   formattedCreatedAt: string;
   customerName: string;
 };
+
+// Mapeamento para os textos dos status
+const statusLabels: Record<LicenseBatchStatus, string> = {
+  CRIADO: "CRIADO",
+  ENVIADO: "ENVIADO",
+  RECEBIDO: "RECEBIDO",
+  ATIVO: "ATIVO",
+  EXPIRADO: "EXPIRADO",
+  PENDENTE: "PENDENTE"
+};
+
+// Função para definir a cor do badge com base no status
+const getStatusVariant = (status: LicenseBatchStatus) => {
+  switch (status) {
+    case "CRIADO":
+    case "ENVIADO":
+    case "RECEBIDO":
+    case "ATIVO":
+      return "default";
+    case "PENDENTE":
+      return "secondary";
+    case "EXPIRADO":
+      return "destructive";
+    default:
+      return "outline";
+  }
+};
+
 
 // --- COMPONENTE PRINCIPAL ---
 export default function LicenseBatchesPage() {
@@ -125,17 +152,9 @@ export default function LicenseBatchesPage() {
     }
   };
 
-  // Funções de navegação
   const handleViewDetails = (id: number) => {
     router.push(`/admin/licenses/resume?id=${id}`);
   };
-  const handleEdit = (id: number) => {
-    router.push(`/admin/licenses/edit?id=${id}`); // Rota de exemplo
-  };
-  const handleAdd = () => {
-    router.push("/admin/licenses/form"); // Rota de exemplo
-  };
-
 
   const filteredBatches = useMemo(() => {
     if (!searchQuery) {
@@ -146,29 +165,23 @@ export default function LicenseBatchesPage() {
       (batch) =>
         batch.book.title.toLowerCase().includes(lowercasedQuery) ||
         batch.customerName.toLowerCase().includes(lowercasedQuery) ||
-        batch.status.toLowerCase().includes(lowercasedQuery)
+        (statusLabels[batch.status] || "").toLowerCase().includes(lowercasedQuery)
     );
   }, [allBatches, searchQuery]);
 
-  // Função para dar cor ao status
-  const statusVariant = (status: LicenseBatchApiResponse["status"]) => {
-    switch (status) {
-      case "PAID":
-      case "SENT":
-      case "RECEIVED":
-        return "default";
-      case "PENDING_PAYMENT":
-        return "secondary";
-      case "CANCELLED":
-        return "destructive";
-      default:
-        return "outline";
+  // --- MODIFICAÇÃO 2: LÓGICA DE EXIBIÇÃO DO STATUS ---
+  const getDisplayStatus = (status: LicenseBatchStatus) => {
+    // Se o usuário for da secretaria e o status for "ENVIADO", mostra "RECEBIDO"
+    if (user?.user_type === "responsible_secretary" && status === "ENVIADO") {
+      return statusLabels["RECEBIDO"];
     }
+    // Para todos os outros casos, retorna o label padrão
+    return statusLabels[status] || status;
   };
+
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 min-h-screen">
-      {/* CABEÇALHO - ESTILO ATUALIZADO */}
       <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -189,11 +202,9 @@ export default function LicenseBatchesPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-     
         </div>
       </div>
 
-      {/* TABELA - ESTRUTURA E ESTILO ATUALIZADOS */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -229,16 +240,21 @@ export default function LicenseBatchesPage() {
                     <TableCell className="font-medium">
                       {batch.book.title}
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{batch.customerName}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {batch.customerName}
+                    </TableCell>
                     <TableCell className="text-center">
                       {batch.quantity}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant={statusVariant(batch.status)}>
-                        {batch.status.replace("_", " ")}
+                      {/* MODIFICAÇÃO 3: APLICANDO A NOVA LÓGICA */}
+                      <Badge variant={getStatusVariant(batch.status)}>
+                        {getDisplayStatus(batch.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{batch.formattedCreatedAt}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {batch.formattedCreatedAt}
+                    </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -252,15 +268,6 @@ export default function LicenseBatchesPage() {
                             onClick={() => handleViewDetails(batch.id)}
                           >
                             <BookOpen className="mr-2 h-4 w-4" /> Ver Detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEdit(batch.id)}>
-                            <Pencil className="mr-2 h-4 w-4" /> Editar Lote
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setBatchToDelete(batch)}
-                            className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" /> Excluir Lote
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -279,7 +286,6 @@ export default function LicenseBatchesPage() {
         </CardContent>
       </Card>
 
-      {/* DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO */}
       <AlertDialog
         open={!!batchToDelete}
         onOpenChange={(isOpen) => !isOpen && setBatchToDelete(null)}
