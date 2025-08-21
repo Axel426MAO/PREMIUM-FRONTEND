@@ -179,7 +179,7 @@ export default function Home() {
 
   return (
     <main className="flex flex-1 flex-col  p-6 md:p-10 md:py-6">
-      <header className="mb-4">
+      <header className="mb-4 border-b pb-4">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Bem-vindo(a)
           {responsibleName ? `, ${responsibleName}` : ""}!

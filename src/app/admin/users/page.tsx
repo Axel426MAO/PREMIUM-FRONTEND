@@ -63,15 +63,24 @@ interface UserViewData {
 }
 
 // Tipos para os dois níveis de filtro
-type MainUserCategory = "all" | "premium" | "resp_sec_municipal" | "resp_sec_estadual" | "resp_school" | "student" | "teacher";
+type MainUserCategory =
+  | "all"
+  | "premium"
+  | "resp_sec_municipal"
+  | "resp_sec_estadual"
+  | "resp_school"
+  | "student"
+  | "teacher";
 type SchoolTypeCategory = "all" | "public" | "private";
 
 export default function UsersPage() {
   const router = useRouter();
   const [allUsers, setAllUsers] = useState<UserViewData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [mainCategoryFilter, setMainCategoryFilter] = useState<MainUserCategory>("all");
-  const [schoolTypeFilter, setSchoolTypeFilter] = useState<SchoolTypeCategory>("all");
+  const [mainCategoryFilter, setMainCategoryFilter] =
+    useState<MainUserCategory>("all");
+  const [schoolTypeFilter, setSchoolTypeFilter] =
+    useState<SchoolTypeCategory>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserViewData | null>(null);
@@ -88,7 +97,7 @@ export default function UsersPage() {
         // Garanta que sua API `getUsers` inclua os dados aninhados necessários
         const apiData = await getUsers();
 
-        const viewData: any[] = apiData.map((user:any) => ({
+        const viewData: any[] = apiData.map((user: any) => ({
           id: user.id,
           email: user.email,
           user_type: user.user_type,
@@ -98,7 +107,7 @@ export default function UsersPage() {
           student: user.student,
           teacher: user.teacher,
         }));
-        
+
         setAllUsers(viewData);
         setError(null);
       } catch (err) {
@@ -157,24 +166,30 @@ export default function UsersPage() {
 
     // Etapa 2: Filtrar pelo Tipo de Escola (sub-filtro), se aplicável
     if (schoolTypeFilter !== "all") {
-      users = users.filter(user => {
-        const school = user.responsible?.school || user.student?.school || user.teacher?.school;
+      users = users.filter((user) => {
+        const school =
+          user.responsible?.school ||
+          user.student?.school ||
+          user.teacher?.school;
         if (!school) return false; // Se não tiver escola, não passa no filtro
-        return schoolTypeFilter === 'public' ? school.is_private === false : school.is_private === true;
+        return schoolTypeFilter === "public"
+          ? school.is_private === false
+          : school.is_private === true;
       });
     }
 
     // Etapa 3: Filtrar pela Barra de Busca
     if (searchQuery) {
-        const lowercasedQuery = searchQuery.toLowerCase();
-        users = users.filter(user => {
-            const profile = user.responsible || user.student || user.teacher;
-            return (
-                user.email.toLowerCase().includes(lowercasedQuery) ||
-                (profile?.name && profile.name.toLowerCase().includes(lowercasedQuery)) ||
-                user.user_type.toLowerCase().includes(lowercasedQuery)
-            );
-        });
+      const lowercasedQuery = searchQuery.toLowerCase();
+      users = users.filter((user) => {
+        const profile = user.responsible || user.student || user.teacher;
+        return (
+          user.email.toLowerCase().includes(lowercasedQuery) ||
+          (profile?.name &&
+            profile.name.toLowerCase().includes(lowercasedQuery)) ||
+          user.user_type.toLowerCase().includes(lowercasedQuery)
+        );
+      });
     }
 
     return users;
@@ -190,11 +205,13 @@ export default function UsersPage() {
     teacher: "Professores",
   };
 
-  const showSchoolTypeFilter = ['resp_school', 'student', 'teacher'].includes(mainCategoryFilter);
+  const showSchoolTypeFilter = ["resp_school", "student", "teacher"].includes(
+    mainCategoryFilter
+  );
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8  min-h-screen">
-      <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+      <div className="flex flex-col md:flex-row items-center justify-between border-b pb-4 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Usuários
@@ -224,24 +241,41 @@ export default function UsersPage() {
       <div className="flex flex-col gap-4">
         {/* ABAS DE FILTRO PRINCIPAL */}
         <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-fit flex-wrap">
-          {(Object.keys(mainCategoryLabels) as MainUserCategory[]).map((cat) => (
-            <Button
-              key={cat}
-              variant={mainCategoryFilter === cat ? "default" : "ghost"}
-              className="rounded-md capitalize"
-              onClick={() => setMainCategoryFilter(cat)}
-            >
-              {mainCategoryLabels[cat]}
-            </Button>
-          ))}
+          {(Object.keys(mainCategoryLabels) as MainUserCategory[]).map(
+            (cat) => (
+              <Button
+                key={cat}
+                variant={mainCategoryFilter === cat ? "default" : "ghost"}
+                className="rounded-md capitalize"
+                onClick={() => setMainCategoryFilter(cat)}
+              >
+                {mainCategoryLabels[cat]}
+              </Button>
+            )
+          )}
         </div>
 
         {/* SUB-FILTRO DE ESCOLA (RENDERIZAÇÃO CONDICIONAL) */}
         {showSchoolTypeFilter && (
           <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg w-fit flex-wrap">
-            <Button variant={schoolTypeFilter === 'all' ? "secondary" : "ghost"} onClick={() => setSchoolTypeFilter('all')}>Todos os Tipos</Button>
-            <Button variant={schoolTypeFilter === 'public' ? "secondary" : "ghost"} onClick={() => setSchoolTypeFilter('public')}>Pública</Button>
-            <Button variant={schoolTypeFilter === 'private' ? "secondary" : "ghost"} onClick={() => setSchoolTypeFilter('private')}>Privada</Button>
+            <Button
+              variant={schoolTypeFilter === "all" ? "secondary" : "ghost"}
+              onClick={() => setSchoolTypeFilter("all")}
+            >
+              Todos os Tipos
+            </Button>
+            <Button
+              variant={schoolTypeFilter === "public" ? "secondary" : "ghost"}
+              onClick={() => setSchoolTypeFilter("public")}
+            >
+              Pública
+            </Button>
+            <Button
+              variant={schoolTypeFilter === "private" ? "secondary" : "ghost"}
+              onClick={() => setSchoolTypeFilter("private")}
+            >
+              Privada
+            </Button>
           </div>
         )}
       </div>
@@ -252,8 +286,12 @@ export default function UsersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>E-mail / Nome</TableHead>
-                <TableHead className="hidden sm:table-cell">Tipo / Vínculo</TableHead>
-                <TableHead className="hidden md:table-cell">Data de Criação</TableHead>
+                <TableHead className="hidden sm:table-cell">
+                  Tipo / Vínculo
+                </TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Data de Criação
+                </TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -261,44 +299,80 @@ export default function UsersPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">Carregando...</TableCell>
+                  <TableCell colSpan={5} className="text-center h-24">
+                    Carregando...
+                  </TableCell>
                 </TableRow>
               ) : error ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24 text-red-500">{error}</TableCell>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center h-24 text-red-500"
+                  >
+                    {error}
+                  </TableCell>
                 </TableRow>
               ) : filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => {
-                  const profile = user.responsible || user.student || user.teacher;
-                  const school = user.responsible?.school || user.student?.school || user.teacher?.school;
+                  const profile =
+                    user.responsible || user.student || user.teacher;
+                  const school =
+                    user.responsible?.school ||
+                    user.student?.school ||
+                    user.teacher?.school;
                   const secretary = user.responsible?.secretary;
 
                   return (
-                    <TableRow key={user.id}>
+                    <TableRow
+                      key={user.id}
+                      className="odd:bg-gray-100 dark:odd:bg-muted/40"
+                    >
                       <TableCell className="font-medium">
                         <div className="flex flex-col">
                           <span>{user.email}</span>
-                          {profile?.name && <span className="text-xs text-muted-foreground">{profile.name}</span>}
+                          {profile?.name && (
+                            <span className="text-xs text-muted-foreground">
+                              {profile.name}
+                            </span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         {secretary ? (
                           <div className="flex flex-col">
-                            <span className="font-medium">{secretary.is_state_level ? 'Resp. Sec. Estadual' : 'Resp. Sec. Municipal'}</span>
-                            <span className="text-xs text-muted-foreground">{secretary.name}</span>
+                            <span className="font-medium">
+                              {secretary.is_state_level
+                                ? "Resp. Sec. Estadual"
+                                : "Resp. Sec. Municipal"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {secretary.name}
+                            </span>
                           </div>
                         ) : school ? (
                           <div className="flex flex-col">
-                            <span className="font-medium">{school.is_private ? 'Escola Privada' : 'Escola Pública'}</span>
-                            <span className="text-xs text-muted-foreground">{school.name}</span>
+                            <span className="font-medium">
+                              {school.is_private
+                                ? "Escola Privada"
+                                : "Escola Pública"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {school.name}
+                            </span>
                           </div>
                         ) : (
                           user.user_type
                         )}
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{user.createdAt}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {user.createdAt}
+                      </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant={user.status === "Ativo" ? "default" : "destructive"}>
+                        <Badge
+                          variant={
+                            user.status === "Ativo" ? "default" : "destructive"
+                          }
+                        >
                           {user.status}
                         </Badge>
                       </TableCell>
@@ -311,7 +385,9 @@ export default function UsersPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEdit(user.id)}>
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(user.id)}
+                            >
                               <Pencil className="mr-2 h-4 w-4" /> Editar
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -328,7 +404,9 @@ export default function UsersPage() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">Nenhum usuário encontrado.</TableCell>
+                  <TableCell colSpan={5} className="text-center h-24">
+                    Nenhum usuário encontrado.
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

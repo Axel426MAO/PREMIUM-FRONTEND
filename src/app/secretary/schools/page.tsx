@@ -90,7 +90,9 @@ export default function SchoolsPage() {
             setIsLoading(false);
             return;
           }
-          apiData = await getSchoolsBySecretaryId(user.responsible?.secretary?.id);
+          apiData = await getSchoolsBySecretaryId(
+            user.responsible?.secretary?.id
+          );
         } else {
           // Se for um administrador, busque todas as escolas
           apiData = await getSchools();
@@ -161,7 +163,7 @@ export default function SchoolsPage() {
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 min-h-screen">
       {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+      <div className="flex flex-col md:flex-row items-center justify-between border-b pb-4 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Suas Escolas
@@ -223,7 +225,11 @@ export default function SchoolsPage() {
                 </TableRow>
               ) : filteredSchools.length > 0 ? (
                 filteredSchools.map((school) => (
-                  <TableRow key={school.id}>
+                  <TableRow
+                    key={school.id}
+                    className="odd:bg-gray-100 dark:odd:bg-muted/40"
+                  >
+                    {" "}
                     <TableCell className="font-medium">{school.name}</TableCell>
                     <TableCell className="text-center">
                       <Badge

@@ -210,9 +210,9 @@ export default function SecretaryPage() {
   }, [allSecretaries, searchQuery, levelFilter]);
 
   return (
-    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 min-h-screen">
+    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 min-h-screen ">
       {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b pb-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             Secretarias
@@ -273,18 +273,18 @@ export default function SecretaryPage() {
           {/* Visão de Tabela para Desktop */}
           <div className="hidden md:block">
             <Table>
-              <TableHeader>
+              <TableHeader className="p-6  rounded">
                 <TableRow >
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead>Contato</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className=" p-4">Nome</TableHead>
+                  <TableHead className="">Responsável</TableHead>
+                  <TableHead className="">Contato</TableHead>
+                  <TableHead className="text-center ">Status</TableHead>
+                  <TableHead className="text-right ">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow>
+                  <TableRow >
                     <TableCell colSpan={5} className="h-24 text-center">
                       Carregando...
                     </TableCell>
@@ -300,18 +300,18 @@ export default function SecretaryPage() {
                   </TableRow>
                 ) : filteredSecretaries.length > 0 ? (
                   filteredSecretaries.map((secretary) => (
-                    <TableRow key={secretary.id} className="odd:bg-muted/50">
-                      <TableCell className="font-medium">
+                    <TableRow key={secretary.id} className="odd:bg-gray-100 dark:odd:bg-muted/40">
+                      <TableCell className="font-medium  p-4">
                         {secretary.name}
                       </TableCell>
-                      <TableCell>{secretary.responsible}</TableCell>
+                      <TableCell className="">{secretary.responsible}</TableCell>
                       <TableCell>
                         <div className="text-sm">{secretary.email}</div>
                         <div className="text-xs text-muted-foreground">
                           {secretary.phone}
                         </div>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center ">
                         <Badge
                           variant={
                             secretary.status === "Ativa"

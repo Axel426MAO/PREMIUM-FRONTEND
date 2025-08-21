@@ -1,8 +1,18 @@
 "use client";
 
-import { useState, useEffect, type FormEvent, type ChangeEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  type FormEvent,
+  type ChangeEvent,
+  useMemo,
+  type FC,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+
+// --- UI Components ---
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,15 +36,190 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { ArrowLeft, Check, ChevronsUpDown } from "lucide-react";
+
+// --- Icons ---
+import {
+  ArrowLeft,
+  Check,
+  ChevronsUpDown,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  XCircle,
+  CheckCircle,
+} from "lucide-react";
+
+// --- API ---
 import {
   getSecretariesForSelect,
-  createResponsibleUser, // Usaremos esta função para ambos os casos
+  createResponsibleUser,
 } from "../services/formApi";
 import type { SecretaryApiResponse } from "../../secretary/services/api";
 
+// --- TIPOS, CONSTANTES E UTILITÁRIOS ---
 type UserType = "premium" | "responsible" | "student" | "teacher";
 type UserLevel = "super_admin" | "admin";
+type PasswordStrength = {
+  score: number;
+  criteria: {
+    length: boolean;
+    uppercase: boolean;
+    lowercase: boolean;
+    number: boolean;
+    specialChar: boolean;
+  };
+};
+
+const passwordCriteria = [
+  { id: "length", text: "Pelo menos 8 caracteres" },
+  { id: "uppercase", text: "Uma letra maiúscula" },
+  { id: "lowercase", text: "Uma letra minúscula" },
+  { id: "number", text: "Um número" },
+  { id: "specialChar", text: "Um caractere especial (!@#...)" },
+];
+
+const roleOptions = [
+  "Secretário(a) de Educação",
+  "Secretário(a) Adjunto(a)",
+  "Subsecretário(a)",
+  "Superintendente",
+  "Diretor(a) de Departamento",
+  "Coordenador(a) Pedagógico",
+  "Coordenador(a) Administrativo",
+  "Assessor(a) Técnico",
+];
+
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const checkPasswordStrength = (password: string): PasswordStrength => {
+  const criteria = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  };
+  const score = Object.values(criteria).filter(Boolean).length;
+  return { score, criteria };
+};
+
+const generateStrongPassword = (): string => {
+  const lower = "abcdefghijklmnopqrstuvwxyz";
+  const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+  const allChars = lower + upper + numbers + symbols;
+  let password = "";
+  password += lower[Math.floor(Math.random() * lower.length)];
+  password += upper[Math.floor(Math.random() * upper.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
+  for (let i = 4; i < 12; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  return password.split("").sort(() => 0.5 - Math.random()).join("");
+};
+
+// --- COMPONENTE AUXILIAR DE SENHA ---
+const PasswordInput: FC<{
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onGenerate: () => void;
+}> = ({ value, onChange, onGenerate }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const strength = useMemo(() => checkPasswordStrength(value), [value]);
+
+  const strengthColor =
+    strength.score <= 2
+      ? "bg-red-500"
+      : strength.score <= 4
+      ? "bg-yellow-500"
+      : "bg-green-500";
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Senha</Label>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="p-0 h-auto text-primary"
+            onClick={onGenerate}
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Gerar Senha
+          </Button>
+        </div>
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={value}
+            onChange={onChange}
+            required
+            className="pr-10"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute inset-y-0 right-0 h-full w-10 text-muted-foreground hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {value.length > 0 && (
+        <div className="space-y-3">
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <motion.div
+              className={`h-2 rounded-full ${strengthColor}`}
+              initial={{ width: 0 }}
+              animate={{ width: `${(strength.score / 5) * 100}%` }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            />
+          </div>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
+            {passwordCriteria.map((criterion) => {
+              const isMet =
+                strength.criteria[
+                  criterion.id as keyof PasswordStrength["criteria"]
+                ];
+              return (
+                <li
+                  key={criterion.id}
+                  className={`flex items-center transition-colors ${
+                    isMet ? "text-green-600" : "text-muted-foreground"
+                  }`}
+                >
+                  {isMet ? (
+                    <CheckCircle className="h-3 w-3 mr-2 shrink-0" />
+                  ) : (
+                    <XCircle className="h-3 w-3 mr-2 shrink-0" />
+                  )}
+                  {criterion.text}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 export default function UserFormPage() {
   const router = useRouter();
@@ -48,18 +233,24 @@ export default function UserFormPage() {
   const [responsibleData, setResponsibleData] = useState({
     name: "",
     role: "",
-    // MODIFICAÇÃO: Iniciar com null para clareza
     secretary_id: null as number | null,
   });
+  
+  // --- Novos estados para validação ---
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   const [secretaries, setSecretaries] = useState<SecretaryApiResponse[]>([]);
   const [openSecretaryPopover, setOpenSecretaryPopover] = useState(false);
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const passwordStrength = useMemo(() => checkPasswordStrength(userData.password), [userData.password]);
+
   useEffect(() => {
-    // Esta lógica continua a mesma, pois só buscamos secretarias para o tipo 'responsible'
     if (selectedUserType === "responsible") {
       getSecretariesForSelect()
         .then(setSecretaries)
@@ -71,6 +262,25 @@ export default function UserFormPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    // Validação antes de enviar
+    if (!isValidEmail(userData.email)) {
+        toast.error("O formato do e-mail é inválido.");
+        return;
+    }
+    if (userData.email !== confirmEmail) {
+        toast.error("Os e-mails não coincidem.");
+        return;
+    }
+    if (passwordStrength.score < 4) {
+        toast.error("A senha não atende aos critérios de segurança.");
+        return;
+    }
+    if (userData.password !== confirmPassword) {
+        toast.error("As senhas não coincidem.");
+        return;
+    }
+    
     setIsLoading(true);
     setError(null);
 
@@ -78,8 +288,8 @@ export default function UserFormPage() {
       try {
         const userPayload = {
           ...userData,
-          // Define o tipo de usuário corretamente
-          user_type: selectedUserType === "premium" ? userLevel : "responsible_secretary",
+          user_type:
+            selectedUserType === "premium" ? userLevel : "responsible_secretary",
           status: true,
         };
 
@@ -95,15 +305,15 @@ export default function UserFormPage() {
           user: userPayload,
           responsible: finalResponsibleData,
         });
-
+        toast.success("Usuário criado com sucesso!");
         router.push("/admin/users");
       } catch (err) {
         setError((err as Error).message);
+        toast.error((err as Error).message);
       } finally {
         setIsLoading(false);
       }
     } else {
-      // Lógica para outros tipos de usuário (student, teacher) se necessário no futuro
       setError("Tipo de usuário selecionado não é válido para criação.");
       setIsLoading(false);
     }
@@ -112,12 +322,32 @@ export default function UserFormPage() {
   const handleUserInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setUserData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "email") {
+        setEmailTouched(true);
+        if (value && !isValidEmail(value)) {
+            setEmailError("Formato de e-mail inválido.");
+        } else {
+            setEmailError(null);
+        }
+    }
   };
 
   const handleResponsibleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setResponsibleData((prev) => ({ ...prev, [name]: value }));
   };
+
+  const handleRoleChange = (value: string) => {
+    setResponsibleData((prev) => ({...prev, role: value}));
+  }
+
+  const handleGeneratePassword = () => {
+    const newPassword = generateStrongPassword();
+    setUserData(prev => ({...prev, password: newPassword}));
+    setConfirmPassword(newPassword);
+    toast.success("Nova senha segura gerada!");
+  }
 
   const cardAnimation = {
     initial: { opacity: 0, y: 20 },
@@ -148,7 +378,7 @@ export default function UserFormPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="grid gap-8">
-          {/* Passo 1: Seleção de Tipo (Sem alterações) */}
+          {/* Passo 1: Seleção de Tipo */}
           <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 grid gap-4">
             <Label htmlFor="userType" className="font-semibold text-lg">
               Passo 1: Tipo de Usuário
@@ -166,15 +396,7 @@ export default function UserFormPage() {
                 <SelectItem value="responsible">
                   Responsável de Secretaria
                 </SelectItem>
-                <SelectItem value="student" disabled>
-                  Responsável de Escola (Em breve)
-                </SelectItem>
-                <SelectItem value="student" disabled>
-                  Aluno (Em breve)
-                </SelectItem>
-                <SelectItem value="teacher" disabled>
-                  Professor (Em breve)
-                </SelectItem>
+                {/* Outras opções desabilitadas */}
               </SelectContent>
             </Select>
           </div>
@@ -226,32 +448,47 @@ export default function UserFormPage() {
                     ? "Passo 3: Dados do Admin"
                     : "Passo 2: Dados de Acesso"}
                 </h3>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">E-mail de Acesso</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={userData.email}
-                    onChange={handleUserInputChange}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={userData.password}
-                    onChange={handleUserInputChange}
-                    required
-                    disabled={isLoading}
-                  />
+
+                {/* --- SEÇÃO DE E-MAIL ATUALIZADA --- */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="grid gap-2">
+                        <Label htmlFor="email">E-mail de Acesso</Label>
+                        <div className="relative">
+                            <Input id="email" name="email" type="email" value={userData.email} onChange={handleUserInputChange} required disabled={isLoading} className={`pr-10 ${emailTouched && emailError ? "border-red-500" : emailTouched && !emailError && userData.email ? "border-green-500" : ""}`} />
+                             {emailTouched && userData.email && (
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    {emailError ? <XCircle className="h-5 w-5 text-red-500" /> : <CheckCircle className="h-5 w-5 text-green-500" />}
+                                </div>
+                            )}
+                        </div>
+                         <div className="h-5"><p className="text-xs text-red-500">{emailTouched && emailError}</p></div>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="confirmEmail">Confirmar E-mail</Label>
+                        <Input id="confirmEmail" type="email" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} required disabled={isLoading} />
+                        <div className="h-5">
+                            {confirmEmail && userData.email !== confirmEmail && (<p className="text-xs text-red-500">Os e-mails não coincidem.</p>)}
+                        </div>
+                    </div>
                 </div>
 
-                {/* MODIFICAÇÃO: Dados do responsável agora aparecem para ambos */}
+                {/* --- SEÇÃO DE SENHA ATUALIZADA --- */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start gap-x-6 gap-y-6">
+                    <PasswordInput value={userData.password} onChange={handleUserInputChange} onGenerate={handleGeneratePassword} />
+                    <div className="grid gap-2">
+                        <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                        <div className="relative">
+                            <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isLoading} className="pr-10"/>
+                             <Button type="button" variant="ghost" size="icon" className="absolute inset-y-0 right-0 h-full w-10" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                        </div>
+                         <div className="h-5">
+                            {confirmPassword && userData.password !== confirmPassword && (<p className="text-xs text-red-500">As senhas não coincidem.</p>)}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="border-t pt-6 grid gap-6">
                   <h3 className="font-semibold text-lg">
                     Dados do Responsável
@@ -260,28 +497,24 @@ export default function UserFormPage() {
                     <Label htmlFor="responsibleName">
                       Nome Completo do Responsável
                     </Label>
-                    <Input
-                      id="responsibleName"
-                      name="name"
-                      value={responsibleData.name}
-                      onChange={handleResponsibleInputChange}
-                      required
-                      disabled={isLoading}
-                    />
+                    <Input id="responsibleName" name="name" value={responsibleData.name} onChange={handleResponsibleInputChange} required disabled={isLoading} />
                   </div>
+                  
+                  {/* --- CAMPO DE CARGO ATUALIZADO --- */}
                   <div className="grid gap-2">
                     <Label htmlFor="responsibleRole">Cargo</Label>
-                    <Input
-                      id="responsibleRole"
-                      name="role"
-                      value={responsibleData.role}
-                      onChange={handleResponsibleInputChange}
-                      required
-                      disabled={isLoading}
-                    />
+                    <Select onValueChange={handleRoleChange} value={responsibleData.role} required>
+                        <SelectTrigger id="responsibleRole" disabled={isLoading}>
+                            <SelectValue placeholder="Selecione um cargo..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {roleOptions.map(role => (
+                                <SelectItem key={role} value={role}>{role}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                   </div>
 
-                  {/* MODIFICAÇÃO: Campo de Secretaria só aparece para 'responsible' */}
                   {selectedUserType === "responsible" && (
                     <div className="grid gap-2">
                       <Label>Secretaria Vinculada</Label>
@@ -347,12 +580,6 @@ export default function UserFormPage() {
               </motion.div>
             )}
           </AnimatePresence>
-
-          {error && (
-            <p className="text-center text-destructive bg-destructive/10 p-3 rounded-md">
-              {error}
-            </p>
-          )}
 
           <div className="flex justify-end gap-2 pt-4">
             <Button

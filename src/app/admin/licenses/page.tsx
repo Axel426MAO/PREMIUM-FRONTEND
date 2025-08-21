@@ -64,7 +64,7 @@ const statusLabels: Record<LicenseBatchStatus, string> = {
   RECEBIDO: "RECEBIDO",
   ATIVO: "ATIVO",
   EXPIRADO: "EXPIRADO",
-  PENDENTE: "PENDENTE"
+  PENDENTE: "PENDENTE",
 };
 
 const getStatusVariant = (status: LicenseBatchStatus) => {
@@ -204,7 +204,7 @@ export default function LicenseBatchesPage() {
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 min-h-screen">
       {/* CABEÇALHO */}
-      <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+      <div className="flex flex-col md:flex-row items-center justify-between border-b pb-4 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Licenças
@@ -281,7 +281,10 @@ export default function LicenseBatchesPage() {
                 </TableRow>
               ) : filteredBatches.length > 0 ? (
                 filteredBatches.map((batch) => (
-                  <TableRow key={batch.id}>
+                  <TableRow
+                    key={batch.id}
+                    className="odd:bg-gray-100 dark:odd:bg-muted/40"
+                  >
                     <TableCell className="font-medium">
                       {batch.book.title}
                     </TableCell>
