@@ -229,7 +229,7 @@ export default function BookFormPage() {
         await Promise.all(uploadPromises);
       }
 
-      router.push("/admin/books");
+      router.push("/secretary/books");
     } catch (err) {
       console.error(err);
       alert("Ocorreu um erro ao salvar o livro.");

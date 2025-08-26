@@ -119,7 +119,7 @@ export default function LicenseBatchCreationForm() {
     try {
       await createLicenseBatch(payload);
       // Idealmente, você usaria um sistema de toast aqui para notificar o sucesso
-      router.push("/admin/licenses");
+      router.push("/secretary/licenses");
     } catch (err) {
       setError((err as Error).message);
     } finally {
