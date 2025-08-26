@@ -264,7 +264,7 @@ const EditSecretaryPage = () => {
           </p>
         </div>
       </div>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto ">
         <form onSubmit={handleUpdate} className="space-y-8">
           <fieldset disabled={isLoading}>
             <FormSection
@@ -273,7 +273,7 @@ const EditSecretaryPage = () => {
               icon={<Building className="h-6 w-6 text-primary" />}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="grid gap-2 sm:col-span-2">
+                <div className="grid gap-2 sm:col-span-2 mt-2 mb-2">
                   <Label htmlFor="secretary.name">Nome da Secretaria</Label>
                   <Input
                     id="secretary.name"
@@ -283,7 +283,7 @@ const EditSecretaryPage = () => {
                     required
                   />
                 </div>
-                <div className="grid gap-2">
+                <div className="grid gap-2 mt-2 mb-2">
                   <Label>Nível</Label>
                   <Select
                     value={
@@ -305,7 +305,7 @@ const EditSecretaryPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2">
+                <div className="grid gap-2 mt-2 mb-2">
                   <Label htmlFor="secretary.state">Estado (UF)</Label>
                   <Select
                     name="secretary.state"
