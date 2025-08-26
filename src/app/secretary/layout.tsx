@@ -8,22 +8,13 @@ import { cn } from "@/lib/utils";
 import "../globals.css";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, LogOut, User } from "lucide-react";
 import { Toaster } from "sonner";
 import { AuthProvider } from "../utils/contexts/AuthContext";
 import RouteGuard from "../utils/auth/guard";
 import { NavLinks, SideMenu } from "../shared/components/SideMenu";
 import { useUserStore } from "../store/userStore";
-import { ThemeToggleButton } from "../shared/components/ThemeToggleButton";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { DesktopHeader } from "../shared/components/Header";
 
 const fontSans = Poppins({

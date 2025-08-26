@@ -242,7 +242,7 @@ const ReviewCard: FC<{
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, icon, children }) => (
-  <div className="rounded-xl border bg-card shadow-sm text-card-foreground">
+  <div className="rounded-xl border bg-card shadow-sm text-card-foreground mt-4 mb-4">
     <div className="flex items-center gap-3 border-b bg-muted/50 p-4">
       {icon}
       <h4 className="text-md font-semibold">{title}</h4>
