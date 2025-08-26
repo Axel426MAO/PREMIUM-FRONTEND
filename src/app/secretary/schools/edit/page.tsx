@@ -155,7 +155,7 @@ export default function EditSchoolPage() {
     try {
       await updateFullSchoolWorkflow(Number(schoolId), formData);
       toast.success("Escola atualizada com sucesso!", { id: toastId });
-      router.push("/admin/schools");
+      router.push("/secretary/schools");
     } catch (error) {
       toast.error((error as Error).message, { id: toastId });
     } finally {
