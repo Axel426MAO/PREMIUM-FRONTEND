@@ -58,28 +58,33 @@ type LicenseBatchViewData = LicenseBatchApiResponse & {
 type CustomerTypeFilter = "all" | "secretary" | "private_school";
 
 // --- MAPEAMENTOS E FUNÇÕES AUXILIARES ---
+
+// --- MODIFICAÇÃO 1: TEXTOS DOS STATUS MELHORADOS ---
 const statusLabels: Record<LicenseBatchStatus, string> = {
-  CRIADO: "CRIADO",
-  ENVIADO: "ENVIADO",
-  RECEBIDO: "RECEBIDO",
-  ATIVO: "ATIVO",
-  EXPIRADO: "EXPIRADO",
-  PENDENTE: "PENDENTE",
+  CRIADO: "Criado",
+  ENVIADO: "Enviado",
+  RECEBIDO: "Recebido",
+  ATIVO: "Ativo",
+  EXPIRADO: "Expirado",
+  PENDENTE: "Pendente",
 };
 
-const getStatusVariant = (status: LicenseBatchStatus) => {
+// --- MODIFICAÇÃO 2: CORES DE STATUS APRIMORADAS ---
+// Função para definir classes de cor do badge com base no status
+const getStatusClasses = (status: LicenseBatchStatus): string => {
   switch (status) {
-    case "CRIADO":
+    case "ATIVO":
+      return "bg-green-100 text-green-800 border-green-200 hover:bg-green-100 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800";
     case "ENVIADO":
     case "RECEBIDO":
-    case "ATIVO":
-      return "default";
+      return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800";
     case "PENDENTE":
-      return "secondary";
+      return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800";
     case "EXPIRADO":
-      return "destructive";
+      return "bg-red-100 text-red-800 border-red-200 hover:bg-red-100 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800";
+    case "CRIADO":
     default:
-      return "outline";
+      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700";
   }
 };
 
@@ -250,8 +255,8 @@ export default function LicenseBatchesPage() {
       </div>
 
       {/* TABELA */}
-      <Card>
-        <CardContent className="p-0">
+      <Card className="py-0 rounded">
+        <CardContent className="p-0 rounded">
           <Table>
             <TableHeader>
               <TableRow>
@@ -283,7 +288,7 @@ export default function LicenseBatchesPage() {
                 filteredBatches.map((batch) => (
                   <TableRow
                     key={batch.id}
-                    className="odd:bg-gray-100 dark:odd:bg-muted/40"
+                    className="even:bg-gray-100 dark:even:bg-muted/40"
                   >
                     <TableCell className="font-medium">
                       {batch.book.title}
@@ -295,7 +300,11 @@ export default function LicenseBatchesPage() {
                       {batch.quantity}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant={getStatusVariant(batch.status)}>
+                      {/* --- MODIFICAÇÃO 3: APLICANDO AS NOVAS CORES --- */}
+                      <Badge
+                        variant="outline"
+                        className={getStatusClasses(batch.status)}
+                      >
                         {statusLabels[batch.status] || batch.status}
                       </Badge>
                     </TableCell>

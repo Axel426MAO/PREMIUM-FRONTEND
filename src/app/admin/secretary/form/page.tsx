@@ -666,23 +666,6 @@ const SecretaryFormPage: FC = () => {
                             className="grid grid-cols-1 sm:grid-cols-2 max-w-xl gap-4"
                           >
                             <Label
-                              htmlFor="r-municipal"
-                              className={`flex flex-col items-center justify-center rounded-lg border-2 p-6 cursor-pointer transition-all ${
-                                !formData.secretary.is_state_level &&
-                                levelSelected
-                                  ? "border-primary bg-muted"
-                                  : "border"
-                              }`}
-                            >
-                              <RadioGroupItem
-                                value="municipal"
-                                id="r-municipal"
-                                className="sr-only"
-                              />
-                              <Map className="h-8 w-8 mb-2 text-muted-foreground" />
-                              <span className="font-semibold">Municipal</span>
-                            </Label>
-                            <Label
                               htmlFor="r-state"
                               className={`flex flex-col items-center justify-center rounded-lg border-2 p-6 cursor-pointer transition-all ${
                                 formData.secretary.is_state_level &&
@@ -698,6 +681,24 @@ const SecretaryFormPage: FC = () => {
                               />
                               <Globe className="h-8 w-8 mb-2 text-muted-foreground" />
                               <span className="font-semibold">Estadual</span>
+                            </Label>
+
+                            <Label
+                              htmlFor="r-municipal"
+                              className={`flex flex-col items-center justify-center rounded-lg border-2 p-6 cursor-pointer transition-all ${
+                                !formData.secretary.is_state_level &&
+                                levelSelected
+                                  ? "border-primary bg-muted"
+                                  : "border"
+                              }`}
+                            >
+                              <RadioGroupItem
+                                value="municipal"
+                                id="r-municipal"
+                                className="sr-only"
+                              />
+                              <Map className="h-8 w-8 mb-2 text-muted-foreground" />
+                              <span className="font-semibold">Municipal</span>
                             </Label>
                           </RadioGroup>
                         </div>
@@ -938,9 +939,7 @@ const SecretaryFormPage: FC = () => {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 border-t pt-6 mt-2">
                           <div className="grid gap-2">
-                            <Label htmlFor="user.email">
-                              E-mail de Acesso
-                            </Label>
+                            <Label htmlFor="user.email">E-mail de Acesso</Label>
                             <div className="relative">
                               <Input
                                 id="user.email"
@@ -1014,9 +1013,7 @@ const SecretaryFormPage: FC = () => {
                               <Input
                                 id="confirm.password"
                                 name="confirm.password"
-                                type={
-                                  showConfirmPassword ? "text" : "password"
-                                }
+                                type={showConfirmPassword ? "text" : "password"}
                                 value={confirmPassword}
                                 onChange={(e) =>
                                   setConfirmPassword(e.target.value)

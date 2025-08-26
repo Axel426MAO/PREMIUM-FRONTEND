@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('authToken');
     setIsAuthenticated(false);
-    router.push('/login'); // Redireciona para o login após o logout
+    router.push('/onboard'); // Redireciona para o login após o logout
   };
 
   const value = { isAuthenticated, isLoading, login, logout };

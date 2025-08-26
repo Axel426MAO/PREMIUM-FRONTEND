@@ -191,8 +191,8 @@ export default function SchoolsPage() {
       </div>
 
       {/* Tabela de Dados */}
-      <Card>
-        <CardContent className="p-0">
+      <Card className="py-0 rounded">
+        <CardContent className="p-0 rounded">
           <Table>
             <TableHeader>
               <TableRow>
@@ -227,7 +227,7 @@ export default function SchoolsPage() {
                 filteredSchools.map((school) => (
                   <TableRow
                     key={school.id}
-                    className="odd:bg-gray-100 dark:odd:bg-muted/40"
+                    className="even:bg-gray-100 dark:even:bg-muted/40"
                   >
                     {" "}
                     <TableCell className="font-medium">{school.name}</TableCell>

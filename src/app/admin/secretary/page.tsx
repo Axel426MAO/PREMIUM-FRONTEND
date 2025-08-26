@@ -251,13 +251,7 @@ export default function SecretaryPage() {
         >
           Todas
         </Button>
-        <Button
-          variant={levelFilter === "municipal" ? "default" : "ghost"}
-          className="rounded-md"
-          onClick={() => setLevelFilter("municipal")}
-        >
-          Municipais
-        </Button>
+      
         <Button
           variant={levelFilter === "state" ? "default" : "ghost"}
           className="rounded-md"
@@ -268,23 +262,23 @@ export default function SecretaryPage() {
       </div>
 
       {/* Conteúdo Principal: Cards ou Tabela */}
-      <Card>
-        <CardContent className="p-0">
+      <Card className="py-0 rounded">
+        <CardContent className="p-0 rounded">
           {/* Visão de Tabela para Desktop */}
           <div className="hidden md:block">
             <Table>
-              <TableHeader className="p-6  rounded">
-                <TableRow >
-                  <TableHead className=" p-4">Nome</TableHead>
-                  <TableHead className="">Responsável</TableHead>
-                  <TableHead className="">Contato</TableHead>
+              <TableHeader>
+                <TableRow>
+                  <TableHead >Nome</TableHead>
+                  <TableHead >Responsável</TableHead>
+                  <TableHead >Contato</TableHead>
                   <TableHead className="text-center ">Status</TableHead>
                   <TableHead className="text-right ">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow >
+                  <TableRow>
                     <TableCell colSpan={5} className="h-24 text-center">
                       Carregando...
                     </TableCell>
@@ -300,11 +294,16 @@ export default function SecretaryPage() {
                   </TableRow>
                 ) : filteredSecretaries.length > 0 ? (
                   filteredSecretaries.map((secretary) => (
-                    <TableRow key={secretary.id} className="odd:bg-gray-100 dark:odd:bg-muted/40">
+                    <TableRow
+                      key={secretary.id}
+                      className="even:bg-gray-100 dark:even:bg-muted/40"
+                    >
                       <TableCell className="font-medium  p-4">
                         {secretary.name}
                       </TableCell>
-                      <TableCell className="">{secretary.responsible}</TableCell>
+                      <TableCell className="">
+                        {secretary.responsible}
+                      </TableCell>
                       <TableCell>
                         <div className="text-sm">{secretary.email}</div>
                         <div className="text-xs text-muted-foreground">

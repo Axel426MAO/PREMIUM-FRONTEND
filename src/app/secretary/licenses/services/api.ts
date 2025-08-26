@@ -60,7 +60,7 @@ export interface LicenseBatchDetails {
   license_keys: Array<{
     id: number;
     code: string;
-    status: 'AVAILABLE' | 'ACTIVATED' | 'EXPIRED' | 'REVOKED';
+    status: 'CRIADO' | 'ENVIADO' | 'RECEBIDO' | 'PENDENTE' | 'ATIVO' | 'EXPIRADO';
     createdAt: string;
     activatedAt: string | null;
   }>;

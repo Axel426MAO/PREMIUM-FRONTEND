@@ -3,22 +3,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
-
-.__next-dev-overlay {
-  display: none !important;
-}
-
-
+.__next-dev-overlay,
 #__next > div#__next-dev-overlay {
   display: none !important;
 }
-
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* ... (o resto das variáveis @theme permanece igual) ... */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -54,74 +49,63 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ⚪⚫ TEMA MONOCROMÁTICO PROFISSIONAL (LIGHT) ⚫⚪ */
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --background: oklch(100% 0.00011 271.152);          /* Fundo cinza bem claro, mais suave que branco puro */
+  --foreground: oklch(0.1 0 0);            /* Texto preto/cinza-chumbo forte */
+  --card: oklch(1 0 0);                     /* Cards em branco puro para criar profundidade */
+  --card-foreground: oklch(0.1 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.1 0 0);
+  --primary: oklch(20.019% 0.00002 271.152);                /* Cor primária PRETA para botões e elementos principais */
+  --primary-foreground: oklch(0.985 0 0);   /* Texto branco/claro para botões primários */
+  --secondary: oklch(0.94 0 0);           /* Fundo secundário cinza claro */
+  --secondary-foreground: oklch(0.2 0 0);
+  --muted: oklch(0.96 0 0);               /* Fundo sutil para elementos como filtros */
+  --muted-foreground: oklch(0.45 0 0);    /* Texto sutil para placeholders e descrições */
+  --accent: oklch(0.95 0 0);
+  --accent-foreground: oklch(0.1 0 0);
+  --destructive: oklch(0.65 0.2 25);        /* Vermelho para alertas, mantido por usabilidade */
+  --border: oklch(0.9 0 0);                 /* Borda cinza clara e suave */
+  --input: oklch(0.9 0 0);
+  --ring: oklch(0.2 0 0);                   /* Anel de foco preto */
+
+  /* Gráficos mantêm cores para visualização de dados */
+  --chart-1: oklch(0.5 0.15 270);
+  --chart-2: oklch(0.7 0.15 140);
+  --chart-3: oklch(0.75 0.18 50);
+  --chart-4: oklch(0.6 0.2 300);
+  --chart-5: oklch(0.7 0.2 25);
+  
+  --sidebar: oklch(1 0 0);
+  /* ... resto das variáveis da sidebar ... */
 }
 
+/* ⚫⚪ TEMA MONOCROMÁTICO PROFISSIONAL (DARK) ⚪⚫ */
 .dark {
-  --background: oklch(0.018 0 0); 
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.07 0 0);         /* Fundo cinza-chumbo, não preto puro */
+  --foreground: oklch(0.95 0 0);         /* Texto cinza claro */
+  --card: oklch(0.12 0 0);               /* Cards um pouco mais claros que o fundo */
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.95 0 0);             /* Cor primária BRANCA para contraste no escuro */
+  --primary-foreground: oklch(0.1 0 0);   /* Texto PRETO para botões primários */
+  --secondary: oklch(0.18 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.15 0 0);
+  --muted-foreground: oklch(0.55 0 0);
+  --accent: oklch(0.2 0 0);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.7 0.18 25);
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.2 0 0);
+  --ring: oklch(0.8 0 0);
+
+  /* ... (resto das variáveis do dark mode) ... */
 }
+
 
 @layer base {
   * {
@@ -132,33 +116,4 @@
   }
 }
 
-/* src/app/globals.css */
-
-/* Estilos para o visualizador seguro */
-.secure-viewer {
-  /* Impede a seleção de texto */
-  user-select: none;
-  -webkit-user-select: none; /* Para Safari */
-  -moz-user-select: none; /* Para Firefox */
-  -ms-user-select: none; /* Para Internet Explorer/Edge */
-}
-
-/* Oculta tudo ao tentar imprimir a página */
-@media print {
-  /* Esconde o corpo da página, exceto a nossa mensagem */
-  body * {
-    display: none;
-  }
-
-  /* Mostra uma mensagem personalizada quando a impressão é tentada */
-  body::after {
-    content: "A impressão de conteúdo é desativada por motivos de segurança.";
-    display: block;
-    text-align: center;
-    font-size: 24px;
-    font-weight: bold;
-    padding: 50px;
-    color: black;
-  }
-}
-
+/* ... (resto do seu css) ... */

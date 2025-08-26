@@ -1,4 +1,3 @@
-// src/app/admin/schools/edit/page.tsx
 "use client";
 
 import React, { useState, useEffect, type ChangeEvent, type FC } from "react";
@@ -9,29 +8,17 @@ import { toast } from "sonner";
 import {
   getSchoolById,
   updateFullSchoolWorkflow,
-  getSecretariesForSelect,
+  // MODIFICAÇÃO: 'getSecretariesForSelect' não é mais necessário aqui
   type FullSchoolUpdatePayload,
-  type SecretarySelectItem,
 } from "../services/api";
 
 // --- UI Components ---
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+// MODIFICAÇÃO: Switch, Popover e Command não são mais usados nesta página
+// import { Switch } from "@/components/ui/switch"; 
+// ...
 
 // --- Icons ---
 import {
@@ -40,10 +27,23 @@ import {
   Building2,
   Home,
   User,
-  Check,
-  ChevronsUpDown,
+  // MODIFICAÇÃO: Check e ChevronsUpDown não são mais necessários
 } from "lucide-react";
 import { motion } from "framer-motion";
+
+// --- NOVO COMPONENTE AUXILIAR ---
+// Componente para exibir dados de forma estática (não editável)
+const InfoDisplay: FC<{ label: string; value: string | null }> = ({
+  label,
+  value,
+}) => (
+  <div className="grid gap-2">
+    <Label>{label}</Label>
+    <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
+      {value || "Não aplicável"}
+    </div>
+  </div>
+);
 
 // Componente para agrupar seções do formulário
 const FormSection: FC<{
@@ -52,8 +52,7 @@ const FormSection: FC<{
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, description, icon, children }) => (
-  // MODIFICADO: Cores adaptadas para tema escuro/claro
-  <div className="bg-card rounded-lg border shadow-sm">
+  <div className="bg-card rounded-lg border shadow-sm mt-4 mb-4">
     <div className="p-5 border-b">
       <div className="flex items-center gap-3">
         {icon}
@@ -75,22 +74,24 @@ export default function EditSchoolPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(true);
-  const [secretaries, setSecretaries] = useState<SecretarySelectItem[]>([]);
-  const [openSecretaryPopover, setOpenSecretaryPopover] = useState(false);
+  
+  // MODIFICAÇÃO: Estado para guardar o nome da secretaria para exibição
+  const [secretaryName, setSecretaryName] = useState<string | null>(null);
 
-  // Busca os dados da escola e a lista de secretarias
+  // Busca apenas os dados da escola
   useEffect(() => {
     if (!schoolId) {
       toast.error("ID da escola não fornecido.");
-      router.push("/admin/schools");
+      router.push("/secretary/schools");
       return;
     }
 
     const fetchInitialData = async () => {
       try {
         const schoolData = await getSchoolById(Number(schoolId));
-        const secretariesData = await getSecretariesForSelect();
-        setSecretaries(secretariesData);
+        
+        // Guarda o nome da secretaria para exibição
+        setSecretaryName(schoolData.secretary?.name || null);
 
         const mainResponsible = schoolData.responsibles?.[0];
         if (!mainResponsible || !mainResponsible.user) {
@@ -119,7 +120,7 @@ export default function EditSchoolPage() {
           },
           user: {
             email: mainResponsible.user.email,
-            password: "", // Senha fica em branco por padrão
+            password: "",
           },
         });
       } catch (error) {
@@ -143,29 +144,6 @@ export default function EditSchoolPage() {
     );
   };
 
-  const handleSwitchChange = (isPrivate: boolean) => {
-    setFormData((prev) =>
-      prev
-        ? {
-            ...prev,
-            school: {
-              ...prev.school,
-              is_private: isPrivate,
-              secretary_id: isPrivate ? null : prev.school.secretary_id,
-            },
-          }
-        : null
-    );
-  };
-
-  const handleSecretarySelect = (secretaryId: number) => {
-    setFormData((prev) =>
-      prev
-        ? { ...prev, school: { ...prev.school, secretary_id: secretaryId } }
-        : null
-    );
-    setOpenSecretaryPopover(false);
-  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,7 +165,6 @@ export default function EditSchoolPage() {
 
   if (isFetchingData) {
     return (
-      // MODIFICADO: Cores adaptadas
       <div className="flex items-center justify-center h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
@@ -196,7 +173,6 @@ export default function EditSchoolPage() {
 
   if (!formData) {
     return (
-      // MODIFICADO: Cores adaptadas
       <div className="flex items-center justify-center h-screen bg-background text-destructive">
         Não foi possível carregar o formulário de edição.
       </div>
@@ -204,7 +180,6 @@ export default function EditSchoolPage() {
   }
 
   return (
-    // MODIFICADO: Cor de fundo principal
     <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
       <div className=" mx-auto">
         <div className="flex items-center gap-4 mb-8">
@@ -217,7 +192,6 @@ export default function EditSchoolPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            {/* MODIFICADO: Cor do texto do título */}
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               Editar Escola
             </h1>
@@ -246,80 +220,21 @@ export default function EditSchoolPage() {
                     required
                   />
                 </div>
-                {/* MODIFICADO: Cores adaptadas */}
-                <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 bg-muted/50">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      Escola Privada
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Marque se for uma instituição de ensino privada.
-                    </p>
-                  </div>
-                  <Switch
-                    id="school.is_private"
-                    checked={formData.school.is_private}
-                    onCheckedChange={handleSwitchChange}
-                  />
+                
+                {/* --- MODIFICAÇÃO: Exibição estática do tipo de escola e secretaria --- */}
+                <div className="hidden ">
+                   <InfoDisplay
+                      label="Tipo de Escola"
+                      value={formData.school.is_private ? "Privada" : "Pública"}
+                   />
+                   {!formData.school.is_private && (
+                     <InfoDisplay
+                       label="Secretaria Vinculada"
+                       value={secretaryName}
+                     />
+                   )}
                 </div>
-                {!formData.school.is_private && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="grid gap-2">
-                      <Label>Secretaria Vinculada</Label>
-                      <Popover
-                        open={openSecretaryPopover}
-                        onOpenChange={setOpenSecretaryPopover}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="w-full justify-between"
-                          >
-                            {formData.school.secretary_id
-                              ? secretaries.find(
-                                  (s) => s.id === formData.school.secretary_id
-                                )?.name
-                              : "Selecione uma secretaria..."}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                          <Command>
-                            <CommandInput placeholder="Buscar secretaria..." />
-                            <CommandList>
-                              <CommandEmpty>
-                                Nenhuma secretaria encontrada.
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {secretaries.map((s) => (
-                                  <CommandItem
-                                    key={s.id}
-                                    value={s.name}
-                                    onSelect={() => handleSecretarySelect(s.id)}
-                                  >
-                                    <Check
-                                      className={`mr-2 h-4 w-4 ${
-                                        formData.school.secretary_id === s.id
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      }`}
-                                    />
-                                    {s.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </motion.div>
-                )}
+
               </div>
             </FormSection>
 
@@ -428,7 +343,6 @@ export default function EditSchoolPage() {
                     />
                   </div>
                 </div>
-                {/* MODIFICADO: Cor da borda adaptada */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t">
                   <div className="grid gap-2">
                     <Label htmlFor="user.email">E-mail de Acesso</Label>

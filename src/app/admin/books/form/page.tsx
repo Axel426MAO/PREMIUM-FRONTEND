@@ -374,6 +374,7 @@ export default function BookFormPage() {
             <div className="grid gap-2">
               <Label htmlFor="isbn">ISBN</Label>
               <Input
+                maxLength={13}
                 id="isbn"
                 value={formData.isbn || ""}
                 onChange={handleInputChange}

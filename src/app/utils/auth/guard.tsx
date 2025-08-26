@@ -13,7 +13,7 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
     // 2. A verificação agora só acontece quando o carregamento inicial termina.
     // Se não estiver carregando E não estiver autenticado, redireciona.
     if (!isLoading && !isAuthenticated) {
-      router.replace('/admin/login');
+      router.replace('/onboard');
     }
   }, [isAuthenticated, isLoading, router]); // Adicionamos isLoading às dependências
 

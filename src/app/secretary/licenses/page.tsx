@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -33,9 +33,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   MoreHorizontal,
-  Trash2,
   Search,
   BookOpen,
+  RefreshCw, // --- MODIFICAÇÃO 1: Ícone de recarregar importado ---
 } from "lucide-react";
 import {
   getLicenseBatches,
@@ -46,40 +46,40 @@ import {
 import { toast } from "sonner";
 import { useUserStore } from "@/app/store/userStore";
 
-// --- MODIFICAÇÃO 1: TIPAGEM E MAPEAMENTO DE STATUS ---
+// --- TIPAGEM E MAPEAMENTO DE STATUS ---
 type LicenseBatchStatus = LicenseBatchApiResponse["status"];
 type LicenseBatchViewData = LicenseBatchApiResponse & {
   formattedCreatedAt: string;
   customerName: string;
 };
 
-// Mapeamento para os textos dos status
 const statusLabels: Record<LicenseBatchStatus, string> = {
-  CRIADO: "CRIADO",
-  ENVIADO: "ENVIADO",
-  RECEBIDO: "RECEBIDO",
-  ATIVO: "ATIVO",
-  EXPIRADO: "EXPIRADO",
-  PENDENTE: "PENDENTE"
+  CRIADO: "Criado",
+  ENVIADO: "Enviado",
+  RECEBIDO: "Recebido",
+  ATIVO: "Ativo",
+  EXPIRADO: "Expirado",
+  PENDENTE: "Pendente",
 };
 
-// Função para definir a cor do badge com base no status
-const getStatusVariant = (status: LicenseBatchStatus) => {
+// --- MODIFICAÇÃO 2: CORES DE STATUS APRIMORADAS ---
+// Função para definir classes de cor do badge com base no status
+const getStatusClasses = (status: LicenseBatchStatus): string => {
   switch (status) {
-    case "CRIADO":
+    case "ATIVO":
+      return "bg-green-100 text-green-800 border-green-200 hover:bg-green-100 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800";
     case "ENVIADO":
     case "RECEBIDO":
-    case "ATIVO":
-      return "default";
+      return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800";
     case "PENDENTE":
-      return "secondary";
+      return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800";
     case "EXPIRADO":
-      return "destructive";
+      return "bg-red-100 text-red-800 border-red-200 hover:bg-red-100 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800";
+    case "CRIADO":
     default:
-      return "outline";
+      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 dark:bg-gray-900/50 dark:text-gray-300 dark:border-gray-700";
   }
 };
-
 
 // --- COMPONENTE PRINCIPAL ---
 export default function LicenseBatchesPage() {
@@ -92,47 +92,53 @@ export default function LicenseBatchesPage() {
     useState<LicenseBatchViewData | null>(null);
   const { user } = useUserStore();
 
-  useEffect(() => {
-    const fetchBatches = async () => {
-      if (!user) {
-        setError("Dados do usuário não disponíveis.");
-        setIsLoading(false);
-        return;
-      }
-      try {
-        setIsLoading(true);
-        let apiData: LicenseBatchApiResponse[];
-        if (user.user_type === "responsible_secretary") {
-          if (!user.responsible?.secretary?.id) {
-            setError("ID da secretaria não encontrado para o usuário.");
-            setIsLoading(false);
-            return;
-          }
-          apiData = await getLicenseBatchesBySecretaryId(
-            user.responsible.secretary.id
-          );
-        } else {
-          apiData = await getLicenseBatches();
+  // --- MODIFICAÇÃO 3: LÓGICA DE BUSCA EXTRAÍDA PARA REÚSO ---
+  const fetchBatches = useCallback(async (showToast = false) => {
+    if (!user) {
+      setError("Dados do usuário não disponíveis.");
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      let apiData: LicenseBatchApiResponse[];
+      if (user.user_type === "responsible_secretary") {
+        if (!user.responsible?.secretary?.id) {
+          throw new Error("ID da secretaria não encontrado para o usuário.");
         }
-        const viewData: LicenseBatchViewData[] = apiData.map((batch) => ({
-          ...batch,
-          formattedCreatedAt: new Date(batch.createdAt).toLocaleDateString(
-            "pt-BR"
-          ),
-          customerName:
-            batch.secretary?.name || batch.school?.name || "Não atribuído",
-        }));
-        setAllBatches(viewData);
-        setError(null);
-      } catch (err) {
-        setError("Não foi possível carregar os lotes de licenças.");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+        apiData = await getLicenseBatchesBySecretaryId(
+          user.responsible.secretary.id
+        );
+      } else {
+        apiData = await getLicenseBatches();
       }
-    };
+      const viewData: LicenseBatchViewData[] = apiData.map((batch) => ({
+        ...batch,
+        formattedCreatedAt: new Date(batch.createdAt).toLocaleDateString(
+          "pt-BR"
+        ),
+        customerName:
+          batch.secretary?.name || batch.school?.name || "Não atribuído",
+      }));
+      setAllBatches(viewData);
+      setError(null);
+      if (showToast) {
+        toast.success("Lista de licenças atualizada!");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro desconhecido";
+      setError(`Não foi possível carregar os lotes: ${errorMessage}`);
+      toast.error(`Erro ao atualizar: ${errorMessage}`);
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]); // A dependência `user` garante que a função é recriada se o usuário mudar.
+
+  useEffect(() => {
     fetchBatches();
-  }, [user]);
+  }, [fetchBatches]);
 
   const handleConfirmDelete = async () => {
     if (!batchToDelete) return;
@@ -169,23 +175,19 @@ export default function LicenseBatchesPage() {
     );
   }, [allBatches, searchQuery]);
 
-  // --- MODIFICAÇÃO 2: LÓGICA DE EXIBIÇÃO DO STATUS ---
   const getDisplayStatus = (status: LicenseBatchStatus) => {
-    // Se o usuário for da secretaria e o status for "ENVIADO", mostra "RECEBIDO"
     if (user?.user_type === "responsible_secretary" && status === "ENVIADO") {
       return statusLabels["RECEBIDO"];
     }
-    // Para todos os outros casos, retorna o label padrão
     return statusLabels[status] || status;
   };
-
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 min-h-screen">
       <div className="flex flex-col md:flex-row items-center justify-between border-b pb-4 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Licenças
+            Licenças Recebidas
           </h1>
           <p className="text-muted-foreground mt-1">
             Gerencie as licenças de livros digitais.
@@ -202,11 +204,23 @@ export default function LicenseBatchesPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          {/* --- MODIFICAÇÃO 4: BOTÃO DE RECARREGAR ADICIONADO --- */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fetchBatches(true)}
+            disabled={isLoading}
+            aria-label="Recarregar lista"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+            />
+          </Button>
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
+      <Card className="rounded-lg shadow-sm p-0 ">
+        <CardContent className="p-0 rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
@@ -215,14 +229,16 @@ export default function LicenseBatchesPage() {
                 <TableHead className="text-center">Quantidade</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="hidden md:table-cell">Criação</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead>
+                  <span className="sr-only">Ações</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center h-24">
-                    Carregando...
+                    Carregando licenças...
                   </TableCell>
                 </TableRow>
               ) : error ? (
@@ -240,25 +256,29 @@ export default function LicenseBatchesPage() {
                     <TableCell className="font-medium">
                       {batch.book.title}
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">
+                    <TableCell className="hidden sm:table-cell text-muted-foreground">
                       {batch.customerName}
                     </TableCell>
                     <TableCell className="text-center">
                       {batch.quantity}
                     </TableCell>
                     <TableCell className="text-center">
-                      {/* MODIFICAÇÃO 3: APLICANDO A NOVA LÓGICA */}
-                      <Badge variant={getStatusVariant(batch.status)}>
+                      {/* --- MODIFICAÇÃO 5: APLICANDO AS NOVAS CORES --- */}
+                      <Badge
+                        variant="outline"
+                        className={getStatusClasses(batch.status)}
+                      >
                         {getDisplayStatus(batch.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden md:table-cell text-muted-foreground">
                       {batch.formattedCreatedAt}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>

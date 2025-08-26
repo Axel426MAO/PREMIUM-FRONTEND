@@ -8,21 +8,26 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 interface SecretaryProfile {
     id: number;
     name: string;
-    is_state_level: boolean; 
+    is_state_level: boolean;
     municipality: string;
     state: string;
+
 }
 
 interface UserProfile {
     id: number;
     email: string;
     user_type: string;
+    createdAt: Date
     responsible?: {
         id: number;
         name: string;
         role: string;
         school?: { id: number; name: string };
-        secretary?: SecretaryProfile; 
+        phone: string;
+        whatsapp: string
+        secretary?: SecretaryProfile;
+
     };
 }
 interface UserState {
@@ -47,7 +52,7 @@ export const useUserStore = create<UserState>()(
             },
 
             logout: () => {
-                
+                localStorage.removeItem('authToken')
                 set({ token: null, isAuthenticated: false });
             },
         }),

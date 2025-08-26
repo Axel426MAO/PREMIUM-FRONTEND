@@ -13,9 +13,11 @@ import {
   ArrowRight,
   UserCheck,
   Loader2,
-  Building2, // MODIFICAÇÃO: Ícone para escolas privadas
+  Building2,
 } from "lucide-react";
 import { getSchoolsBySecretaryId } from "./schools/services/api";
+// --- MODIFICAÇÃO 1: Importar o serviço de licenças ---
+import { getLicenseBatchesBySecretaryId } from "./licenses/services/api";
 
 // Paleta de cores (sem alterações)
 const themeColors = {
@@ -125,10 +127,11 @@ export default function Home() {
   const { user } = useUserStore();
   const responsibleName = user?.responsible?.name;
 
-  // MODIFICAÇÃO: Estado unificado para as estatísticas
+  // --- MODIFICAÇÃO 2: Adicionar 'receivedLicenses' ao estado ---
   const [stats, setStats] = useState({
     publicSchools: 0,
     privateSchools: 0,
+    receivedLicenses: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,12 +148,14 @@ export default function Home() {
           if (!user.responsible?.secretary?.id) {
             throw new Error("ID da secretaria não encontrado.");
           }
+          const secretaryId = user.responsible.secretary.id;
 
-          const schools = await getSchoolsBySecretaryId(
-            user.responsible.secretary.id
-          );
+          // --- MODIFICAÇÃO 3: Buscar escolas e licenças em paralelo ---
+          const [schools, licenseBatches] = await Promise.all([
+            getSchoolsBySecretaryId(secretaryId),
+            getLicenseBatchesBySecretaryId(secretaryId),
+          ]);
 
-          // MODIFICAÇÃO: Lógica para contar escolas públicas e privadas
           const publicSchoolsCount = schools.filter(
             (school) => !school.is_private
           ).length;
@@ -161,8 +166,8 @@ export default function Home() {
           setStats({
             publicSchools: publicSchoolsCount,
             privateSchools: privateSchoolsCount,
+            receivedLicenses: licenseBatches.length, // Contagem total de lotes de licença
           });
-
         } catch (err) {
           console.error("Erro ao buscar dados do dashboard:", err);
           setError("Não foi possível carregar os dados.");
@@ -178,11 +183,14 @@ export default function Home() {
   }, [user]);
 
   return (
-    <main className="flex flex-1 flex-col  p-6 md:p-10 md:py-6">
+    <main className="flex flex-1 flex-col p-6 md:p-10 md:py-6">
       <header className="mb-4 border-b pb-4">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Bem-vindo(a)
-          {responsibleName ? `, ${responsibleName}` : ""}!
+          Bem-vindo
+          {responsibleName
+            ? `, ${responsibleName.trim().split(" ").slice(0, 2).join(" ")}`
+            : ""}
+          !
         </h1>
         <p className="mt-1 text-muted-foreground">
           Aqui está um resumo das escolas, livros e licenças relacionados à sua
@@ -223,35 +231,25 @@ export default function Home() {
           >
             Visão Geral
           </h2>
-          {/* MODIFICAÇÃO: Grid ajustado para 5 colunas para melhor encaixe */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {/* MODIFICAÇÃO: Card de Escolas Públicas */}
             <StatCard
               href="/admin/schools"
-              title="Escolas Públicas"
+              title="Escolas"
               value={stats.publicSchools}
               icon={School}
               colorClass={themeColors.schools.text}
               isLoading={isLoading}
             />
-            {/* MODIFICAÇÃO: Card de Escolas Privadas */}
-            <StatCard
-              href="/admin/schools"
-              title="Escolas Privadas"
-              value={stats.privateSchools}
-              icon={Building2}
-              colorClass={themeColors.schools.text}
-              isLoading={isLoading}
-            />
+
+            {/* --- MODIFICAÇÃO 4: Conectar o valor do card com o estado --- */}
             <StatCard
               href="/admin/licenses"
               title="Licenças Recebidas"
-              value={0} // TODO: Conectar com o backend
+              value={stats.receivedLicenses}
               icon={Layers}
               colorClass={themeColors.licenses.text}
               isLoading={isLoading}
             />
-
 
             <StatCard
               href="/admin/licenses"

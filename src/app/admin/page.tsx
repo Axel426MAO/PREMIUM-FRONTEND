@@ -150,7 +150,6 @@ export default function Home() {
   useEffect(() => {
     const fetchAllStats = async () => {
       try {
-        // MODIFICAÇÃO 4: Adicionada a chamada para getSchools
         const [
           booksData,
           secretariesData,
@@ -162,10 +161,9 @@ export default function Home() {
           getSecretaries(),
           getUsers(),
           getLicenseBatches(),
-          getSchools(), // Chamando a nova função
+          getSchools(), 
         ]);
 
-        // MODIFICAÇÃO 5: Lógica para contar escolas públicas e privadas
         const publicSchoolsCount = schoolsData.filter(
           (school) => !school.is_private
         ).length;
@@ -195,8 +193,11 @@ export default function Home() {
     <main className="flex flex-1 flex-col bg-muted/20 dark:bg-background/95 p-6 md:p-8">
       <header className="mb-4 border-b pb-4">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Bem-vindo(a)
-          {responsibleName ? `, ${responsibleName}` : ""}!
+          Bem-vindo
+          {responsibleName
+            ? `, ${responsibleName.trim().split(" ").slice(0, 2).join(" ")}`
+            : ""}
+          !
         </h1>
         <p className="mt-1 text-muted-foreground">
           Aqui está um resumo rápido da atividade no seu sistema.

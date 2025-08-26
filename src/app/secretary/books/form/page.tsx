@@ -362,6 +362,7 @@ export default function BookFormPage() {
               <Label htmlFor="isbn">ISBN</Label>
               <Input
                 id="isbn"
+                maxLength={12}
                 value={formData.isbn || ""}
                 onChange={handleInputChange}
                 disabled={isLoading}

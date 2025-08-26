@@ -66,11 +66,11 @@ interface UserViewData {
 type MainUserCategory =
   | "all"
   | "premium"
-  | "resp_sec_municipal"
   | "resp_sec_estadual"
+  | "resp_sec_municipal"
   | "resp_school"
-  | "student"
-  | "teacher";
+  | "teacher"
+  | "student";
 type SchoolTypeCategory = "all" | "public" | "private";
 
 export default function UsersPage() {
@@ -198,11 +198,11 @@ export default function UsersPage() {
   const mainCategoryLabels: Record<MainUserCategory, string> = {
     all: "Todos",
     premium: "Premium",
-    resp_sec_municipal: "Resp. Sec. Municipal",
     resp_sec_estadual: "Resp. Sec. Estadual",
+    resp_sec_municipal: "Resp. Sec. Municipal",
     resp_school: "Resp. Escolas",
-    student: "Alunos",
     teacher: "Professores",
+    student: "Alunos",
   };
 
   const showSchoolTypeFilter = ["resp_school", "student", "teacher"].includes(
@@ -280,8 +280,8 @@ export default function UsersPage() {
         )}
       </div>
 
-      <Card>
-        <CardContent className="p-0">
+      <Card className="py-0 rounded">
+        <CardContent className="p-0 rounded">
           <Table>
             <TableHeader>
               <TableRow>
@@ -325,7 +325,7 @@ export default function UsersPage() {
                   return (
                     <TableRow
                       key={user.id}
-                      className="odd:bg-gray-100 dark:odd:bg-muted/40"
+                      className="even:bg-gray-100 dark:even:bg-muted/40"
                     >
                       <TableCell className="font-medium">
                         <div className="flex flex-col">

@@ -120,7 +120,10 @@ const generateStrongPassword = (): string => {
   for (let i = 4; i < 12; i++) {
     password += allChars[Math.floor(Math.random() * allChars.length)];
   }
-  return password.split("").sort(() => 0.5 - Math.random()).join("");
+  return password
+    .split("")
+    .sort(() => 0.5 - Math.random())
+    .join("");
 };
 
 // --- COMPONENTE AUXILIAR DE SENHA ---
@@ -220,7 +223,6 @@ const PasswordInput: FC<{
   );
 };
 
-
 export default function UserFormPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -235,7 +237,7 @@ export default function UserFormPage() {
     role: "",
     secretary_id: null as number | null,
   });
-  
+
   // --- Novos estados para validação ---
   const [confirmEmail, setConfirmEmail] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -248,7 +250,10 @@ export default function UserFormPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const passwordStrength = useMemo(() => checkPasswordStrength(userData.password), [userData.password]);
+  const passwordStrength = useMemo(
+    () => checkPasswordStrength(userData.password),
+    [userData.password]
+  );
 
   useEffect(() => {
     if (selectedUserType === "responsible") {
@@ -265,22 +270,22 @@ export default function UserFormPage() {
 
     // Validação antes de enviar
     if (!isValidEmail(userData.email)) {
-        toast.error("O formato do e-mail é inválido.");
-        return;
+      toast.error("O formato do e-mail é inválido.");
+      return;
     }
     if (userData.email !== confirmEmail) {
-        toast.error("Os e-mails não coincidem.");
-        return;
+      toast.error("Os e-mails não coincidem.");
+      return;
     }
     if (passwordStrength.score < 4) {
-        toast.error("A senha não atende aos critérios de segurança.");
-        return;
+      toast.error("A senha não atende aos critérios de segurança.");
+      return;
     }
     if (userData.password !== confirmPassword) {
-        toast.error("As senhas não coincidem.");
-        return;
+      toast.error("As senhas não coincidem.");
+      return;
     }
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -289,7 +294,9 @@ export default function UserFormPage() {
         const userPayload = {
           ...userData,
           user_type:
-            selectedUserType === "premium" ? userLevel : "responsible_secretary",
+            selectedUserType === "premium"
+              ? userLevel
+              : "responsible_secretary",
           status: true,
         };
 
@@ -324,12 +331,12 @@ export default function UserFormPage() {
     setUserData((prev) => ({ ...prev, [name]: value }));
 
     if (name === "email") {
-        setEmailTouched(true);
-        if (value && !isValidEmail(value)) {
-            setEmailError("Formato de e-mail inválido.");
-        } else {
-            setEmailError(null);
-        }
+      setEmailTouched(true);
+      if (value && !isValidEmail(value)) {
+        setEmailError("Formato de e-mail inválido.");
+      } else {
+        setEmailError(null);
+      }
     }
   };
 
@@ -339,15 +346,15 @@ export default function UserFormPage() {
   };
 
   const handleRoleChange = (value: string) => {
-    setResponsibleData((prev) => ({...prev, role: value}));
-  }
+    setResponsibleData((prev) => ({ ...prev, role: value }));
+  };
 
   const handleGeneratePassword = () => {
     const newPassword = generateStrongPassword();
-    setUserData(prev => ({...prev, password: newPassword}));
+    setUserData((prev) => ({ ...prev, password: newPassword }));
     setConfirmPassword(newPassword);
     toast.success("Nova senha segura gerada!");
-  }
+  };
 
   const cardAnimation = {
     initial: { opacity: 0, y: 20 },
@@ -448,132 +455,206 @@ export default function UserFormPage() {
                     ? "Passo 3: Dados do Admin"
                     : "Passo 2: Dados de Acesso"}
                 </h3>
-
+                <div className="grid gap-2">
+                  <Label htmlFor="responsibleName">Nome</Label>
+                  <Input
+                    id="responsibleName"
+                    name="name"
+                    value={responsibleData.name}
+                    onChange={handleResponsibleInputChange}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
                 {/* --- SEÇÃO DE E-MAIL ATUALIZADA --- */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">E-mail de Acesso</Label>
-                        <div className="relative">
-                            <Input id="email" name="email" type="email" value={userData.email} onChange={handleUserInputChange} required disabled={isLoading} className={`pr-10 ${emailTouched && emailError ? "border-red-500" : emailTouched && !emailError && userData.email ? "border-green-500" : ""}`} />
-                             {emailTouched && userData.email && (
-                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    {emailError ? <XCircle className="h-5 w-5 text-red-500" /> : <CheckCircle className="h-5 w-5 text-green-500" />}
-                                </div>
-                            )}
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">E-mail de Acesso</Label>
+                    <div className="relative">
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={userData.email}
+                        onChange={handleUserInputChange}
+                        required
+                        disabled={isLoading}
+                        className={`pr-10 ${
+                          emailTouched && emailError
+                            ? "border-red-500"
+                            : emailTouched && !emailError && userData.email
+                            ? "border-green-500"
+                            : ""
+                        }`}
+                      />
+                      {emailTouched && userData.email && (
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          {emailError ? (
+                            <XCircle className="h-5 w-5 text-red-500" />
+                          ) : (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          )}
                         </div>
-                         <div className="h-5"><p className="text-xs text-red-500">{emailTouched && emailError}</p></div>
+                      )}
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="confirmEmail">Confirmar E-mail</Label>
-                        <Input id="confirmEmail" type="email" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} required disabled={isLoading} />
-                        <div className="h-5">
-                            {confirmEmail && userData.email !== confirmEmail && (<p className="text-xs text-red-500">Os e-mails não coincidem.</p>)}
-                        </div>
+                    <div className="h-5">
+                      <p className="text-xs text-red-500">
+                        {emailTouched && emailError}
+                      </p>
                     </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="confirmEmail">Confirmar E-mail</Label>
+                    <Input
+                      id="confirmEmail"
+                      type="email"
+                      value={confirmEmail}
+                      onChange={(e) => setConfirmEmail(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                    <div className="h-5">
+                      {confirmEmail && userData.email !== confirmEmail && (
+                        <p className="text-xs text-red-500">
+                          Os e-mails não coincidem.
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* --- SEÇÃO DE SENHA ATUALIZADA --- */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 items-start gap-x-6 gap-y-6">
-                    <PasswordInput value={userData.password} onChange={handleUserInputChange} onGenerate={handleGeneratePassword} />
-                    <div className="grid gap-2">
-                        <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                        <div className="relative">
-                            <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isLoading} className="pr-10"/>
-                             <Button type="button" variant="ghost" size="icon" className="absolute inset-y-0 right-0 h-full w-10" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
-                        </div>
-                         <div className="h-5">
-                            {confirmPassword && userData.password !== confirmPassword && (<p className="text-xs text-red-500">As senhas não coincidem.</p>)}
-                        </div>
+                  <PasswordInput
+                    value={userData.password}
+                    onChange={handleUserInputChange}
+                    onGenerate={handleGeneratePassword}
+                  />
+                  <div className="grid gap-2 pt-1">
+                    <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute inset-y-0 right-0 h-full w-10"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
+                    <div className="h-5">
+                      {confirmPassword &&
+                        userData.password !== confirmPassword && (
+                          <p className="text-xs text-red-500">
+                            As senhas não coincidem.
+                          </p>
+                        )}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="border-t pt-6 grid gap-6">
-                  <h3 className="font-semibold text-lg">
-                    Dados do Responsável
-                  </h3>
-                  <div className="grid gap-2">
-                    <Label htmlFor="responsibleName">
-                      Nome Completo do Responsável
-                    </Label>
-                    <Input id="responsibleName" name="name" value={responsibleData.name} onChange={handleResponsibleInputChange} required disabled={isLoading} />
-                  </div>
-                  
-                  {/* --- CAMPO DE CARGO ATUALIZADO --- */}
-                  <div className="grid gap-2">
-                    <Label htmlFor="responsibleRole">Cargo</Label>
-                    <Select onValueChange={handleRoleChange} value={responsibleData.role} required>
-                        <SelectTrigger id="responsibleRole" disabled={isLoading}>
-                            <SelectValue placeholder="Selecione um cargo..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {roleOptions.map(role => (
-                                <SelectItem key={role} value={role}>{role}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                  </div>
-
+                <div className="  grid gap-6">
                   {selectedUserType === "responsible" && (
-                    <div className="grid gap-2">
-                      <Label>Secretaria Vinculada</Label>
-                      <Popover
-                        open={openSecretaryPopover}
-                        onOpenChange={setOpenSecretaryPopover}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openSecretaryPopover}
-                            className="w-full justify-between"
-                            disabled={!secretaries.length}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="grid gap-2">
+                        <Label>Secretaria Vinculada</Label>
+                        <Popover
+                          open={openSecretaryPopover}
+                          onOpenChange={setOpenSecretaryPopover}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openSecretaryPopover}
+                              className="w-full justify-between"
+                              disabled={!secretaries.length}
+                            >
+                              {responsibleData.secretary_id
+                                ? secretaries.find(
+                                    (s) => s.id === responsibleData.secretary_id
+                                  )?.name
+                                : "Selecione uma secretaria..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                              <CommandInput placeholder="Buscar secretaria..." />
+                              <CommandList>
+                                <CommandEmpty>
+                                  Nenhuma secretaria encontrada.
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {secretaries.map((secretary) => (
+                                    <CommandItem
+                                      key={secretary.id}
+                                      value={secretary.name}
+                                      onSelect={() => {
+                                        setResponsibleData((prev) => ({
+                                          ...prev,
+                                          secretary_id: secretary.id,
+                                        }));
+                                        setOpenSecretaryPopover(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${
+                                          responsibleData.secretary_id ===
+                                          secretary.id
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        }`}
+                                      />
+                                      {secretary.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="grid gap-2 w-full">
+                        <Label htmlFor="responsibleRole">Cargo</Label>
+                        <Select
+                          onValueChange={handleRoleChange}
+                          value={responsibleData.role}
+                          required
+                        >
+                          <SelectTrigger
+                            id="responsibleRole"
+                            disabled={isLoading}
+                                                      className="w-full"
+
                           >
-                            {responsibleData.secretary_id
-                              ? secretaries.find(
-                                  (s) => s.id === responsibleData.secretary_id
-                                )?.name
-                              : "Selecione uma secretaria..."}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                          <Command>
-                            <CommandInput placeholder="Buscar secretaria..." />
-                            <CommandList>
-                              <CommandEmpty>
-                                Nenhuma secretaria encontrada.
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {secretaries.map((secretary) => (
-                                  <CommandItem
-                                    key={secretary.id}
-                                    value={secretary.name}
-                                    onSelect={() => {
-                                      setResponsibleData((prev) => ({
-                                        ...prev,
-                                        secretary_id: secretary.id,
-                                      }));
-                                      setOpenSecretaryPopover(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={`mr-2 h-4 w-4 ${
-                                        responsibleData.secretary_id ===
-                                        secretary.id
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      }`}
-                                    />
-                                    {secretary.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                            <SelectValue placeholder="Selecione um cargo..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {roleOptions.map((role) => (
+                              <SelectItem key={role} value={role}>
+                                {role}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   )}
                 </div>

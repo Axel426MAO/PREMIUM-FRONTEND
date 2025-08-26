@@ -53,7 +53,7 @@ const FormSection: FC<{
   children: React.ReactNode;
 }> = ({ title, description, icon, children }) => (
   // MODIFICADO: Cores adaptadas para tema escuro/claro
-  <div className="bg-card rounded-lg border shadow-sm">
+  <div className="bg-card rounded-lg border shadow-sm mt-4 mb-4">
     <div className="p-5 border-b">
       <div className="flex items-center gap-3">
         {icon}
