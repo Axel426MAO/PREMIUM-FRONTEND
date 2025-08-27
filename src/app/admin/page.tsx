@@ -134,7 +134,6 @@ function ActionCard({
 }
 
 export default function Home() {
-  // MODIFICAÇÃO 3: Estado atualizado para incluir contagem de escolas
   const [stats, setStats] = useState({
     books: 0,
     secretaries: 0,
