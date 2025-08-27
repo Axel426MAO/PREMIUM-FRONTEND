@@ -47,17 +47,16 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
     displayEmail = user.email;
 
     // ======================= INÍCIO DA ALTERAÇÃO =======================
-    // Lógica simplificada para exibir o nome e sobrenome do usuário.
-    // 1. Tenta usar o nome completo de 'user.responsible.name'.
-    // 2. Se não existir, usa o email do usuário como alternativa.
     if (user.responsible && user.responsible.name) {
-      displayName = user.responsible.name;
+      // 1. Divide o nome completo em um array de palavras.
+      // 2. Pega as duas primeiras palavras com slice(0, 2).
+      // 3. Junta as palavras novamente com um espaço.
+      displayName = user.responsible.name.split(" ").slice(0, 2).join(" ");
     } else {
       displayName = user.email;
     }
     // ======================= FIM DA ALTERAÇÃO =======================
 
-    // A lógica para as iniciais já funciona corretamente com esta alteração.
     const nameForInitials = user.responsible?.name || user.email;
     initials = nameForInitials
       .split(" ")
@@ -103,7 +102,8 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {displayName}
+                  {/* ATUALIZAÇÃO: Exibe o nome completo no dropdown */}
+                  {user?.responsible?.name || user?.email}
                 </p>
                 <p className="text-xs leading-none text-muted-foreground">
                   {displayEmail}
