@@ -58,7 +58,7 @@
   --card-foreground: oklch(0.1 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.1 0 0);
-  --primary: oklch(20.019% 0.00002 271.152);                /* Cor primária PRETA para botões e elementos principais */
+  --primary: #324155;                /* Cor primária PRETA para botões e elementos principais */
   --primary-foreground: oklch(0.985 0 0);   /* Texto branco/claro para botões primários */
   --secondary: oklch(0.94 0 0);           /* Fundo secundário cinza claro */
   --secondary-foreground: oklch(0.2 0 0);
