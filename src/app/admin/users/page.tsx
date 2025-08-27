@@ -285,15 +285,15 @@ export default function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>E-mail / Nome</TableHead>
-                <TableHead className="hidden sm:table-cell">
+                <TableHead font-bold>E-mail / Nome</TableHead>
+                <TableHead className="hidden sm:table-cell font-bold">
                   Tipo / Vínculo
                 </TableHead>
-                <TableHead className="hidden md:table-cell">
+                <TableHead className="hidden md:table-cell font-bold">
                   Data de Criação
                 </TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="text-center font-bold">Status</TableHead>
+                <TableHead className="text-right font-bold">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

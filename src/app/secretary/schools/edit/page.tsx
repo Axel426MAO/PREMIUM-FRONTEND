@@ -75,10 +75,8 @@ export default function EditSchoolPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(true);
   
-  // MODIFICAÇÃO: Estado para guardar o nome da secretaria para exibição
   const [secretaryName, setSecretaryName] = useState<string | null>(null);
 
-  // Busca apenas os dados da escola
   useEffect(() => {
     if (!schoolId) {
       toast.error("ID da escola não fornecido.");
