@@ -17,6 +17,7 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const { user, logout } = useUserStore();
   const router = useRouter();
 
+  // Valores padrão
   let displayName = "Usuário";
   let displayEmail = "Não autenticado";
   let initials = "U";
@@ -26,9 +27,8 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
     router.push("/");
   };
 
-  // --- MODIFICAÇÃO 1: Lógica de redirecionamento do perfil ---
   const handleProfileNavigation = () => {
-    if (!user) return; // Proteção caso o usuário não esteja carregado
+    if (!user) return;
 
     switch (user.user_type) {
       case "admin":
@@ -38,7 +38,6 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
         router.push("/secretary/profile");
         break;
       default:
-        // Rota padrão para outros tipos de usuário, se houver
         router.push("/admin/profile");
         break;
     }
@@ -46,30 +45,24 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
 
   if (user) {
     displayEmail = user.email;
-    if (!user.responsible) {
-      displayName = user.email;
+
+    // ======================= INÍCIO DA ALTERAÇÃO =======================
+    // Lógica simplificada para exibir o nome e sobrenome do usuário.
+    // 1. Tenta usar o nome completo de 'user.responsible.name'.
+    // 2. Se não existir, usa o email do usuário como alternativa.
+    if (user.responsible && user.responsible.name) {
+      displayName = user.responsible.name;
     } else {
-      switch (user.user_type) {
-        case "admin":
-          displayName = "Responsável Editoria Premium";
-          break;
-        case "responsible_secretary":
-          if (user.responsible.secretary?.is_state_level) {
-            displayName = "Responsável da Secretaria Estadual";
-          } else {
-            displayName = "Responsável da Secretaria Municipal";
-          }
-          break;
-        default:
-          displayName = user.responsible.name;
-          break;
-      }
+      displayName = user.email;
     }
+    // ======================= FIM DA ALTERAÇÃO =======================
+
+    // A lógica para as iniciais já funciona corretamente com esta alteração.
     const nameForInitials = user.responsible?.name || user.email;
     initials = nameForInitials
       .split(" ")
       .slice(0, 2)
-      .map((n: any) => n[0])
+      .map((n: string) => n[0])
       .join("")
       .toUpperCase();
   }
@@ -118,7 +111,6 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {/* --- MODIFICAÇÃO 2: Aplicando a nova função ao clique --- */}
             <DropdownMenuItem onClick={handleProfileNavigation}>
               <User className="mr-2 h-4 w-4" />
               <span>Meu Perfil</span>
