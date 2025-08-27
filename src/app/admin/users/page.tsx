@@ -285,7 +285,7 @@ export default function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead font-bold>E-mail / Nome</TableHead>
+                <TableHead className="font-bold">E-mail / Nome</TableHead>
                 <TableHead className="hidden sm:table-cell font-bold">
                   Tipo / Vínculo
                 </TableHead>
