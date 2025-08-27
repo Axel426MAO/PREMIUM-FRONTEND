@@ -280,10 +280,10 @@ export default function UsersPage() {
         )}
       </div>
 
-      <Card className="py-0 rounded">
-        <CardContent className="p-0 rounded">
-          <Table>
-            <TableHeader >
+      <Card className="py-0 ">
+        <CardContent className="p-0 ">
+          <Table className="">
+            <TableHeader className="">
               <TableRow className="">
                 <TableHead className="font-bold xl:px-4 xl:py-3">E-mail / Nome</TableHead>
                 <TableHead className="hidden sm:table-cell font-bold">
@@ -293,7 +293,7 @@ export default function UsersPage() {
                   Data de Criação
                 </TableHead>
                 <TableHead className="text-center font-bold">Status</TableHead>
-                <TableHead className="text-right font-bold">Ações</TableHead>
+                <TableHead className="text-right font-bold xl:px-4 xl:py-3">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
