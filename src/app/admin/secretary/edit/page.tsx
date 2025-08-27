@@ -68,7 +68,7 @@ const FormSection: FC<{
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, description, icon, children }) => (
-  <div className="bg-card rounded-xl border shadow-sm">
+  <div className="bg-card rounded-xl border shadow-sm mt-4 mb-4">
     <div className="p-5 border-b bg-muted/50 rounded-t-xl">
       <div className="flex items-center gap-3">
         {icon}
@@ -273,7 +273,7 @@ const EditSecretaryPage = () => {
               icon={<Building className="h-6 w-6 text-primary" />}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="grid gap-2 sm:col-span-2 mt-2 mb-2">
+                <div className="grid gap-2 sm:col-span-2 ">
                   <Label htmlFor="secretary.name">Nome da Secretaria</Label>
                   <Input
                     id="secretary.name"
@@ -283,7 +283,7 @@ const EditSecretaryPage = () => {
                     required
                   />
                 </div>
-                <div className="grid gap-2 mt-2 mb-2">
+                <div className="grid gap-2 ">
                   <Label>Nível</Label>
                   <Select
                     value={
@@ -305,7 +305,7 @@ const EditSecretaryPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2 mt-2 mb-2">
+                <div className="grid gap-2 ">
                   <Label htmlFor="secretary.state">Estado (UF)</Label>
                   <Select
                     name="secretary.state"
