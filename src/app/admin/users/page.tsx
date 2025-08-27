@@ -283,9 +283,9 @@ export default function UsersPage() {
       <Card className="py-0 rounded">
         <CardContent className="p-0 rounded">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="font-bold">E-mail / Nome</TableHead>
+            <TableHeader >
+              <TableRow className="">
+                <TableHead className="font-bold xl:px-4 xl:py-3">E-mail / Nome</TableHead>
                 <TableHead className="hidden sm:table-cell font-bold">
                   Tipo / Vínculo
                 </TableHead>
@@ -327,7 +327,7 @@ export default function UsersPage() {
                       key={user.id}
                       className="even:bg-gray-100 dark:even:bg-muted/40"
                     >
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium xl:px-4 xl:py-3" >
                         <div className="flex flex-col">
                           <span>{user.email}</span>
                           {profile?.name && (
