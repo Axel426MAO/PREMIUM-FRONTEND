@@ -62,11 +62,11 @@ const SchoolCard: FC<{
   onDelete: (school: SchoolViewData) => void;
 }> = ({ school, onEdit, onDelete }) => {
   return (
-    <div className="w-full bg-background border border-slate-200 rounded-lg p-4 transition-shadow hover:shadow-md flex flex-col">
+    <div className="w-full bg-card   rounded-lg p-4 transition-shadow hover:shadow-md flex flex-col">
       {/* Cabeçalho do Card */}
-      <div className="flex items-start justify-between pb-3 mb-3 border-b border-slate-100">
+      <div className="flex items-start justify-between pb-3 mb-3 ">
         <div className="space-y-1.5">
-          <h3 className="text-base font-bold text-slate-800 leading-tight">
+          <h3 className="text-base font-bold text-foreground-800 leading-tight">
             {school.name}
           </h3>
           <Badge variant={school.type === "Pública" ? "secondary" : "outline"}>
@@ -77,7 +77,7 @@ const SchoolCard: FC<{
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-8 w-8 p-0 -mr-2 -mt-1 text-slate-500"
+              className="h-8 w-8 p-0 -mr-2 -mt-1 text-foreground-500"
             >
               <MoreHorizontal className="h-5 w-5" />
             </Button>
@@ -99,24 +99,19 @@ const SchoolCard: FC<{
 
       {/* Conteúdo do Card */}
       <div className="space-y-3 text-sm flex-grow">
-        <div className="flex items-center gap-3 text-slate-600">
-          <Building className="h-4 w-4 shrink-0 text-slate-400" />
+        <div className="flex items-center gap-3 text-foreground-600">
+          <Building className="h-4 w-4 shrink-0 text-foreground-400" />
           <span className="truncate" title={school.secretaryName}>
             {school.secretaryName}
           </span>
         </div>
-        <div className="flex items-center gap-3 text-slate-600">
-          <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
+        <div className="flex items-center gap-3 text-foreground-600">
+          <MapPin className="h-4 w-4 shrink-0 text-foreground-400" />
           <span className="truncate">{school.location}</span>
         </div>
       </div>
 
-      {/* Rodapé do Card */}
-      <div className="pt-4 mt-auto">
-        <Badge variant={school.status === "Ativa" ? "default" : "destructive"}>
-          {school.status}
-        </Badge>
-      </div>
+  
     </div>
   );
 };
