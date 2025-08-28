@@ -63,11 +63,11 @@ const SecretaryCard: FC<{
   onDelete: (secretary: SecretaryViewData) => void;
 }> = ({ secretary, onEdit, onDelete }) => {
   return (
-    <div className="w-full bg-background border border-slate-200 rounded-lg p-4 transition-shadow hover:shadow-md flex flex-col">
+    <div className="w-full bg-card border border-slate-200 dark:border-card rounded-lg p-4 transition-shadow hover:shadow-md flex flex-col">
       {/* Cabeçalho do Card */}
       <div className="flex items-start justify-between pb-3 mb-3 border-b border-slate-100">
         <div className="space-y-1.5">
-          <h3 className="text-base font-bold text-slate-800 leading-tight">
+          <h3 className="text-base font-bold text-slate-800 dark:text-foreground leading-tight">
             {secretary.name}
           </h3>
           <Badge variant={secretary.is_state_level ? "secondary" : "outline"}>
@@ -78,7 +78,7 @@ const SecretaryCard: FC<{
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-8 w-8 p-0 -mr-2 -mt-1 text-slate-500"
+              className="h-8 w-8 p-0 -mr-2 -mt-1 text-slate-500 dark:text-foreground"
             >
               <MoreHorizontal className="h-5 w-5" />
             </Button>
@@ -100,16 +100,16 @@ const SecretaryCard: FC<{
 
       {/* Conteúdo do Card */}
       <div className="space-y-3 text-sm flex-grow">
-        <div className="flex items-center gap-3 text-slate-600">
-          <User className="h-4 w-4 shrink-0 text-slate-400" />
+        <div className="flex items-center gap-3 text-slate-600 dark:text-foreground">
+          <User className="h-4 w-4 shrink-0 text-slate-400 dark:text-foreground" />
           <span>{secretary.responsible}</span>
         </div>
-        <div className="flex items-center gap-3 text-slate-600">
-          <Mail className="h-4 w-4 shrink-0 text-slate-400" />
+        <div className="flex items-center gap-3 text-slate-600 dark:text-foreground">
+          <Mail className="h-4 w-4 shrink-0 text-slate-400 dark:text-foreground" />
           <span className="truncate">{secretary.email}</span>
         </div>
-        <div className="flex items-center gap-3 text-slate-600">
-          <Phone className="h-4 w-4 shrink-0 text-slate-400" />
+        <div className="flex items-center gap-3 text-slate-600 dark:text-foreground">
+          <Phone className="h-4 w-4 shrink-0 text-slate-400 dark:text-foreground" />
           <span>{secretary.phone}</span>
         </div>
       </div>
@@ -243,7 +243,7 @@ export default function SecretaryPage() {
       </div>
 
       {/* FILTRO DE ABAS */}
-      <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-full sm:w-fit overflow-x-auto">
+      <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-full sm:w-fit overflow-x-auto shadow">
         <Button
           variant={levelFilter === "all" ? "default" : "ghost"}
           className="rounded-md"
@@ -262,19 +262,16 @@ export default function SecretaryPage() {
       </div>
 
       {/* Conteúdo Principal: Cards ou Tabela */}
-      <Card className="py-0 rounded">
-        <CardContent className="p-0 rounded">
+  
           {/* Visão de Tabela para Desktop */}
-          <div className="hidden md:block">
-            <Table>
+          <div className="hidden md:block shadow rounded-xl">
+            <Table className="">
               <TableHeader>
-                <TableRow>
                   <TableHead >Nome</TableHead>
                   <TableHead >Responsável</TableHead>
                   <TableHead >Contato</TableHead>
                   <TableHead className="text-center ">Status</TableHead>
                   <TableHead className="text-right ">Ações</TableHead>
-                </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
@@ -296,7 +293,7 @@ export default function SecretaryPage() {
                   filteredSecretaries.map((secretary) => (
                     <TableRow
                       key={secretary.id}
-                      className="even:bg-gray-100 dark:even:bg-muted/40"
+                      className=" even:bg-gray-100 dark:even:bg-card/100"
                     >
                       <TableCell className="font-medium  p-4">
                         {secretary.name}
@@ -322,7 +319,7 @@ export default function SecretaryPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
+                        <DropdownMenu >
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
                               <MoreHorizontal className="h-4 w-4" />
@@ -382,8 +379,7 @@ export default function SecretaryPage() {
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+       
 
       {/* DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO */}
       <AlertDialog

@@ -137,7 +137,7 @@ export function SideMenu({
   return (
     <aside
       className={cn(
-        "fixed top-0 left-0 z-50 hidden h-screen flex-col border-r bg-background md:flex",
+        "fixed top-0 left-0 z-50 hidden h-screen flex-col border-r bg-sidebar md:flex",
         "transition-all duration-300 ease-in-out",
         isCollapsed ? "w-16" : "w-64"
       )}

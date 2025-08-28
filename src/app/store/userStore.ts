@@ -18,7 +18,7 @@ interface UserProfile {
     id: number;
     email: string;
     user_type: string;
-    createdAt: Date
+    createdAt: string
     responsible?: {
         id: number;
         name: string;

@@ -241,7 +241,7 @@ export default function SchoolsPage() {
       </div>
 
       {/* FILTRO DE ABAS */}
-      <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-full sm:w-fit overflow-x-auto">
+      <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-full sm:w-fit overflow-x-auto shadow">
         <Button
           variant={typeFilter === "all" ? "default" : "ghost"}
           className="rounded-md"
@@ -265,20 +265,15 @@ export default function SchoolsPage() {
         </Button>
       </div>
 
-      {/* Conteúdo Principal: Cards ou Tabela */}
-      <Card className="py-0 rounded">
-        <CardContent className="p-0 rounded">
-          {/* Visão de Tabela para Desktop */}
-          <div className="hidden md:block">
+   
+          <div className="hidden md:block shadow rounded-xl">
             <Table>
               <TableHeader>
-                <TableRow>
                   <TableHead className="w-[30%]">Escola</TableHead>
                   <TableHead>Secretaria Vinculada</TableHead>
                   <TableHead>Localização</TableHead>
                   <TableHead className="text-center">Tipo</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
@@ -378,8 +373,6 @@ export default function SchoolsPage() {
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
 
       {/* DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO */}
       <AlertDialog

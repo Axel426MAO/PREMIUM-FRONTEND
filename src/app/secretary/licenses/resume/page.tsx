@@ -18,7 +18,6 @@ import {
 import { getLicenseBatchById, type LicenseBatchDetails } from "../services/api";
 import { ListLicense } from "@/app/shared/sections/ListLicense";
 
-
 const InfoCard: FC<{
   icon: React.ReactNode;
   title: string;
@@ -76,7 +75,7 @@ export default function LicenseResumePage() {
       case "ENVIADO":
         return {
           variant: "default" as const,
-          text: status.charAt(0) + status.slice(1).toLowerCase(),
+          text: "Recebido", // Exibe "Recebido"
         };
       case "PENDENTE":
       case "CRIADO":

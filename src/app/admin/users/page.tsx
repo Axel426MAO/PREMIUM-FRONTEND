@@ -240,7 +240,7 @@ export default function UsersPage() {
 
       <div className="flex flex-col gap-4">
         {/* ABAS DE FILTRO PRINCIPAL */}
-        <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-fit flex-wrap">
+        <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-fit flex-wrap shadow">
           {(Object.keys(mainCategoryLabels) as MainUserCategory[]).map(
             (cat) => (
               <Button
@@ -257,7 +257,7 @@ export default function UsersPage() {
 
         {/* SUB-FILTRO DE ESCOLA (RENDERIZAÇÃO CONDICIONAL) */}
         {showSchoolTypeFilter && (
-          <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg w-fit flex-wrap">
+          <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg w-fit flex-wrap shadow">
             <Button
               variant={schoolTypeFilter === "all" ? "secondary" : "ghost"}
               onClick={() => setSchoolTypeFilter("all")}
@@ -280,139 +280,137 @@ export default function UsersPage() {
         )}
       </div>
 
-      <Card className="py-0 ">
-        <CardContent className="p-0 ">
-          <Table className="">
-            <TableHeader className="">
-              <TableRow className="">
-                <TableHead className="font-bold xl:px-4 xl:py-3">E-mail / Nome</TableHead>
-                <TableHead className="hidden sm:table-cell font-bold">
-                  Tipo / Vínculo
-                </TableHead>
-                <TableHead className="hidden md:table-cell font-bold">
-                  Data de Criação
-                </TableHead>
-                <TableHead className="text-center font-bold">Status</TableHead>
-                <TableHead className="text-right font-bold xl:px-4 xl:py-3">Ações</TableHead>
+      <div className="shadow rounded-xl">
+        <Table className="">
+          <TableHeader className="">
+              <TableHead className="font-bold ">
+                E-mail / Nome
+              </TableHead>
+              <TableHead className="hidden sm:table-cell font-bold">
+                Tipo / Vínculo
+              </TableHead>
+              <TableHead className="hidden md:table-cell font-bold">
+                Data de Criação
+              </TableHead>
+              <TableHead className="text-center font-bold">Status</TableHead>
+              <TableHead className="text-right font-bold ">
+                Ações
+              </TableHead>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center h-24">
+                  Carregando...
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">
-                    Carregando...
-                  </TableCell>
-                </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center h-24 text-red-500"
-                  >
-                    {error}
-                  </TableCell>
-                </TableRow>
-              ) : filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => {
-                  const profile =
-                    user.responsible || user.student || user.teacher;
-                  const school =
-                    user.responsible?.school ||
-                    user.student?.school ||
-                    user.teacher?.school;
-                  const secretary = user.responsible?.secretary;
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center h-24 text-red-500"
+                >
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => {
+                const profile =
+                  user.responsible || user.student || user.teacher;
+                const school =
+                  user.responsible?.school ||
+                  user.student?.school ||
+                  user.teacher?.school;
+                const secretary = user.responsible?.secretary;
 
-                  return (
-                    <TableRow
-                      key={user.id}
-                      className="even:bg-gray-100 dark:even:bg-muted/40"
-                    >
-                      <TableCell className="font-medium xl:px-4 xl:py-3" >
-                        <div className="flex flex-col">
-                          <span>{user.email}</span>
-                          {profile?.name && (
-                            <span className="text-xs text-muted-foreground">
-                              {profile.name}
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        {secretary ? (
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {secretary.is_state_level
-                                ? "Resp. Sec. Estadual"
-                                : "Resp. Sec. Municipal"}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {secretary.name}
-                            </span>
-                          </div>
-                        ) : school ? (
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {school.is_private
-                                ? "Escola Privada"
-                                : "Escola Pública"}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {school.name}
-                            </span>
-                          </div>
-                        ) : (
-                          user.user_type
+                return (
+                  <TableRow
+                    key={user.id}
+                    className="even:bg-gray-100 dark:even:bg-muted/40"
+                  >
+                    <TableCell className="font-medium ">
+                      <div className="flex flex-col">
+                        <span>{user.email}</span>
+                        {profile?.name && (
+                          <span className="text-xs text-muted-foreground">
+                            {profile.name}
+                          </span>
                         )}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {user.createdAt}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge
-                          variant={
-                            user.status === "Ativo" ? "default" : "destructive"
-                          }
-                        >
-                          {user.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right xl:px-4 xl:py-3">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                            <DropdownMenuItem
-                              onClick={() => handleEdit(user.id)}
-                            >
-                              <Pencil className="mr-2 h-4 w-4" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setUserToDelete(user)}
-                              className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">
-                    Nenhum usuário encontrado.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {secretary ? (
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {secretary.is_state_level
+                              ? "Resp. Sec. Estadual"
+                              : "Resp. Sec. Municipal"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {secretary.name}
+                          </span>
+                        </div>
+                      ) : school ? (
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {school.is_private
+                              ? "Escola Privada"
+                              : "Escola Pública"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {school.name}
+                          </span>
+                        </div>
+                      ) : (
+                        user.user_type
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {user.createdAt}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant={
+                          user.status === "Ativo" ? "default" : "destructive"
+                        }
+                      >
+                        {user.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right ">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleEdit(user.id)}>
+                            <Pencil className="mr-2 h-4 w-4" /> Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setUserToDelete(user)}
+                            className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center h-24">
+                  Nenhum usuário encontrado.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <AlertDialog
         open={!!userToDelete}

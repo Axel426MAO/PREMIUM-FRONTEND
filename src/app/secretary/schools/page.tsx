@@ -191,97 +191,91 @@ export default function SchoolsPage() {
       </div>
 
       {/* Tabela de Dados */}
-      <Card className="py-0 rounded">
-        <CardContent className="p-0 rounded">
-          <Table>
-            <TableHeader>
+      <div className="shadow rounded-xl">
+        <Table>
+          <TableHeader>
+              <TableHead>Nome da Escola</TableHead>
+              <TableHead className="text-center">Tipo</TableHead>
+              <TableHead className="hidden sm:table-cell">
+                Localização
+              </TableHead>
+              <TableHead className="hidden md:table-cell">
+                Secretaria Vinculada
+              </TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
               <TableRow>
-                <TableHead>Nome da Escola</TableHead>
-                <TableHead className="text-center">Tipo</TableHead>
-                <TableHead className="hidden sm:table-cell">
-                  Localização
-                </TableHead>
-                <TableHead className="hidden md:table-cell">
-                  Secretaria Vinculada
-                </TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableCell colSpan={5} className="text-center h-24">
+                  Carregando...
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">
-                    Carregando...
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center h-24 text-red-500"
+                >
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredSchools.length > 0 ? (
+              filteredSchools.map((school) => (
+                <TableRow
+                  key={school.id}
+                  className="even:bg-gray-100 dark:even:bg-muted/40"
+                >
+                  {" "}
+                  <TableCell className="font-medium">{school.name}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge
+                      variant={
+                        school.type === "Pública" ? "default" : "secondary"
+                      }
+                    >
+                      {school.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    {school.location}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {school.secretaryName}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => handleEdit(school.id)}>
+                          <Pencil className="mr-2 h-4 w-4" /> Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setSchoolToDelete(school)}
+                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center h-24 text-red-500"
-                  >
-                    {error}
-                  </TableCell>
-                </TableRow>
-              ) : filteredSchools.length > 0 ? (
-                filteredSchools.map((school) => (
-                  <TableRow
-                    key={school.id}
-                    className="even:bg-gray-100 dark:even:bg-muted/40"
-                  >
-                    {" "}
-                    <TableCell className="font-medium">{school.name}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge
-                        variant={
-                          school.type === "Pública" ? "default" : "secondary"
-                        }
-                      >
-                        {school.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {school.location}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {school.secretaryName}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            onClick={() => handleEdit(school.id)}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" /> Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setSchoolToDelete(school)}
-                            className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">
-                    Nenhuma escola encontrada.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center h-24">
+                  Nenhuma escola encontrada.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO */}
       <AlertDialog

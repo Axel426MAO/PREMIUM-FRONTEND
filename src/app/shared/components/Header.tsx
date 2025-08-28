@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { ThemeToggleButton } from "./ThemeToggleButton";
 import {
   DropdownMenu,
@@ -13,9 +16,56 @@ import { cn } from "@/lib/utils";
 import { useUserStore } from "@/app/store/userStore";
 import { useRouter } from "next/navigation";
 
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_DOMAIN = process.env.NEXT_PUBLIC_API_BASE_URL_WITHOUTH_SUFIX;
+
+interface ApiFile {
+  id: number;
+  name: string;
+  file_path: string;
+}
+
+const isImageFile = (fileName: string): boolean => {
+  return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
+};
+
+export const getFiles = async (reference_table: string, reference_id: number): Promise<ApiFile[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/files/${reference_table}/${reference_id}`);
+    if (!response.ok) return []; // Retorna array vazio em caso de erro para não quebrar a interface
+    return response.json();
+  } catch (error) {
+    console.error("Falha ao buscar arquivos:", error);
+    return [];
+  }
+};
+
+// =================================================================
+//  COMPONENTE HEADER
+// =================================================================
 export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const { user, logout } = useUserStore();
   const router = useRouter();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Efeito para buscar a foto de perfil do usuário
+  useEffect(() => {
+    if (user?.id) {
+      const fetchAvatar = async () => {
+        const files = await getFiles('users', user.id);
+        const imageFile = files.find(file => isImageFile(file.name));
+        if (imageFile) {
+          setAvatarUrl(new URL(imageFile.file_path, API_DOMAIN).href);
+        } else {
+          setAvatarUrl(null);
+        }
+      };
+      fetchAvatar();
+    } else {
+      setAvatarUrl(null);
+    }
+  }, [user]);
 
   // Valores padrão
   let displayName = "Usuário";
@@ -29,7 +79,6 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
 
   const handleProfileNavigation = () => {
     if (!user) return;
-
     switch (user.user_type) {
       case "admin":
         router.push("/admin/profile");
@@ -46,16 +95,11 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
   if (user) {
     displayEmail = user.email;
 
-    // ======================= INÍCIO DA ALTERAÇÃO =======================
     if (user.responsible && user.responsible.name) {
-      // 1. Divide o nome completo em um array de palavras.
-      // 2. Pega as duas primeiras palavras com slice(0, 2).
-      // 3. Junta as palavras novamente com um espaço.
       displayName = user.responsible.name.split(" ").slice(0, 2).join(" ");
     } else {
       displayName = user.email;
     }
-    // ======================= FIM DA ALTERAÇÃO =======================
 
     const nameForInitials = user.responsible?.name || user.email;
     initials = nameForInitials
@@ -69,7 +113,7 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
   return (
     <header
       className={cn(
-        "hidden md:flex items-center justify-between border-b bg-background px-6 py-1.5",
+        "hidden md:flex items-center justify-between border-b bg-sidebar px-6 py-1.5",
         "fixed top-0 z-30 transition-all duration-300 ease-in-out",
         isCollapsed
           ? "left-16 w-[calc(100%-4rem)]"
@@ -78,8 +122,6 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
     >
       <div /> {/* Espaçador */}
       <div className="flex items-center gap-4">
-        <ThemeToggleButton />
-
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="flex cursor-pointer items-center gap-3">
@@ -91,18 +133,23 @@ export const DesktopHeader = ({ isCollapsed }: { isCollapsed: boolean }) => {
                   {displayEmail}
                 </span>
               </div>
-              <Avatar className="h-10 w-10">
-                <AvatarImage src="" alt="Foto do usuário" />
-                <AvatarFallback>{initials}</AvatarFallback>
+              <Avatar className="h-10 w-10 shadow-sm">
+                {/* A URL da imagem agora vem do estado 'avatarUrl' */}
+                <AvatarImage src={avatarUrl ?? undefined} alt="Foto do usuário" />
+                <AvatarFallback className="bg-card ">{initials}</AvatarFallback>
               </Avatar>
             </div>
           </DropdownMenuTrigger>
+          <ThemeToggleButton />
 
-          <DropdownMenuContent align="end" sideOffset={8} className="w-56">
+          <DropdownMenuContent
+            align="end"
+            sideOffset={8}
+            className="w-56 bg-card"
+          >
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {/* ATUALIZAÇÃO: Exibe o nome completo no dropdown */}
                   {user?.responsible?.name || user?.email}
                 </p>
                 <p className="text-xs leading-none text-muted-foreground">

@@ -49,63 +49,119 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* ⚪⚫ TEMA MONOCROMÁTICO PROFISSIONAL (LIGHT) ⚫⚪ */
+/* ==========================================================================
+   PALETA DE CORES REFINADA (LIGHT & DARK)
+   ========================================================================== */
+
+/* 🔵⚪ TEMA CLARO (PROFESSIONAL BLUE) ⚪🔵 */
 :root {
   --radius: 0.625rem;
-  --background: oklch(100% 0.00011 271.152);          /* Fundo cinza bem claro, mais suave que branco puro */
-  --foreground: oklch(0.1 0 0);            /* Texto preto/cinza-chumbo forte */
-  --card: oklch(1 0 0);                     /* Cards em branco puro para criar profundidade */
-  --card-foreground: oklch(0.1 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.1 0 0);
-  --primary: #151A28;                /* Cor primária PRETA para botões e elementos principais */
-  --primary-foreground: oklch(0.985 0 0);   /* Texto branco/claro para botões primários */
-  --secondary: oklch(0.94 0 0);           /* Fundo secundário cinza claro */
-  --secondary-foreground: oklch(0.2 0 0);
-  --muted: oklch(0.96 0 0);               /* Fundo sutil para elementos como filtros */
-  --muted-foreground: oklch(0.45 0 0);    /* Texto sutil para placeholders e descrições */
-  --accent: oklch(0.95 0 0);
-  --accent-foreground: oklch(0.1 0 0);
-  --destructive: oklch(0.65 0.2 25);        /* Vermelho para alertas, mantido por usabilidade */
-  --border: oklch(0.9 0 0);                 /* Borda cinza clara e suave */
-  --input: oklch(0.9 0 0);
-  --ring: oklch(0.2 0 0);                   /* Anel de foco preto */
 
-  /* Gráficos mantêm cores para visualização de dados */
-  --chart-1: oklch(0.5 0.15 270);
-  --chart-2: oklch(0.7 0.15 140);
-  --chart-3: oklch(0.75 0.18 50);
-  --chart-4: oklch(0.6 0.2 300);
-  --chart-5: oklch(0.7 0.2 25);
-  
-  --sidebar: oklch(1 0 0);
-  /* ... resto das variáveis da sidebar ... */
+  /* FUNDOS: A base é um branco sutilmente azulado para realçar os tons escuros. */
+  --background: #f6faf8; /* #F8F9FC - Fundo principal, quase branco mas frio. */
+  --card: oklch(
+    100% 0.00011 271.152
+  ); /* #FFFFFF - Cards em branco puro para criar profundidade. */
+
+  --sidebar: #ffffff; /* #FDFEFF - Sidebar um pouco diferente do fundo. */
+  --header: #f5f8fa; /* #FDFEFF - Sidebar um pouco diferente do fundo. */
+  --popover: oklch(100% 0.00011 271.152);
+  --muted: oklch(100% 0.00011 271.152);
+
+  /* TEXTOS: Usando seus tons escuros para garantir contraste e identidade. */
+  --foreground: #182546; /* #151A28 - Texto principal, seu azul-escuro mais forte. */
+  --card-foreground: var(--foreground);
+  --muted-foreground: oklch(
+    42% 0.028 258
+  ); /* #5B6378 - Texto sutil para placeholders, etc. */
+
+  /* AÇÕES PRIMÁRIAS: Botões e links principais com alto contraste. */
+  --primary: #182546; /* #10141F - Seu azul mais escuro e profundo para botões. */
+  --primary-foreground: oklch(
+    99% 0.003 260
+  ); /* #FAFBFC - Texto branco/gelo para botões primários. */
+
+  /* AÇÕES SECUNDÁRIAS: Elementos com menos destaque. */
+  --secondary: oklch(
+    95% 0.01 257
+  ); /* #EAEFF7 - Fundo azulado bem claro para botões secundários. */
+  --secondary-foreground: oklch(
+    17% 0.021 259
+  ); /* #1E2433 - Texto escuro para botões secundários. */
+
+  /* ACENTOS E BORDAS: A chave para dar vida à paleta. */
+  --accent: oklch(
+    95% 0.01 257
+  ); /* #EAEFF7 - Fundo para hover e itens ativos. */
+  --accent-foreground: oklch(
+    10.3% 0.019 259.61
+  ); /* #10141F - Texto para itens com fundo de acento. */
+  --border: oklch(93.5% 0.012 257); /* #E4E8F0 - Bordas suaves e frias. */
+  --input: var(--border);
+  --ring: oklch(
+    45% 0.13 258
+  ); /* #3B72DE - Um azul mais vivo para anéis de foco, dando o toque de cor. */
+
+  /* CORES SEMÂNTICAS E GRÁFICOS */
+  --destructive: oklch(65% 0.22 25); /* Vermelho para alertas. */
+  --chart-1: oklch(48% 0.12 260); /* Roxo/Azul para gráficos */
+  --chart-2: oklch(65% 0.15 140); /* Verde para gráficos */
+  --chart-3: oklch(75% 0.18 50); /* Laranja para gráficos */
+  --chart-4: oklch(60% 0.2 300); /* Magenta para gráficos */
+  --chart-5: oklch(70% 0.2 25); /* Vermelho para gráficos */
 }
 
-/* ⚫⚪ TEMA MONOCROMÁTICO PROFISSIONAL (DARK) ⚪⚫ */
 .dark {
-  --background: oklch(0.07 0 0);         /* Fundo cinza-chumbo, não preto puro */
-  --foreground: oklch(0.95 0 0);         /* Texto cinza claro */
-  --card: oklch(0.12 0 0);               /* Cards um pouco mais claros que o fundo */
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.12 0 0);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.95 0 0);             /* Cor primária BRANCA para contraste no escuro */
-  --primary-foreground: oklch(0.1 0 0);   /* Texto PRETO para botões primários */
-  --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.15 0 0);
-  --muted-foreground: oklch(0.55 0 0);
-  --accent: oklch(0.2 0 0);
-  --accent-foreground: oklch(0.98 0 0);
-  --destructive: oklch(0.7 0.18 25);
-  --border: oklch(0.2 0 0);
-  --input: oklch(0.2 0 0);
-  --ring: oklch(0.8 0 0);
+  /* FUNDOS: Uma base escura e profunda para criar contraste e camadas. */
+  --background: oklch(15% 0.03 255); /* Azul quase preto: #1A1D2B */
+  --card: oklch(
+    20% 0.04 255
+  ); /* Superfícies (cards) um pouco mais claras: #24283B */
+  --sidebar: oklch(
+    20% 0.04 255
+  ); /* #FDFEFF - Sidebar um pouco diferente do fundo. */
+  --header: oklch(
+    20% 0.04 255
+  ); /* #FDFEFF - Sidebar um pouco diferente do fundo. */
+  --popover: oklch(20% 0.04 255);
+  --muted: oklch(20% 0.04 255);
 
-  /* ... (resto das variáveis do dark mode) ... */
+  /* TEXTOS: Alto contraste para máxima legibilidade. */
+  --foreground: oklch(95% 0.01 255); /* Branco levemente azulado: #EFF1F9 */
+  --card-foreground: var(--foreground);
+  --muted-foreground: oklch(
+    65% 0.02 255
+  ); /* Cinza-azulado para textos secundários: #9299B3 */
+
+  /* AÇÕES PRIMÁRIAS: O ponto focal do tema. Vibrante e chamativo. */
+  --primary: oklch(60% 0.15 255); /* Azul elétrico, moderno: #3B82F6 */
+  --primary-foreground: oklch(
+    98% 0.01 255
+  ); /* Texto quase branco para alto contraste: #F8FAFC */
+
+  /* AÇÕES SECUNDÁRIAS: Sutis para não competir com a ação primária. */
+  --secondary: oklch(30% 0.04 255); /* Fundo de botão secundário: #3E445E */
+  --secondary-foreground: var(--foreground);
+
+  /* ACENTOS E BORDAS: Detalhes que definem a interface. */
+  --accent: oklch(
+    25% 0.04 255
+  ); /* Cor para hover, sutilmente mais clara que o card: #31364C */
+  --accent-foreground: var(--foreground);
+  --border: oklch(25% 0.04 255); /* Bordas discretas, mas visíveis: #31364C */
+  --input: oklch(25% 0.04 255); /* Fundo de inputs: #31364C */
+  --ring: oklch(
+    65% 0.18 255
+  ); /* Anel de foco mais brilhante para acessibilidade: #538DFF */
+
+  /* CORES SEMÂNTICAS: Para feedback claro ao usuário. */
+  --destructive: oklch(
+    65% 0.22 25
+  ); /* Vermelho vibrante para alertas e erros: #EF4444 */
+  --destructive-foreground: oklch(
+    98% 0.01 255
+  ); /* Texto claro para o botão destrutivo: #F8FAFC */
 }
-
 
 @layer base {
   * {
@@ -115,5 +171,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* ... (resto do seu css) ... */

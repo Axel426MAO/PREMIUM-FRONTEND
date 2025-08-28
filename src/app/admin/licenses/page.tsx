@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator, // Importado para separar visualmente as ações
 } from "@/components/ui/dropdown-menu";
 import {
   Table,
@@ -30,15 +31,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   MoreHorizontal,
   PlusCircle,
   Trash2,
   Search,
   BookOpen,
-  Pencil,
-  MailIcon,
+  Pencil, // Ícone já estava importado
   Send,
 } from "lucide-react";
 import {
@@ -58,8 +57,6 @@ type LicenseBatchViewData = LicenseBatchApiResponse & {
 type CustomerTypeFilter = "all" | "secretary" | "private_school";
 
 // --- MAPEAMENTOS E FUNÇÕES AUXILIARES ---
-
-// --- MODIFICAÇÃO 1: TEXTOS DOS STATUS MELHORADOS ---
 const statusLabels: Record<LicenseBatchStatus, string> = {
   CRIADO: "Criado",
   ENVIADO: "Enviado",
@@ -69,8 +66,6 @@ const statusLabels: Record<LicenseBatchStatus, string> = {
   PENDENTE: "Pendente",
 };
 
-// --- MODIFICAÇÃO 2: CORES DE STATUS APRIMORADAS ---
-// Função para definir classes de cor do badge com base no status
 const getStatusClasses = (status: LicenseBatchStatus): string => {
   switch (status) {
     case "ATIVO":
@@ -108,6 +103,7 @@ export default function LicenseBatchesPage() {
   const [batchToSend, setBatchToSend] = useState<LicenseBatchViewData | null>(
     null
   );
+
   useEffect(() => {
     const fetchBatches = async () => {
       try {
@@ -154,6 +150,7 @@ export default function LicenseBatchesPage() {
       setBatchToSend(null);
     }
   };
+
   const handleConfirmDelete = async () => {
     if (!batchToDelete) return;
     const toastId = toast.loading("Excluindo lote...");
@@ -208,7 +205,6 @@ export default function LicenseBatchesPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 min-h-screen">
-      {/* CABEÇALHO */}
       <div className="flex flex-col md:flex-row items-center justify-between border-b pb-4 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -238,8 +234,7 @@ export default function LicenseBatchesPage() {
         </div>
       </div>
 
-      {/* FILTRO DE ABAS - ESTILO CORRIGIDO */}
-      <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-fit">
+      <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-fit shadow">
         {(Object.keys(customerTypeLabels) as CustomerTypeFilter[]).map(
           (cat) => (
             <Button
@@ -254,105 +249,109 @@ export default function LicenseBatchesPage() {
         )}
       </div>
 
-      {/* TABELA */}
-      <Card className="py-0 rounded">
-        <CardContent className="p-0 rounded">
-          <Table>
-            <TableHeader>
+      <div className="shadow rounded-xl">
+        <Table>
+          <TableHeader>
+              <TableHead>Livro</TableHead>
+              <TableHead className="hidden sm:table-cell">Cliente</TableHead>
+              <TableHead className="text-center">Quantidade</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="hidden md:table-cell">Criação</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
               <TableRow>
-                <TableHead>Livro</TableHead>
-                <TableHead className="hidden sm:table-cell">Cliente</TableHead>
-                <TableHead className="text-center">Quantidade</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="hidden md:table-cell">Criação</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableCell colSpan={6} className="text-center h-24">
+                  Carregando...
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">
-                    Carregando...
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center h-24 text-red-500"
+                >
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredBatches.length > 0 ? (
+              filteredBatches.map((batch) => (
+                <TableRow
+                  key={batch.id}
+                  className="even:bg-gray-100 dark:even:bg-muted/40"
+                >
+                  <TableCell className="font-medium">
+                    {batch.book.title}
                   </TableCell>
-                </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center h-24 text-red-500"
-                  >
-                    {error}
+                  <TableCell className="hidden sm:table-cell">
+                    {batch.customerName}
                   </TableCell>
-                </TableRow>
-              ) : filteredBatches.length > 0 ? (
-                filteredBatches.map((batch) => (
-                  <TableRow
-                    key={batch.id}
-                    className="even:bg-gray-100 dark:even:bg-muted/40"
-                  >
-                    <TableCell className="font-medium">
-                      {batch.book.title}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {batch.customerName}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {batch.quantity}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {/* --- MODIFICAÇÃO 3: APLICANDO AS NOVAS CORES --- */}
-                      <Badge
-                        variant="outline"
-                        className={getStatusClasses(batch.status)}
-                      >
-                        {statusLabels[batch.status] || batch.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {batch.formattedCreatedAt}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            onClick={() => handleViewDetails(batch.id)}
-                          >
-                            <BookOpen className="mr-2 h-4 w-4" /> Ver Detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setBatchToSend(batch)}
-                          >
-                            <Send className="mr-2 h-4 w-4" /> Enviar Lote
-                          </DropdownMenuItem>
+                  <TableCell className="text-center">
+                    {batch.quantity}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge
+                      variant="outline"
+                      className={getStatusClasses(batch.status)}
+                    >
+                      {statusLabels[batch.status] || batch.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {batch.formattedCreatedAt}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() => handleViewDetails(batch.id)}
+                        >
+                          <BookOpen className="mr-2 h-4 w-4" /> Ver Detalhes
+                        </DropdownMenuItem>
 
-                          <DropdownMenuItem
-                            onClick={() => setBatchToDelete(batch)}
-                            className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" /> Excluir Lote
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">
-                    Nenhum lote encontrado para os filtros aplicados.
+                        {/* --- INÍCIO DA MODIFICAÇÃO --- */}
+                        {/* Mostra as opções de Enviar, Editar e Excluir apenas se o status for "CRIADO" */}
+                        {batch.status === "CRIADO" && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => setBatchToSend(batch)}
+                            >
+                              <Send className="mr-2 h-4 w-4" /> Enviar Lote
+                            </DropdownMenuItem>
+                         
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => setBatchToDelete(batch)}
+                              className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Excluir Lote
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {/* --- FIM DA MODIFICAÇÃO --- */}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center h-24">
+                  Nenhum lote encontrado para os filtros aplicados.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
       <AlertDialog
         open={!!batchToSend}
         onOpenChange={(isOpen) => !isOpen && setBatchToSend(null)}
@@ -374,7 +373,7 @@ export default function LicenseBatchesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {/* DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO */}
+
       <AlertDialog
         open={!!batchToDelete}
         onOpenChange={(isOpen) => !isOpen && setBatchToDelete(null)}

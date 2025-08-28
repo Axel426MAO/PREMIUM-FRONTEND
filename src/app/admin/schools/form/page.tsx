@@ -574,13 +574,13 @@ export default function SchoolFormPage() {
                           onValueChange={(value: SchoolType) =>
                             handleSchoolTypeChange(value)
                           }
-                          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+                          className="grid grid-cols-1 sm:grid-cols-3 gap-4 "
                         >
                           {[
                             {
                               id: "estadual",
                               icon: (
-                                <Globe className="h-8 w-8 mb-2 text-muted-foreground" />
+                                <Globe className="h-8 w-8 mb-2 text-muted-foreground " />
                               ),
                               label: "Estadual",
                             },
@@ -602,9 +602,9 @@ export default function SchoolFormPage() {
                             <Label
                               key={type.id}
                               htmlFor={`r-${type.id}`}
-                              className={`flex flex-col items-center justify-center rounded-lg border-2 p-6 cursor-pointer transition-all ${
+                              className={`flex flex-col items-center bg-card shadow-sm justify-center rounded-lg border-2 p-6 cursor-pointer transition-all ${
                                 schoolTypeSelected === type.id
-                                  ? "border-primary bg-muted"
+                                  ? "border-primary "
                                   : "border"
                               }`}
                             >
@@ -818,7 +818,7 @@ export default function SchoolFormPage() {
                             onValueChange={handleRoleChange}
                             required
                           >
-                            <SelectTrigger id="responsible.role">
+                            <SelectTrigger className="w-full" id="responsible.role">
                               <SelectValue placeholder="Selecione um cargo" />
                             </SelectTrigger>
                             <SelectContent>
@@ -907,7 +907,7 @@ export default function SchoolFormPage() {
                           <Label htmlFor="confirm.password">
                             Confirmar Senha
                           </Label>
-                          <div className="relative">
+                          <div className="relative pt-1">
                             <Input
                               id="confirm.password"
                               name="confirm.password"

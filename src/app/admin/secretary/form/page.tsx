@@ -732,7 +732,7 @@ const SecretaryFormPage: FC = () => {
                                     onValueChange={handleStateSelectChange}
                                     required
                                   >
-                                    <SelectTrigger id="secretary.state">
+                                    <SelectTrigger className="w-full" id="secretary.state">
                                       <SelectValue placeholder="Selecione um estado" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -767,7 +767,7 @@ const SecretaryFormPage: FC = () => {
                                         municipalities.length === 0
                                       }
                                     >
-                                      <SelectTrigger id="secretary.municipality">
+                                      <SelectTrigger className="w-full"  id="secretary.municipality">
                                         <SelectValue
                                           placeholder={
                                             isFetchingMunicipalities
@@ -893,14 +893,14 @@ const SecretaryFormPage: FC = () => {
                               required
                             />
                           </div>
-                          <div className="grid gap-2">
+                          <div className="grid gap-2 w-full">
                             <Label htmlFor="responsible.role">Cargo</Label>
                             <Select
                               value={formData.responsible.role}
                               onValueChange={handleRoleChange}
                               required
                             >
-                              <SelectTrigger id="responsible.role">
+                              <SelectTrigger className="w-full" id="responsible.role">
                                 <SelectValue placeholder="Selecione um cargo" />
                               </SelectTrigger>
                               <SelectContent>
@@ -1009,7 +1009,7 @@ const SecretaryFormPage: FC = () => {
                             <Label htmlFor="confirm.password">
                               Confirmar Senha
                             </Label>
-                            <div className="relative">
+                            <div className="relative pt-2">
                               <Input
                                 id="confirm.password"
                                 name="confirm.password"

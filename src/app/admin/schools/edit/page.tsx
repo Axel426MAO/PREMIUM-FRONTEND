@@ -235,7 +235,7 @@ export default function EditSchoolPage() {
               description="Informações principais sobre a instituição de ensino."
               icon={<Building2 className="h-6 w-6 text-muted-foreground" />}
             >
-              <div className="space-y-6">
+              <div className="space-y-6 grid grid-cols-2 gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="school.name">Nome da Escola</Label>
                   <Input
@@ -246,8 +246,7 @@ export default function EditSchoolPage() {
                     required
                   />
                 </div>
-                {/* MODIFICADO: Cores adaptadas */}
-                <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 bg-muted/50">
+                {/* <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 bg-muted/50">
                   <div className="space-y-1">
                     <p className="text-sm font-medium leading-none">
                       Escola Privada
@@ -261,7 +260,7 @@ export default function EditSchoolPage() {
                     checked={formData.school.is_private}
                     onCheckedChange={handleSwitchChange}
                   />
-                </div>
+                </div> */}
                 {!formData.school.is_private && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}

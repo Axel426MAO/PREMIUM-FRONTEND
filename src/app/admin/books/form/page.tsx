@@ -2,19 +2,30 @@
 
 import { useState, useEffect, type FormEvent, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import {
+  ArrowLeft,
+  UploadCloud,
+  FileText,
+  Trash2,
+  Image as ImageIcon,
+  Loader2,
+} from "lucide-react";
+
+// --- SHADCN/UI IMPORTS ---
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  ArrowLeft,
-  UploadCloud,
-  X,
-  FileText,
-  Trash2,
-  Image as ImageIcon,
-} from "lucide-react";
-import Image from "next/image";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+// --- API & TYPES ---
 import {
   getBookById,
   createBook,
@@ -27,10 +38,8 @@ import {
   type ApiFile,
 } from "../services/api";
 
-// --- TIPOS E CONSTANTES INTERNAS ---
+// --- TIPOS E CONSTANTES ---
 const API_DOMAIN = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-// MODIFICAÇÃO 1: Definindo as extensões permitidas
 const ALLOWED_IMAGE_EXTENSIONS = ["svg", "png", "jpg", "jpeg"];
 const ALLOWED_DOC_EXTENSIONS = ["pdf", "epub"];
 
@@ -38,12 +47,242 @@ const isImageFile = (fileName: string): boolean => {
   return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
 };
 
-// --- COMPONENTE DA PÁGINA DO FORMULÁRIO ---
+// --- SUBCOMPONENTES PARA ORGANIZAÇÃO ---
+
+// Componente para o formulário de detalhes do livro
+const BookDetailsCard = ({
+  formData,
+  handleInputChange,
+  isLoading,
+}: {
+  formData: Partial<BookData>;
+  handleInputChange: (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void;
+  isLoading: boolean;
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Informações do Livro</CardTitle>
+      <CardDescription>
+        Preencha as informações principais do livro.
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="grid grid-cols-2 gap-6">
+      <div className="grid gap-2">
+        <Label htmlFor="title">Título</Label>
+        <Input
+          id="title"
+          value={formData.title || ""}
+          onChange={handleInputChange}
+          required
+          disabled={isLoading}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="author">Autor</Label>
+        <Input
+          id="author"
+          value={formData.author || ""}
+          onChange={handleInputChange}
+          required
+          disabled={isLoading}
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="pages">Nº de Páginas</Label>
+          <Input
+            id="pages"
+            type="number"
+            value={formData.pages || ""}
+            onChange={handleInputChange}
+            disabled={isLoading}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="year_launch">Ano de Lançamento</Label>
+          <Input
+            id="year_launch"
+            type="number"
+            value={formData.year_launch || ""}
+            onChange={handleInputChange}
+            disabled={isLoading}
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="publisher">Editora</Label>
+          <Input
+            id="publisher"
+            value={formData.publisher || ""}
+            onChange={handleInputChange}
+            disabled={isLoading}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="isbn">ISBN</Label>
+          <Input
+            maxLength={13}
+            id="isbn"
+            value={formData.isbn || ""}
+            onChange={handleInputChange}
+            disabled={isLoading}
+          />
+        </div>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="summary">Resumo</Label>
+        <Textarea
+          id="summary"
+          value={formData.summary || ""}
+          onChange={handleInputChange}
+          disabled={isLoading}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="description">Descrição</Label>
+        <Textarea
+          id="description"
+          value={formData.description || ""}
+          onChange={handleInputChange}
+          disabled={isLoading}
+        />
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// Componente para os anexos e uploads
+const AttachmentsCard = ({
+  allPreviews,
+  removeNewFile,
+  deleteExistingFile,
+  handleFileChange,
+  isLoading,
+  existingCoverImage,
+  coverImageToUpload,
+}: {
+  allPreviews: any[];
+  removeNewFile: (index: number, fileType: "cover" | "doc") => void;
+  deleteExistingFile: (fileId: number, fileType: "cover" | "doc") => void;
+  handleFileChange: (
+    e: ChangeEvent<HTMLInputElement>,
+    fileType: "cover" | "doc"
+  ) => void;
+  isLoading: boolean;
+  existingCoverImage: any;
+  coverImageToUpload: File | null;
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Anexos</CardTitle>
+      <CardDescription>
+        Adicione a imagem da capa e os arquivos do livro (PDF, EPUB).
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="grid gap-6">
+      {allPreviews.length > 0 && (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+          {allPreviews.map((file) => (
+            <div key={file.key} className="relative group aspect-square">
+              {file.isImage ? (
+                <Image
+                  src={file.url}
+                  alt={`Preview de ${file.name}`}
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-md bg-muted"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full bg-muted rounded-md flex flex-col items-center justify-center p-2 text-center">
+                  <FileText className="w-8 h-8 text-muted-foreground" />
+                  <p
+                    className="text-xs text-muted-foreground mt-2 line-clamp-2"
+                    title={file.name}
+                  >
+                    {file.name}
+                  </p>
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                onClick={() =>
+                  file.isNew
+                    ? removeNewFile(file.index!, file.type)
+                    : deleteExistingFile(file.id!, file.type)
+                }
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <label
+          htmlFor="cover-input"
+          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed"
+          data-disabled={!!existingCoverImage || !!coverImageToUpload}
+        >
+          <div className="flex flex-col items-center justify-center">
+            <ImageIcon className="w-8 h-8 mb-4 text-muted-foreground" />
+            <p className="mb-2 text-sm text-muted-foreground">
+              <span className="font-semibold">Adicionar Capa</span>
+            </p>
+            <p className="text-xs text-muted-foreground">SVG, PNG, ou JPG</p>
+          </div>
+          <Input
+            id="cover-input"
+            type="file"
+            className="hidden"
+            onChange={(e) => handleFileChange(e, "cover")}
+            accept=".svg, .png, .jpg, .jpeg"
+            disabled={
+              isLoading || !!existingCoverImage || !!coverImageToUpload
+            }
+          />
+        </label>
+        <label
+          htmlFor="doc-input"
+          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed"
+          data-disabled={isLoading}
+        >
+          <div className="flex flex-col items-center justify-center">
+            <UploadCloud className="w-8 h-8 mb-4 text-muted-foreground" />
+            <p className="mb-2 text-sm text-muted-foreground">
+              <span className="font-semibold">Adicionar Documentos</span>
+            </p>
+            <p className="text-xs text-muted-foreground">PDF ou EPUB</p>
+          </div>
+          <Input
+            id="doc-input"
+            type="file"
+            className="hidden"
+            onChange={(e) => handleFileChange(e, "doc")}
+            multiple
+            accept=".pdf, .epub"
+            disabled={isLoading}
+          />
+        </label>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function BookFormPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bookId = searchParams.get("id");
 
+  // --- ESTADOS DO COMPONENTE ---
   const [formData, setFormData] = useState<Partial<BookData>>({
     title: "",
     author: "",
@@ -54,7 +293,6 @@ export default function BookFormPage() {
     summary: "",
     description: "",
   });
-
   const [coverImageToUpload, setCoverImageToUpload] = useState<File | null>(
     null
   );
@@ -71,10 +309,10 @@ export default function BookFormPage() {
   const [existingDocs, setExistingDocs] = useState<
     Array<ApiFile & { url: string }>
   >([]);
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // --- EFEITOS (DATA FETCHING) ---
   useEffect(() => {
     if (bookId) {
       const fetchBookData = async () => {
@@ -96,7 +334,7 @@ export default function BookFormPage() {
             )
             .map((file) => ({
               ...file,
-              url: new URL(file.file_path, API_DOMAIN).href,
+              url: new URL(file.file_path, API_DOMAIN as string).href,
             }));
 
           const cover =
@@ -118,6 +356,7 @@ export default function BookFormPage() {
     }
   }, [bookId]);
 
+  // --- HANDLERS (EVENTOS) ---
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -133,7 +372,6 @@ export default function BookFormPage() {
     }));
   };
 
-  // MODIFICAÇÃO 2: Adicionando validação de extensão de arquivo
   const handleFileChange = (
     e: ChangeEvent<HTMLInputElement>,
     fileType: "cover" | "doc"
@@ -147,22 +385,28 @@ export default function BookFormPage() {
 
       const extension = file.name.split(".").pop()?.toLowerCase();
       if (!extension || !ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
-        alert(`Arquivo inválido. Apenas imagens (${ALLOWED_IMAGE_EXTENSIONS.join(", ")}) são permitidas.`);
-        e.target.value = ""; // Limpa o input
+        alert(
+          `Arquivo inválido. Apenas imagens (${ALLOWED_IMAGE_EXTENSIONS.join(
+            ", "
+          )}) são permitidas.`
+        );
+        e.target.value = "";
         return;
       }
       setCoverImageToUpload(file);
       if (coverImagePreview) URL.revokeObjectURL(coverImagePreview);
       setCoverImagePreview(URL.createObjectURL(file));
     } else {
-      const validDocs = files.filter(file => {
+      const validDocs = files.filter((file) => {
         const extension = file.name.split(".").pop()?.toLowerCase();
         return extension && ALLOWED_DOC_EXTENSIONS.includes(extension);
       });
-      
+
       const invalidCount = files.length - validDocs.length;
       if (invalidCount > 0) {
-        alert(`${invalidCount} arquivo(s) foram ignorados por não serem PDF ou EPUB.`);
+        alert(
+          `${invalidCount} arquivo(s) foram ignorados por não serem PDF ou EPUB.`
+        );
       }
 
       if (validDocs.length > 0) {
@@ -173,10 +417,9 @@ export default function BookFormPage() {
         }));
         setNewDocPreviews((prev) => [...prev, ...newPreviews]);
       }
-      e.target.value = ""; // Limpa o input para permitir re-seleção
+      e.target.value = "";
     }
   };
-
 
   const removeNewFile = (index: number, fileType: "cover" | "doc") => {
     if (fileType === "cover") {
@@ -250,7 +493,8 @@ export default function BookFormPage() {
     }
   };
 
-  const allPreviews: any[] = [  
+  // --- DADOS PARA RENDERIZAÇÃO ---
+  const allPreviews: any[] = [
     ...(existingCoverImage
       ? [
           {
@@ -296,222 +540,71 @@ export default function BookFormPage() {
     })),
   ];
 
+  // --- RENDERIZAÇÃO CONDICIONAL ---
   if (isLoading && !error && bookId)
     return <p className="text-center p-8">A carregar formulário...</p>;
   if (error) return <p className="text-center text-red-500 p-8">{error}</p>;
 
+  // --- RENDERIZAÇÃO PRINCIPAL (JSX) ---
   return (
-    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8  min-h-screen">
-      <div className="flex items-center gap-4 mb-8 pb-4 border-b">
+    <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+      <div className="flex items-center gap-4 mb-8">
         <Button variant="outline" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
             {bookId ? "Editar Livro" : "Adicionar Novo Livro"}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground">
             Preencha os campos para{" "}
             {bookId ? "atualizar o" : "cadastrar um novo"} livro.
           </p>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto">
-        <form onSubmit={handleSubmit} className="grid gap-6 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="title">Título</Label>
-            <Input
-              id="title"
-              value={formData.title || ""}
-              onChange={handleInputChange}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="author">Autor</Label>
-            <Input
-              id="author"
-              value={formData.author || ""}
-              onChange={handleInputChange}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="pages">Nº de Páginas</Label>
-              <Input
-                id="pages"
-                type="number"
-                value={formData.pages || ""}
-                onChange={handleInputChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="year_launch">Ano de Lançamento</Label>
-              <Input
-                id="year_launch"
-                type="number"
-                value={formData.year_launch || ""}
-                onChange={handleInputChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="publisher">Editora</Label>
-              <Input
-                id="publisher"
-                value={formData.publisher || ""}
-                onChange={handleInputChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="isbn">ISBN</Label>
-              <Input
-                maxLength={13}
-                id="isbn"
-                value={formData.isbn || ""}
-                onChange={handleInputChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="summary">Resumo</Label>
-            <Textarea
-              id="summary"
-              value={formData.summary || ""}
-              onChange={handleInputChange}
-              disabled={isLoading}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="description">Descrição</Label>
-            <Textarea
-              id="description"
-              value={formData.description || ""}
-              onChange={handleInputChange}
-              disabled={isLoading}
-            />
-          </div>
+      <form
+        onSubmit={handleSubmit}
+        className=" mx-auto grid gap-8"
+      >
+        <BookDetailsCard
+          formData={formData}
+          handleInputChange={handleInputChange}
+          isLoading={isLoading}
+        />
+        <AttachmentsCard
+          allPreviews={allPreviews}
+          removeNewFile={removeNewFile}
+          deleteExistingFile={deleteExistingFile}
+          handleFileChange={handleFileChange}
+          isLoading={isLoading}
+          existingCoverImage={existingCoverImage}
+          coverImageToUpload={coverImageToUpload}
+        />
 
-          <div className="grid gap-4 border-t pt-6">
-            <Label className="text-base font-semibold">Anexos</Label>
-
-            {allPreviews.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-4">
-                {allPreviews.map((file) => (
-                  <div key={file.key} className="relative group aspect-square">
-                    {file.isImage ? (
-                      <Image
-                        src={file.url}
-                        alt={`Preview de ${file.name}`}
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded-md bg-muted"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted rounded-md flex flex-col items-center justify-center p-2 text-center">
-                        <FileText className="w-8 h-8 text-muted-foreground" />
-                        <p
-                          className="text-xs text-muted-foreground mt-2 line-clamp-2"
-                          title={file.name}
-                        >
-                          {file.name}
-                        </p>
-                      </div>
-                    )}
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                      onClick={() =>
-                        file.isNew
-                          ? removeNewFile(file.index!, file.type)
-                          : deleteExistingFile(file.id!, file.type)
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Carregando...
+              </>
+            ) : bookId ? (
+              "Salvar Alterações"
+            ) : (
+              "Criar Livro"
             )}
-
-            <div className="grid sm:grid-cols-2 gap-4 pt-4">
-              <label
-                htmlFor="cover-input"
-                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors"
-              >
-                <div className="flex flex-col items-center justify-center">
-                  <ImageIcon className="w-8 h-8 mb-4 text-muted-foreground" />
-                  <p className="mb-2 text-sm text-muted-foreground">
-                    <span className="font-semibold">Adicionar Capa</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    SVG, PNG, ou JPG
-                  </p>
-                </div>
-                <Input
-                  id="cover-input"
-                  type="file"
-                  className="hidden"
-                  onChange={(e) => handleFileChange(e, "cover")}
-                  // MODIFICAÇÃO 3: Especificando os tipos de imagem aceitos
-                  accept=".svg, .png, .jpg, .jpeg"
-                  disabled={
-                    isLoading || !!existingCoverImage || !!coverImageToUpload
-                  }
-                />
-              </label>
-              <label
-                htmlFor="doc-input"
-                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors"
-              >
-                <div className="flex flex-col items-center justify-center">
-                  <UploadCloud className="w-8 h-8 mb-4 text-muted-foreground" />
-                  <p className="mb-2 text-sm text-muted-foreground">
-                    <span className="font-semibold">Adicionar Documentos</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">PDF ou EPUB</p>
-                </div>
-                <Input
-                  id="doc-input"
-                  type="file"
-                  className="hidden"
-                  onChange={(e) => handleFileChange(e, "doc")}
-                  multiple
-                  // MODIFICAÇÃO 4: Especificando os tipos de documento aceitos
-                  accept=".pdf, .epub"
-                  disabled={isLoading}
-                />
-              </label>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Carregando..." : "Criar Livro"}
-            </Button>
-          </div>
-        </form>
-      </div>
+          </Button>
+        </div>
+      </form>
     </main>
   );
 }

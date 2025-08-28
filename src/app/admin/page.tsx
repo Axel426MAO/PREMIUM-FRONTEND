@@ -12,7 +12,8 @@ import {
   // MODIFICAÇÃO 1: Novos ícones importados
   KeyRound, // Ícone de chave para licenças
   School, // Ícone para escola pública
-  Building2, // Ícone para escola privada
+  Building2,
+  Landmark, // Ícone para escola privada
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -23,6 +24,86 @@ import {
 } from "./licenses/services/api";
 import { getUsers } from "./users/services/api";
 import { useUserStore } from "../store/userStore";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+  ChartOptions,
+  ChartData,
+} from "chart.js";
+import { Bar, Line, Doughnut } from "react-chartjs-2";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+interface BookLecture {
+  book: string;
+  lectures: number;
+}
+
+interface ReadingTime {
+  month: string;
+  "Tempo Médio (min)": number;
+}
+
+interface PopularGenre {
+  name: string;
+  value: number;
+}
+
+const mostReadBooksData: BookLecture[] = [
+  { book: "O Pequeno Príncipe", lectures: 485 },
+  { book: "A Culpa é das Estrelas", lectures: 392 },
+  { book: "Dom Casmurro", lectures: 351 },
+  { book: "Harry Potter", lectures: 289 },
+  { book: "O Alquimista", lectures: 254 },
+];
+
+const readingTimeData: ReadingTime[] = [
+  { month: "Março", "Tempo Médio (min)": 28 },
+  { month: "Abril", "Tempo Médio (min)": 35 },
+  { month: "Maio", "Tempo Médio (min)": 42 },
+  { month: "Junho", "Tempo Médio (min)": 38 },
+  { month: "Julho", "Tempo Médio (min)": 51 },
+  { month: "Agosto", "Tempo Médio (min)": 45 },
+];
+
+const popularGenresData: PopularGenre[] = [
+  { name: "Ficção", value: 45 },
+  { name: "Romance", value: 25 },
+  { name: "Aventura", value: 15 },
+  { name: "Biografia", value: 10 },
+  { name: "Outros", value: 5 },
+];
+
+interface MostReadBooksChartProps {
+  data: BookLecture[];
+}
+interface PopularGenresChartProps {
+  data: PopularGenre[];
+}
+interface ReadingTimeChartProps {
+  data: ReadingTime[];
+}
 
 // Paleta de cores para os cards
 const themeColors = {
@@ -53,6 +134,103 @@ const themeColors = {
     hoverText: "hover:text-teal-500",
   },
 };
+
+function MostReadBooksChart({ data }: MostReadBooksChartProps) {
+  const chartData: ChartData<"bar"> = {
+    labels: data.map((item) => item.book),
+    datasets: [
+      {
+        label: "Leituras",
+        data: data.map((item) => item.lectures),
+        backgroundColor: "rgba(54, 162, 235, 0.6)",
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 1,
+        borderRadius: 5,
+      },
+    ],
+  };
+  const options: ChartOptions<"bar"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: "#1f2937",
+        titleFont: { size: 14, weight: "bold" },
+        bodyFont: { size: 12 },
+        padding: 10,
+        cornerRadius: 4,
+      },
+    },
+    scales: {
+      y: { beginAtZero: true, grid: { color: "rgba(200, 200, 200, 0.1)" } },
+      x: { grid: { display: false } },
+    },
+  };
+  return <Bar options={options} data={chartData} />;
+}
+
+function PopularGenresChart({ data }: PopularGenresChartProps) {
+  const chartData: ChartData<"doughnut"> = {
+    labels: data.map((item) => item.name),
+    datasets: [
+      {
+        label: "Leituras por Gênero",
+        data: data.map((item) => item.value),
+        backgroundColor: [
+          "#3498db",
+          "#9b59b6",
+          "#e74c3c",
+          "#f1c40f",
+          "#2ecc71",
+        ],
+        borderColor: "#111827",
+        borderWidth: 0,
+      },
+    ],
+  };
+  const options: ChartOptions<"doughnut"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "right",
+        labels: { boxWidth: 20, padding: 15 },
+      },
+    },
+    cutout: "60%",
+  };
+  return <Doughnut options={options} data={chartData} />;
+}
+
+function ReadingTimeChart({ data }: ReadingTimeChartProps) {
+  const chartData: ChartData<"line"> = {
+    labels: data.map((item) => item.month),
+    datasets: [
+      {
+        label: "Tempo Médio (min)",
+        data: data.map((item) => item["Tempo Médio (min)"]),
+        fill: true,
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        tension: 0.4,
+        pointBackgroundColor: "rgba(75, 192, 192, 1)",
+        pointBorderColor: "#fff",
+        pointHoverRadius: 7,
+      },
+    ],
+  };
+  const options: ChartOptions<"line"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: false, grid: { color: "rgba(200, 200, 200, 0.1)" } },
+      x: { grid: { display: false } },
+    },
+  };
+  return <Line options={options} data={chartData} />;
+}
 
 function StatCard({
   title,
@@ -160,7 +338,7 @@ export default function Home() {
           getSecretaries(),
           getUsers(),
           getLicenseBatches(),
-          getSchools(), 
+          getSchools(),
         ]);
 
         const publicSchoolsCount = schoolsData.filter(
@@ -205,35 +383,44 @@ export default function Home() {
 
       <div className="">
         <section aria-labelledby="acoes-rapidas-heading">
-          <h2
-            id="acoes-rapidas-heading"
-            className="text-xl font-semibold tracking-tight text-foreground mb-4"
-          >
-            Ações Rápidas
-          </h2>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <ActionCard
-              title="Adicionar Livro"
-              description="Cadastre um novo título no acervo da biblioteca."
-              href="/admin/books/form"
-              icon={PlusCircle}
-              theme={themeColors.books}
-            />
-            <ActionCard
-              title="Criar Licença"
-              description="Gere um novo lote de licenças para as escolas."
-              href="/admin/licenses/form"
-              icon={Layers}
-              theme={themeColors.licenses}
-            />
-            <ActionCard
-              title="Adicionar Usuário"
-              description="Cadastre um novo gestor no sistema."
-              href="/admin/users/form"
-              icon={Users}
-              theme={themeColors.users}
-            />
-          </div>
+          <section aria-labelledby="acoes-rapidas-heading">
+            <h2
+              id="acoes-rapidas-heading"
+              className="mb-4 text-2xl font-semibold tracking-tight text-foreground"
+            >
+              Ações Rápidas
+            </h2>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <ActionCard
+                title="Cadastrar Secretaria"
+                description="Adicione uma nova secretaria ao sistema."
+                href="/admin/secretary/form"
+                icon={Landmark}
+                theme={themeColors.secretaries}
+              />
+              <ActionCard
+                title="Cadastrar Escola"
+                description="Adicione uma nova instituição de ensino."
+                href="/admin/schools/form"
+                icon={School}
+                theme={themeColors.schools}
+              />
+              <ActionCard
+                title="Cadastrar Livro"
+                description="Cadastre um novo título na plataforma."
+                href="/admin/books/form"
+                icon={Book}
+                theme={themeColors.books}
+              />
+              <ActionCard
+                title="Cadastrar Licenças"
+                description="Gere novas licenças para distribuição."
+                href="/admin/licenses/form"
+                icon={KeyRound}
+                theme={themeColors.licenses}
+              />
+            </div>
+          </section>
         </section>
 
         <section aria-labelledby="visao-geral-heading">
@@ -299,6 +486,58 @@ export default function Home() {
           </div>
         </section>
       </div>
+
+      <section aria-labelledby="analises-heading">
+        <h2
+          id="analises-heading"
+          className="mb-4 mt-4 text-2xl font-semibold tracking-tight text-foreground"
+        >
+          Análises de Leitura
+        </h2>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Livros Mais Lidos</CardTitle>
+              <CardDescription>
+                Top 5 livros mais acessados no último mês.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative h-[350px]">
+                <MostReadBooksChart data={mostReadBooksData} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Gêneros Populares</CardTitle>
+              <CardDescription>
+                Distribuição de leituras por gênero.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative h-[350px]">
+                <PopularGenresChart data={popularGenresData} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Média de Tempo de Leitura</CardTitle>
+              <CardDescription>
+                Evolução do tempo médio de leitura diária por usuário.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative h-[300px]">
+                <ReadingTimeChart data={readingTimeData} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
     </main>
   );
 }

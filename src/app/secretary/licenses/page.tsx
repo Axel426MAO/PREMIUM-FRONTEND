@@ -93,48 +93,51 @@ export default function LicenseBatchesPage() {
   const { user } = useUserStore();
 
   // --- MODIFICAÇÃO 3: LÓGICA DE BUSCA EXTRAÍDA PARA REÚSO ---
-  const fetchBatches = useCallback(async (showToast = false) => {
-    if (!user) {
-      setError("Dados do usuário não disponíveis.");
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    try {
-      let apiData: LicenseBatchApiResponse[];
-      if (user.user_type === "responsible_secretary") {
-        if (!user.responsible?.secretary?.id) {
-          throw new Error("ID da secretaria não encontrado para o usuário.");
+  const fetchBatches = useCallback(
+    async (showToast = false) => {
+      if (!user) {
+        setError("Dados do usuário não disponíveis.");
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        let apiData: LicenseBatchApiResponse[];
+        if (user.user_type === "responsible_secretary") {
+          if (!user.responsible?.secretary?.id) {
+            throw new Error("ID da secretaria não encontrado para o usuário.");
+          }
+          apiData = await getLicenseBatchesBySecretaryId(
+            user.responsible.secretary.id
+          );
+        } else {
+          apiData = await getLicenseBatches();
         }
-        apiData = await getLicenseBatchesBySecretaryId(
-          user.responsible.secretary.id
-        );
-      } else {
-        apiData = await getLicenseBatches();
+        const viewData: LicenseBatchViewData[] = apiData.map((batch) => ({
+          ...batch,
+          formattedCreatedAt: new Date(batch.createdAt).toLocaleDateString(
+            "pt-BR"
+          ),
+          customerName:
+            batch.secretary?.name || batch.school?.name || "Não atribuído",
+        }));
+        setAllBatches(viewData);
+        setError(null);
+        if (showToast) {
+          toast.success("Lista de licenças atualizada!");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Erro desconhecido";
+        setError(`Não foi possível carregar os lotes: ${errorMessage}`);
+        toast.error(`Erro ao atualizar: ${errorMessage}`);
+        console.error(err);
+      } finally {
+        setIsLoading(false);
       }
-      const viewData: LicenseBatchViewData[] = apiData.map((batch) => ({
-        ...batch,
-        formattedCreatedAt: new Date(batch.createdAt).toLocaleDateString(
-          "pt-BR"
-        ),
-        customerName:
-          batch.secretary?.name || batch.school?.name || "Não atribuído",
-      }));
-      setAllBatches(viewData);
-      setError(null);
-      if (showToast) {
-        toast.success("Lista de licenças atualizada!");
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Erro desconhecido";
-      setError(`Não foi possível carregar os lotes: ${errorMessage}`);
-      toast.error(`Erro ao atualizar: ${errorMessage}`);
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]); // A dependência `user` garante que a função é recriada se o usuário mudar.
+    },
+    [user]
+  ); // A dependência `user` garante que a função é recriada se o usuário mudar.
 
   useEffect(() => {
     fetchBatches();
@@ -159,7 +162,7 @@ export default function LicenseBatchesPage() {
   };
 
   const handleViewDetails = (id: number) => {
-    router.push(`/admin/licenses/resume?id=${id}`);
+    router.push(`/secretary/licenses/resume?id=${id}`);
   };
 
   const filteredBatches = useMemo(() => {
@@ -171,7 +174,9 @@ export default function LicenseBatchesPage() {
       (batch) =>
         batch.book.title.toLowerCase().includes(lowercasedQuery) ||
         batch.customerName.toLowerCase().includes(lowercasedQuery) ||
-        (statusLabels[batch.status] || "").toLowerCase().includes(lowercasedQuery)
+        (statusLabels[batch.status] || "")
+          .toLowerCase()
+          .includes(lowercasedQuery)
     );
   }, [allBatches, searchQuery]);
 
@@ -219,92 +224,88 @@ export default function LicenseBatchesPage() {
         </div>
       </div>
 
-      <Card className="rounded-lg shadow-sm p-0 ">
-        <CardContent className="p-0 rounded-lg">
-          <Table>
-            <TableHeader>
+      <div className="shadow rounded-xl">
+        <Table>
+          <TableHeader>
+              <TableHead>Livro</TableHead>
+              <TableHead className="hidden sm:table-cell">Cliente</TableHead>
+              <TableHead className="text-center">Quantidade</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="hidden md:table-cell">Criação</TableHead>
+              <TableHead>
+                <span className="sr-only">Ações</span>
+              </TableHead>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
               <TableRow>
-                <TableHead>Livro</TableHead>
-                <TableHead className="hidden sm:table-cell">Cliente</TableHead>
-                <TableHead className="text-center">Quantidade</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="hidden md:table-cell">Criação</TableHead>
-                <TableHead>
-                  <span className="sr-only">Ações</span>
-                </TableHead>
+                <TableCell colSpan={6} className="text-center h-24">
+                  Carregando licenças...
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">
-                    Carregando licenças...
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center h-24 text-red-500"
+                >
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredBatches.length > 0 ? (
+              filteredBatches.map((batch) => (
+                <TableRow key={batch.id}>
+                  <TableCell className="font-medium">
+                    {batch.book.title}
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-muted-foreground">
+                    {batch.customerName}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {batch.quantity}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {/* --- MODIFICAÇÃO 5: APLICANDO AS NOVAS CORES --- */}
+                    <Badge
+                      variant="outline"
+                      className={getStatusClasses(batch.status)}
+                    >
+                      {getDisplayStatus(batch.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-muted-foreground">
+                    {batch.formattedCreatedAt}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Abrir menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() => handleViewDetails(batch.id)}
+                        >
+                          <BookOpen className="mr-2 h-4 w-4" /> Ver Detalhes
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center h-24 text-red-500"
-                  >
-                    {error}
-                  </TableCell>
-                </TableRow>
-              ) : filteredBatches.length > 0 ? (
-                filteredBatches.map((batch) => (
-                  <TableRow key={batch.id}>
-                    <TableCell className="font-medium">
-                      {batch.book.title}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground">
-                      {batch.customerName}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {batch.quantity}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {/* --- MODIFICAÇÃO 5: APLICANDO AS NOVAS CORES --- */}
-                      <Badge
-                        variant="outline"
-                        className={getStatusClasses(batch.status)}
-                      >
-                        {getDisplayStatus(batch.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">
-                      {batch.formattedCreatedAt}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Abrir menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            onClick={() => handleViewDetails(batch.id)}
-                          >
-                            <BookOpen className="mr-2 h-4 w-4" /> Ver Detalhes
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">
-                    Nenhum lote de licenças encontrado.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center h-24">
+                  Nenhum lote de licenças encontrado.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <AlertDialog
         open={!!batchToDelete}

@@ -264,7 +264,7 @@ const EditSecretaryPage = () => {
           </p>
         </div>
       </div>
-      <div className="max-w-4xl mx-auto ">
+      <div className=" mx-auto ">
         <form onSubmit={handleUpdate} className="space-y-8">
           <fieldset disabled={isLoading}>
             <FormSection
@@ -273,7 +273,7 @@ const EditSecretaryPage = () => {
               icon={<Building className="h-6 w-6 text-primary" />}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="grid gap-2 sm:col-span-2 ">
+                <div className="grid gap-2 sm:col-span-1 ">
                   <Label htmlFor="secretary.name">Nome da Secretaria</Label>
                   <Input
                     id="secretary.name"
@@ -283,7 +283,7 @@ const EditSecretaryPage = () => {
                     required
                   />
                 </div>
-                <div className="grid gap-2 ">
+                <div className="grid gap-2 col-span-1">
                   <Label>Nível</Label>
                   <Select
                     value={
@@ -296,7 +296,7 @@ const EditSecretaryPage = () => {
                       )
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -315,7 +315,7 @@ const EditSecretaryPage = () => {
                     }
                     required
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecione um estado" />
                     </SelectTrigger>
                     <SelectContent>
@@ -328,7 +328,7 @@ const EditSecretaryPage = () => {
                   </Select>
                 </div>
                 {!formData.secretary.is_state_level && (
-                  <div className="grid gap-2 sm:col-span-2">
+                  <div className="grid gap-2  w-full">
                     <Label htmlFor="secretary.municipality">Município</Label>
                     <Select
                       name="secretary.municipality"
@@ -341,7 +341,7 @@ const EditSecretaryPage = () => {
                         isFetchingMunicipalities || municipalities.length === 0
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue
                           placeholder={
                             isFetchingMunicipalities
@@ -487,7 +487,7 @@ const EditSecretaryPage = () => {
                       required
                     />
                   </div>
-                  <div className="grid gap-2">
+                  {/* <div className="grid gap-2">
                     <Label htmlFor="user.password">Nova Senha</Label>
                     <Input
                       id="user.password"
@@ -497,7 +497,7 @@ const EditSecretaryPage = () => {
                       onChange={handleInputChange}
                       placeholder="Deixe em branco para não alterar"
                     />
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </FormSection>
