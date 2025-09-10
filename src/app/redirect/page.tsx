@@ -21,7 +21,7 @@ const userTypeToRouteMap: { [key: string]: string } = {
   responsible_secretary: "/secretary",
   aluno: "/aluno/dashboard",
   professor: "/professor/dashboard",
-  escola: "/escola/dashboard",
+  responsible_school: "/school",
   admin: "/admin/",
 };
 
@@ -98,7 +98,7 @@ export default function RedirectPage() {
         >
           {/* ✨ CORREÇÃO: Usando text-muted-foreground para o ícone */}
           <Library className="h-8 w-8 text-muted-foreground" />
-          <span>Editora Premium</span>
+          <span>Premium Editora</span>
         </Link>
 
         {error ? (

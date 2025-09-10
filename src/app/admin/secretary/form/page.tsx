@@ -577,7 +577,7 @@ const SecretaryFormPage: FC = () => {
           </Button>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              {secretaryId ? "Editar Secretaria" : "Adicionar Nova Secretaria"}
+              {secretaryId ? "Editar Secretaria" : "Cadastrar Nova Secretaria"}
             </h1>
             <p className="text-muted-foreground mt-1 text-sm md:text-base">
               Siga as etapas para cadastrar uma nova entidade no sistema.
@@ -647,7 +647,7 @@ const SecretaryFormPage: FC = () => {
                       <div className="space-y-8">
                         <div>
                           <Label className="text-base font-semibold text-foreground">
-                            Qual o nível da secretaria?
+                            Qual o tipo da secretaria?
                           </Label>
                           <p className="text-sm text-muted-foreground mb-4">
                             Selecione uma das opções abaixo para continuar.
@@ -1067,7 +1067,7 @@ const SecretaryFormPage: FC = () => {
                               value={formData.secretary.name}
                             />
                             <ReviewItem
-                              label="Nível"
+                              label="Tipo"
                               value={
                                 formData.secretary.is_state_level
                                   ? "Estadual"

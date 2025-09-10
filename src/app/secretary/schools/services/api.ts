@@ -1,24 +1,33 @@
+import { Class } from "@/app/admin/schools/services/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export interface SchoolApiResponse {
+  id: number;
+  name: string;
+  is_private: boolean;
+  address: {
+    street: string;
+    number: string | null;
+    neighborhood: string;
+    city: string;
+    state: string;
+    cep: string;
+  };
+  secretary: {
     id: number;
     name: string;
-    is_private: boolean;
-    address: {
-        city: string;
-        state: string;
+  } | null;
+  responsibles: {
+    name: string;
+    role: string;
+    whatsapp: string | null;
+    phone: string | null;
+    user: {
+      email: string;
     };
-    secretary: {
-        id: number;
-        name: string;
-    } | null;
-    responsibles: {
-        name: string;
-        user: {
-            status: boolean;
-        } | null;
-    }[];
+  }[];
+  classes: Class[];
 }
 
 // --- TIPOS DE DADOS PARA O FORMULÁRIO DE CRIAÇÃO ---

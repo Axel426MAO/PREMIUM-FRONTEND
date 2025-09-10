@@ -1,4 +1,3 @@
-// src/app/admin/schools/edit/page.tsx
 "use client";
 
 import React, { useState, useEffect, type ChangeEvent, type FC } from "react";
@@ -10,15 +9,17 @@ import {
   getSchoolById,
   updateFullSchoolWorkflow,
   getSecretariesForSelect,
+  createClass,
+  deleteClass,
   type FullSchoolUpdatePayload,
   type SecretarySelectItem,
+  type Class,
 } from "../services/api";
 
 // --- UI Components ---
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Popover,
   PopoverContent,
@@ -32,6 +33,17 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // --- Icons ---
 import {
@@ -42,6 +54,9 @@ import {
   User,
   Check,
   ChevronsUpDown,
+  Users, // Ícone para a nova seção de turmas
+  PlusCircle,
+  Trash2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -52,7 +67,6 @@ const FormSection: FC<{
   icon: React.ReactNode;
   children: React.ReactNode;
 }> = ({ title, description, icon, children }) => (
-  // MODIFICADO: Cores adaptadas para tema escuro/claro
   <div className="bg-card rounded-lg border shadow-sm mt-4 mb-4">
     <div className="p-5 border-b">
       <div className="flex items-center gap-3">
@@ -78,6 +92,11 @@ export default function EditSchoolPage() {
   const [secretaries, setSecretaries] = useState<SecretarySelectItem[]>([]);
   const [openSecretaryPopover, setOpenSecretaryPopover] = useState(false);
 
+  // Estados para gerenciamento de turmas
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [newClassName, setNewClassName] = useState("");
+  const [isClassLoading, setIsClassLoading] = useState(false);
+
   // Busca os dados da escola e a lista de secretarias
   useEffect(() => {
     if (!schoolId) {
@@ -91,6 +110,7 @@ export default function EditSchoolPage() {
         const schoolData = await getSchoolById(Number(schoolId));
         const secretariesData = await getSecretariesForSelect();
         setSecretaries(secretariesData);
+        setClasses(schoolData.classes || []); // Carrega as turmas existentes
 
         const mainResponsible = schoolData.responsibles?.[0];
         if (!mainResponsible || !mainResponsible.user) {
@@ -143,21 +163,6 @@ export default function EditSchoolPage() {
     );
   };
 
-  const handleSwitchChange = (isPrivate: boolean) => {
-    setFormData((prev) =>
-      prev
-        ? {
-            ...prev,
-            school: {
-              ...prev.school,
-              is_private: isPrivate,
-              secretary_id: isPrivate ? null : prev.school.secretary_id,
-            },
-          }
-        : null
-    );
-  };
-
   const handleSecretarySelect = (secretaryId: number) => {
     setFormData((prev) =>
       prev
@@ -175,7 +180,15 @@ export default function EditSchoolPage() {
     const toastId = toast.loading("Salvando alterações...");
 
     try {
-      await updateFullSchoolWorkflow(Number(schoolId), formData);
+      // Cria uma cópia para não modificar o estado diretamente
+      const payload = { ...formData };
+
+      // Remove a senha do payload se estiver em branco, para não alterá-la no backend
+      if (!payload.user.password) {
+        delete (payload.user as Partial<typeof payload.user>).password;
+      }
+
+      await updateFullSchoolWorkflow(Number(schoolId), payload);
       toast.success("Escola atualizada com sucesso!", { id: toastId });
       router.push("/admin/schools");
     } catch (error) {
@@ -185,9 +198,45 @@ export default function EditSchoolPage() {
     }
   };
 
+  // --- Funções de Gerenciamento de Turmas ---
+  const handleAddClass = async () => {
+    if (!newClassName.trim()) {
+      toast.warning("O nome da turma não pode estar vazio.");
+      return;
+    }
+    if (!schoolId) return;
+
+    setIsClassLoading(true);
+    const toastId = toast.loading("Adicionando turma...");
+    try {
+      const newClass = await createClass(Number(schoolId), newClassName.trim());
+      setClasses((prev) => [...prev, newClass]);
+      setNewClassName("");
+      toast.success("Turma adicionada com sucesso!", { id: toastId });
+    } catch (error) {
+      toast.error((error as Error).message, { id: toastId });
+    } finally {
+      setIsClassLoading(false);
+    }
+  };
+
+  const handleDeleteClass = async (classId: number) => {
+    setIsClassLoading(true);
+    const toastId = toast.loading("Excluindo turma...");
+    try {
+      await deleteClass(classId);
+      setClasses((prev) => prev.filter((c) => c.id !== classId));
+      toast.success("Turma excluída com sucesso!", { id: toastId });
+    } catch (error) {
+      toast.error((error as Error).message, { id: toastId });
+    } finally {
+      setIsClassLoading(false);
+    }
+  };
+  // --- Fim das Funções de Turmas ---
+
   if (isFetchingData) {
     return (
-      // MODIFICADO: Cores adaptadas
       <div className="flex items-center justify-center h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
@@ -196,7 +245,6 @@ export default function EditSchoolPage() {
 
   if (!formData) {
     return (
-      // MODIFICADO: Cores adaptadas
       <div className="flex items-center justify-center h-screen bg-background text-destructive">
         Não foi possível carregar o formulário de edição.
       </div>
@@ -204,7 +252,6 @@ export default function EditSchoolPage() {
   }
 
   return (
-    // MODIFICADO: Cor de fundo principal
     <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
       <div className=" mx-auto">
         <div className="flex items-center gap-4 mb-8">
@@ -217,7 +264,6 @@ export default function EditSchoolPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            {/* MODIFICADO: Cor do texto do título */}
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               Editar Escola
             </h1>
@@ -235,7 +281,7 @@ export default function EditSchoolPage() {
               description="Informações principais sobre a instituição de ensino."
               icon={<Building2 className="h-6 w-6 text-muted-foreground" />}
             >
-              <div className="space-y-6 grid grid-cols-2 gap-6">
+              <div className="space-y-6 grid grid-cols-2">
                 <div className="grid gap-2">
                   <Label htmlFor="school.name">Nome da Escola</Label>
                   <Input
@@ -246,21 +292,6 @@ export default function EditSchoolPage() {
                     required
                   />
                 </div>
-                {/* <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 bg-muted/50">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      Escola Privada
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Marque se for uma instituição de ensino privada.
-                    </p>
-                  </div>
-                  <Switch
-                    id="school.is_private"
-                    checked={formData.school.is_private}
-                    onCheckedChange={handleSwitchChange}
-                  />
-                </div> */}
                 {!formData.school.is_private && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -427,7 +458,6 @@ export default function EditSchoolPage() {
                     />
                   </div>
                 </div>
-                {/* MODIFICADO: Cor da borda adaptada */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t">
                   <div className="grid gap-2">
                     <Label htmlFor="user.email">E-mail de Acesso</Label>
@@ -453,6 +483,101 @@ export default function EditSchoolPage() {
                   </div>
                 </div>
               </div>
+            </FormSection>
+
+            {/* NOVA SEÇÃO DE GERENCIAMENTO DE TURMAS */}
+            <FormSection
+              title="Gerenciamento de Turmas"
+              description="Adicione ou remova turmas para esta escola."
+              icon={<Users className="h-6 w-6 text-muted-foreground" />}
+            >
+              <fieldset disabled={isClassLoading || isLoading}>
+                <div className="flex items-center gap-2 mb-6">
+                  <Input
+                    placeholder="Nome da nova turma (ex: 1º Ano A)"
+                    value={newClassName}
+                    onChange={(e) => setNewClassName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddClass();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleAddClass}
+                    disabled={isClassLoading}
+                  >
+                    {isClassLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Cadastrar
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Turmas Cadastradas
+                  </h4>
+                  {classes.length > 0 ? (
+                    <ul className="rounded-md border">
+                      {classes.map((c, index) => (
+                        <li
+                          key={c.id}
+                          className={`flex items-center justify-between p-3 ${
+                            index < classes.length - 1 ? "border-b" : ""
+                          }`}
+                        >
+                          <span className="text-sm font-medium">{c.name}</span>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Você tem certeza?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação não pode ser desfeita. Isso
+                                  excluirá permanentemente a turma{" "}
+                                  <strong>"{c.name}"</strong>.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteClass(c.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-center text-sm text-muted-foreground p-6 border rounded-md border-dashed">
+                      Nenhuma turma cadastrada para esta escola.
+                    </div>
+                  )}
+                </div>
+              </fieldset>
             </FormSection>
           </fieldset>
 

@@ -141,7 +141,7 @@ export default function Login() {
           <div className="bg-gray-900 dark:bg-gray-50 text-white dark:text-black flex size-6 items-center justify-center rounded-md">
             <LogoIcon />
           </div>
-          Editora Premium
+          Premium Editora
         </div>
 
         {/* Card Component */}
@@ -280,7 +280,7 @@ export default function Login() {
         {/* Footer Text */}
         <div className="text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            &copy; {new Date().getFullYear()} Editora Premium. Todos os direitos
+            &copy; {new Date().getFullYear()} Premium Editora. Todos os direitos
             reservados.
           </p>
         </div>

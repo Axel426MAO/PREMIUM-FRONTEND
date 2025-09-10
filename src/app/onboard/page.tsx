@@ -138,15 +138,15 @@ export default function LoginPage() {
           >
             {/* Ícone com cor neutra */}
             <Library className="h-8 w-8 text-gray-800 dark:text-gray-200" />
-            <span>Editora Premium</span>
+            <span>Premium Editora</span>
           </Link>
 
           <div className="text-center lg:text-left">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-              Bem-vindo(a) de volta!
+              Bem-vindo!
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Acesse sua conta para gerenciar a plataforma.
+              Digite suas credenciais abaixo para acessar a plataforma.
             </p>
           </div>
 
@@ -265,13 +265,13 @@ export default function LoginPage() {
                   <span>Entrando...</span>
                 </>
               ) : (
-                "Entrar na Plataforma"
+                "Entrar"
               )}
             </button>
           </form>
 
           <p className="mt-10 text-center text-sm text-gray-600 dark:text-gray-400">
-            &copy; {new Date().getFullYear()} Editora Premium. Todos os direitos
+            &copy; {new Date().getFullYear()} Premium Editora. Todos os direitos
             reservados.
           </p>
         </div>

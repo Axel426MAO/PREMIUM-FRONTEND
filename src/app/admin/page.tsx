@@ -40,7 +40,13 @@ import {
   ChartData,
 } from "chart.js";
 import { Bar, Line, Doughnut } from "react-chartjs-2";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 ChartJS.register(
   CategoryScale,
@@ -257,14 +263,16 @@ function StatCard({
           />
         </div>
         <div className="mt-4">
-          <p className="text-3xl font-bold">{isLoading ? "..." : value}</p>
-          <div className="flex items-center gap-2">
+          <div className="flex align-bottom ">
+            <p className="text-3xl font-bold">{isLoading ? "..." : value}</p>{" "}
             {!isLoading && (
-              <span className="flex items-center text-xs text-emerald-500">
+              <span className="flex items-center pl-1 text-xs text-emerald-500">
                 <TrendingUp className="h-3 w-3 mr-1" />
               </span>
             )}
-            <p className="text-xs text-muted-foreground">Total no sistema</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground">Total de registros.</p>
           </div>
         </div>
       </div>
@@ -369,7 +377,7 @@ export default function Home() {
   return (
     <main className="flex flex-1 flex-col bg-muted/20 dark:bg-background/95 p-6 md:p-8">
       <header className="mb-4 border-b pb-4">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="text-[24px] font-bold tracking-tight text-foreground">
           Bem-vindo
           {responsibleName
             ? `, ${responsibleName.trim().split(" ").slice(0, 2).join(" ")}`
@@ -393,28 +401,28 @@ export default function Home() {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <ActionCard
                 title="Cadastrar Secretaria"
-                description="Adicione uma nova secretaria ao sistema."
+                description="Cadastrar uma nova secretaria no sistema."
                 href="/admin/secretary/form"
                 icon={Landmark}
                 theme={themeColors.secretaries}
               />
               <ActionCard
                 title="Cadastrar Escola"
-                description="Adicione uma nova instituição de ensino."
+                description="Cadastrar uma nova instituição de ensino."
                 href="/admin/schools/form"
                 icon={School}
                 theme={themeColors.schools}
               />
               <ActionCard
                 title="Cadastrar Livro"
-                description="Cadastre um novo título na plataforma."
+                description="Cadastrar um novo livro."
                 href="/admin/books/form"
                 icon={Book}
                 theme={themeColors.books}
               />
               <ActionCard
-                title="Cadastrar Licenças"
-                description="Gere novas licenças para distribuição."
+                title="Criar Licenças"
+                description="Criar novo lote de licenças."
                 href="/admin/licenses/form"
                 icon={KeyRound}
                 theme={themeColors.licenses}
@@ -426,20 +434,12 @@ export default function Home() {
         <section aria-labelledby="visao-geral-heading">
           <h2
             id="visao-geral-heading"
-            className="text-xl font-semibold tracking-tight text-foreground mb-4 mt-4"
+            className="text-[24px] font-semibold tracking-tight text-foreground mb-4 mt-4"
           >
             Visão Geral
           </h2>
           {/* MODIFICAÇÃO 6: Grid ajustado para 6 colunas em telas grandes */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-            <StatCard
-              href="/admin/books"
-              title="Total de Livros"
-              value={stats.books}
-              icon={Book}
-              isLoading={isLoading}
-              colorClass={themeColors.books.text}
-            />
             <StatCard
               href="/admin/secretary"
               title="Total de Secretarias"
@@ -447,23 +447,6 @@ export default function Home() {
               icon={Building}
               isLoading={isLoading}
               colorClass={themeColors.secretaries.text}
-            />
-            <StatCard
-              href="/admin/users"
-              title="Total de Usuários"
-              value={stats.users}
-              icon={Users}
-              isLoading={isLoading}
-              colorClass={themeColors.users.text}
-            />
-            {/* MODIFICAÇÃO 7: Card de Lotes de Licenças atualizado */}
-            <StatCard
-              href="/admin/licenses"
-              title="Lotes de Licenças"
-              value={stats.licenseBatches}
-              icon={KeyRound}
-              isLoading={isLoading}
-              colorClass={themeColors.licenses.text}
             />
             {/* MODIFICAÇÃO 8: Card de Escolas Públicas atualizado */}
             <StatCard
@@ -474,6 +457,7 @@ export default function Home() {
               isLoading={isLoading}
               colorClass={themeColors.schools.text}
             />
+
             {/* MODIFICAÇÃO 9: Card de Escolas Privadas atualizado */}
             <StatCard
               href="/admin/schools" // Link ajustado para a página de escolas
@@ -483,6 +467,32 @@ export default function Home() {
               isLoading={isLoading}
               colorClass={themeColors.schools.text}
             />
+
+            <StatCard
+              href="/admin/users"
+              title="Total de Usuários"
+              value={stats.users}
+              icon={Users}
+              isLoading={isLoading}
+              colorClass={themeColors.users.text}
+            />
+            <StatCard
+              href="/admin/books"
+              title="Total de Livros"
+              value={stats.books}
+              icon={Book}
+              isLoading={isLoading}
+              colorClass={themeColors.books.text}
+            />
+            {/* MODIFICAÇÃO 7: Card de Lotes de Licenças atualizado */}
+            <StatCard
+              href="/admin/licenses"
+              title="Lotes de Licenças"
+              value={stats.licenseBatches}
+              icon={KeyRound}
+              isLoading={isLoading}
+              colorClass={themeColors.licenses.text}
+            />
           </div>
         </section>
       </div>
@@ -490,7 +500,7 @@ export default function Home() {
       <section aria-labelledby="analises-heading">
         <h2
           id="analises-heading"
-          className="mb-4 mt-4 text-2xl font-semibold tracking-tight text-foreground"
+          className="mb-4 mt-4 text-[24px] font-semibold tracking-tight text-foreground"
         >
           Análises de Leitura
         </h2>

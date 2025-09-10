@@ -30,13 +30,31 @@ export interface LicenseBatchApiResponse {
   _count: {
     license_keys: number;
   };
+  child_batches: ChildBatch[]; // Propriedade para os microlotes
+
 }
+
+
+export interface ChildBatch {
+  id: number;
+  quantity: number;
+  status: BackendBatchStatus;
+  createdAt: string;
+  school: {
+    id: number;
+    name: string;
+  } | null;
+  _count: {
+    license_keys: number;
+  };
+}
+
 
 // Interface para os detalhes de um lote específico (visão completa)
 export interface LicenseBatchDetails {
   id: number;
   quantity: number;
-  status: BackendBatchStatus; 
+  status: BackendBatchStatus;
   createdAt: string
   book: {
     title: string

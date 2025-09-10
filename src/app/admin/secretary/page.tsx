@@ -237,7 +237,7 @@ export default function SecretaryPage() {
             className="shrink-0"
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar
+            Cadastrar
           </Button>
         </div>
       </div>
@@ -251,7 +251,7 @@ export default function SecretaryPage() {
         >
           Todas
         </Button>
-      
+
         <Button
           variant={levelFilter === "state" ? "default" : "ghost"}
           className="rounded-md"
@@ -259,127 +259,135 @@ export default function SecretaryPage() {
         >
           Estaduais
         </Button>
+
+        <Button
+          variant={levelFilter === "municipal" ? "default" : "ghost"}
+          className="rounded-md"
+          onClick={() => setLevelFilter("municipal")}
+        >
+          Municipais
+        </Button>
       </div>
 
       {/* Conteúdo Principal: Cards ou Tabela */}
-  
-          {/* Visão de Tabela para Desktop */}
-          <div className="hidden md:block shadow rounded-xl">
-            <Table className="">
-              <TableHeader>
-                  <TableHead >Nome</TableHead>
-                  <TableHead >Responsável</TableHead>
-                  <TableHead >Contato</TableHead>
-                  <TableHead className="text-center ">Status</TableHead>
-                  <TableHead className="text-right ">Ações</TableHead>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      Carregando...
-                    </TableCell>
-                  </TableRow>
-                ) : error ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="h-24 text-center text-red-600"
-                    >
-                      {error}
-                    </TableCell>
-                  </TableRow>
-                ) : filteredSecretaries.length > 0 ? (
-                  filteredSecretaries.map((secretary) => (
-                    <TableRow
-                      key={secretary.id}
-                      className=" even:bg-gray-100 dark:even:bg-card/100"
-                    >
-                      <TableCell className="font-medium  p-4">
-                        {secretary.name}
-                      </TableCell>
-                      <TableCell className="">
-                        {secretary.responsible}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">{secretary.email}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {secretary.phone}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center ">
-                        <Badge
-                          variant={
-                            secretary.status === "Ativa"
-                              ? "default"
-                              : "destructive"
-                          }
-                        >
-                          {secretary.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu >
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                            <DropdownMenuItem
-                              onClick={() => handleEdit(secretary.id)}
-                            >
-                              <Pencil className="mr-2 h-4 w-4" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setSecretaryToDelete(secretary)}
-                              className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      Nenhuma secretaria encontrada.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
 
-          {/* Visão de Cards para Mobile */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden p-4">
+      {/* Visão de Tabela para Desktop */}
+      <div className="hidden md:block shadow rounded-xl">
+        <Table className="">
+          <TableHeader>
+            <TableHead>Nome</TableHead>
+            <TableHead>Responsável</TableHead>
+            <TableHead>Contato</TableHead>
+            <TableHead>Tipo</TableHead>
+
+            <TableHead className="text-center ">Status</TableHead>
+            <TableHead className="text-right ">Ações</TableHead>
+          </TableHeader>
+          <TableBody>
             {isLoading ? (
-              <div className="col-span-full h-24 flex items-center justify-center text-muted-foreground">
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando...
-              </div>
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  Carregando...
+                </TableCell>
+              </TableRow>
             ) : error ? (
-              <div className="col-span-full h-24 flex items-center justify-center text-red-600">
-                {error}
-              </div>
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="h-24 text-center text-red-600"
+                >
+                  {error}
+                </TableCell>
+              </TableRow>
             ) : filteredSecretaries.length > 0 ? (
               filteredSecretaries.map((secretary) => (
-                <SecretaryCard
+                <TableRow
                   key={secretary.id}
-                  secretary={secretary}
-                  onEdit={handleEdit}
-                  onDelete={setSecretaryToDelete}
-                />
+                  className=" even:bg-gray-100 dark:even:bg-card/100"
+                >
+                  <TableCell className="font-medium  p-4">
+                    {secretary.name}
+                  </TableCell>
+                  <TableCell className="">{secretary.responsible}</TableCell>
+                  <TableCell>
+                    <div className="text-sm">{secretary.email}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {secretary.phone}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium  p-4">
+                    {secretary.is_state_level ? "Estadual" : "Municipal"}
+                  </TableCell>
+                  <TableCell className="text-center ">
+                    <Badge
+                      variant={
+                        secretary.status === "Ativa" ? "default" : "destructive"
+                      }
+                    >
+                      {secretary.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() => handleEdit(secretary.id)}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" /> Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setSecretaryToDelete(secretary)}
+                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
               ))
             ) : (
-              <div className="col-span-full h-24 flex items-center justify-center text-muted-foreground">
-                Nenhuma secretaria encontrada.
-              </div>
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Nenhuma secretaria encontrada.
+                </TableCell>
+              </TableRow>
             )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Visão de Cards para Mobile */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden p-4">
+        {isLoading ? (
+          <div className="col-span-full h-24 flex items-center justify-center text-muted-foreground">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Carregando...
           </div>
-       
+        ) : error ? (
+          <div className="col-span-full h-24 flex items-center justify-center text-red-600">
+            {error}
+          </div>
+        ) : filteredSecretaries.length > 0 ? (
+          filteredSecretaries.map((secretary) => (
+            <SecretaryCard
+              key={secretary.id}
+              secretary={secretary}
+              onEdit={handleEdit}
+              onDelete={setSecretaryToDelete}
+            />
+          ))
+        ) : (
+          <div className="col-span-full h-24 flex items-center justify-center text-muted-foreground">
+            Nenhuma secretaria encontrada.
+          </div>
+        )}
+      </div>
 
       {/* DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO */}
       <AlertDialog

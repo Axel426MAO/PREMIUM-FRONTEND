@@ -116,7 +116,7 @@ export default function SchoolsPage() {
       }
     };
     fetchSchools();
-    // Adicionar 'user' como dependência para re-executar a busca se o usuário mudar
+    // Cadastrar'user' como dependência para re-executar a busca se o usuário mudar
   }, [user]);
 
   // Resto do componente permanece o mesmo...
@@ -185,7 +185,7 @@ export default function SchoolsPage() {
           </div>
           <Button onClick={() => router.push("/secretary/schools/form")}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar
+            Cadastrar
           </Button>
         </div>
       </div>

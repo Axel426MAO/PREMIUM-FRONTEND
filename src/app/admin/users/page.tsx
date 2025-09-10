@@ -233,7 +233,7 @@ export default function UsersPage() {
           </div>
           <Button onClick={() => router.push("/admin/users/form")}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar
+            Cadastrar
           </Button>
         </div>
       </div>

@@ -1,8 +1,7 @@
 "use client";
 
-// 1. Adicionar imports do React
+// --- IMPORTS ---
 import { useState, useEffect } from "react";
-import { useUserStore } from "../store/userStore";
 import Link from "next/link";
 import {
   Users,
@@ -15,11 +14,21 @@ import {
   Loader2,
   Building2,
 } from "lucide-react";
-import { getSchoolsBySecretaryId } from "./schools/services/api";
-// --- MODIFICAÇÃO 1: Importar o serviço de licenças ---
-import { getLicenseBatchesBySecretaryId } from "./licenses/services/api";
 
-// Paleta de cores (sem alterações)
+// Store
+import { useUserStore } from "../store/userStore";
+
+// --- API SERVICES ---
+import { getSchoolsBySecretaryId } from "./schools/services/api";
+import {
+  getLicenseBatchesBySecretaryId,
+  LicenseBatchApiResponse,
+} from "./licenses/services/api";
+import { getStudentsBySecretaryId } from "../shared/services/students_api";
+import { getTeachersBySecretaryId } from "../shared/services/teachers_api";
+
+// --- COMPONENTES AUXILIARES ---
+
 const themeColors = {
   schools: {
     bg: "bg-orange-100 dark:bg-orange-900/30",
@@ -39,7 +48,6 @@ const themeColors = {
   },
 };
 
-// Componente StatCard (sem alterações)
 function StatCard({
   title,
   value,
@@ -82,7 +90,6 @@ function StatCard({
   );
 }
 
-// Componente ActionCard (sem alterações)
 function ActionCard({
   title,
   description,
@@ -122,65 +129,69 @@ function ActionCard({
   );
 }
 
-// Componente Principal Home (com a nova lógica)
+// --- COMPONENTE PRINCIPAL ---
 export default function Home() {
   const { user } = useUserStore();
   const responsibleName = user?.responsible?.name;
 
-  // --- MODIFICAÇÃO 2: Adicionar 'receivedLicenses' ao estado ---
   const [stats, setStats] = useState({
-    publicSchools: 0,
-    privateSchools: 0,
+    schools: 0,
     receivedLicenses: 0,
+    sentLicenses: 0,
+    students: 0,
+    teachers: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!user) {
+      if (!user?.responsible?.secretary?.id) {
         setIsLoading(false);
         return;
       }
 
-      if (user.user_type === "responsible_secretary") {
-        try {
-          if (!user.responsible?.secretary?.id) {
-            throw new Error("ID da secretaria não encontrado.");
-          }
-          const secretaryId = user.responsible.secretary.id;
+      try {
+        const secretaryId = user.responsible.secretary.id;
 
-          // --- MODIFICAÇÃO 3: Buscar escolas e licenças em paralelo ---
-          const [schools, licenseBatches] = await Promise.all([
+        const [schoolsData, licenseBatchesData, studentsData, teachersData] =
+          await Promise.all([
             getSchoolsBySecretaryId(secretaryId),
             getLicenseBatchesBySecretaryId(secretaryId),
+            getStudentsBySecretaryId(secretaryId),
+            getTeachersBySecretaryId(secretaryId),
           ]);
 
-          const publicSchoolsCount = schools.filter(
-            (school) => !school.is_private
-          ).length;
-          const privateSchoolsCount = schools.filter(
-            (school) => school.is_private
-          ).length;
+        const sentLicensesCount = licenseBatchesData.reduce(
+          (total, batch) => total + (batch.child_batches?.length || 0),
+          0
+        );
 
-          setStats({
-            publicSchools: publicSchoolsCount,
-            privateSchools: privateSchoolsCount,
-            receivedLicenses: licenseBatches.length, // Contagem total de lotes de licença
-          });
-        } catch (err) {
-          console.error("Erro ao buscar dados do dashboard:", err);
-          setError("Não foi possível carregar os dados.");
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
+        setStats({
+          schools: schoolsData.length,
+          receivedLicenses: licenseBatchesData.length,
+          sentLicenses: sentLicensesCount,
+          students: studentsData.length,
+          teachers: teachersData.length,
+        });
+      } catch (err) {
+        console.error("Erro ao buscar dados do dashboard:", err);
+        setError("Não foi possível carregar os dados.");
+      } finally {
         setIsLoading(false);
       }
     };
 
     fetchDashboardData();
   }, [user]);
+
+  if (error) {
+    return (
+      <main className="flex flex-1 items-center justify-center p-6">
+        <p className="text-red-500">{error}</p>
+      </main>
+    );
+  }
 
   return (
     <main className="flex flex-1 flex-col p-6 md:p-10 md:py-6">
@@ -193,12 +204,12 @@ export default function Home() {
           !
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Aqui está um resumo das escolas, livros e licenças relacionados à sua
-          secretaria.
+          Aqui está um resumo das escolas, licenças e usuários relacionados à
+          sua secretaria.
         </p>
       </header>
 
-      <div className="">
+      <div>
         <section aria-labelledby="acoes-rapidas-heading">
           <h2
             id="acoes-rapidas-heading"
@@ -206,18 +217,33 @@ export default function Home() {
           >
             Ações Rápidas
           </h2>
+          {/* ✅ CÓDIGO ATUALIZADO AQUI */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <ActionCard
-              title="Adicionar Escola"
-              description="Cadastre uma nova instituição de ensino no sistema."
-              href="/admin/schools/form"
-              icon={PlusCircle}
+              title="Cadastrar Escola"
+              description="Adicione uma nova instituição de ensino no sistema."
+              href="/secretary/schools/form"
+              icon={School} // Ícone mais específico para escola
               theme={themeColors.schools}
             />
             <ActionCard
-              title="Gerenciar Licenças"
-              description="Visualize suas Licenças Recebidas"
-              href="/admin/licenses"
+              title="Cadastrar Professor"
+              description="Adicione um novo professor e vincule-o a uma escola."
+              href="/secretary/teachers/form"
+              icon={UserCheck} // Ícone de professor
+              theme={themeColors.teachers}
+            />
+            <ActionCard
+              title="Cadastrar Aluno"
+              description="Adicione um novo aluno e vincule-o a uma escola."
+              href="/secretary/students/form"
+              icon={Users} // Ícone de alunos
+              theme={themeColors.students}
+            />
+            <ActionCard
+              title="Distribuir Licenças"
+              description="Envie licenças para as escolas da sua secretaria."
+              href="/secretary/licenses"
               icon={Layers}
               theme={themeColors.licenses}
             />
@@ -231,46 +257,43 @@ export default function Home() {
           >
             Visão Geral
           </h2>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             <StatCard
-              href="/admin/schools"
+              href="/secretary/schools"
               title="Escolas"
-              value={stats.publicSchools}
+              value={stats.schools}
               icon={School}
               colorClass={themeColors.schools.text}
               isLoading={isLoading}
             />
-
-            {/* --- MODIFICAÇÃO 4: Conectar o valor do card com o estado --- */}
             <StatCard
-              href="/admin/licenses"
+              href="/secretary/licenses"
               title="Licenças Recebidas"
               value={stats.receivedLicenses}
               icon={Layers}
               colorClass={themeColors.licenses.text}
               isLoading={isLoading}
             />
-
             <StatCard
-              href="/admin/licenses"
-              title="Licenças Enviadas"
-              value={0} // TODO: Conectar com o backend
+              href="/secretary/licenses"
+              title="Licenças Distribuídas"
+              value={stats.sentLicenses}
               icon={Layers}
               colorClass={themeColors.licenses.text}
               isLoading={isLoading}
             />
             <StatCard
-              href="/admin/users?filter=student"
+              href="/secretary/students"
               title="Alunos Ativos"
-              value={0} // TODO: Conectar com o backend
+              value={stats.students}
               icon={Users}
               colorClass={themeColors.students.text}
               isLoading={isLoading}
             />
             <StatCard
-              href="/admin/users?filter=teacher"
+              href="/secretary/teachers"
               title="Professores Ativos"
-              value={0} // TODO: Conectar com o backend
+              value={stats.teachers}
               icon={UserCheck}
               colorClass={themeColors.teachers.text}
               isLoading={isLoading}

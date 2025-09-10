@@ -1,5 +1,3 @@
-// src/app/admin/secretary/edit/page.tsx
-
 "use client";
 
 import React, { useState, useEffect, type ChangeEvent, type FC } from "react";
@@ -93,6 +91,7 @@ const EditSecretaryPage = () => {
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
   const [isFetchingMunicipalities, setIsFetchingMunicipalities] =
     useState(false);
+  const [isFetchingCep, setIsFetchingCep] = useState(false);
 
   // Efeito para buscar os dados iniciais da secretaria
   useEffect(() => {
@@ -182,30 +181,105 @@ const EditSecretaryPage = () => {
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const [section, field] = name.split(".");
+
+    let finalValue: string | number = value;
+
+    // Aplica a máscara de CEP (XXXXX-XXX)
+    if (name === "address.cep") {
+      finalValue = value
+        .replace(/\D/g, "")
+        .replace(/^(\d{5})(\d)/, "$1-$2")
+        .substring(0, 9);
+    }
+
     setFormData((prev) =>
       prev
         ? {
             ...prev,
             [section]: {
               ...prev[section as keyof typeof prev],
-              [field]: value,
+              [field]: finalValue,
             },
           }
         : null
     );
   };
 
+  const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const cep = e.target.value.replace(/\D/g, "");
+
+    if (cep.length !== 8) {
+      return;
+    }
+
+    setIsFetchingCep(true);
+    const toastId = toast.loading("Buscando CEP...");
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      if (!response.ok) {
+        throw new Error("Serviço de CEP indisponível.");
+      }
+      const data = await response.json();
+
+      if (data.erro) {
+        throw new Error("CEP não encontrado.");
+      }
+
+      setFormData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          address: {
+            ...prev.address,
+            street: data.logradouro,
+            neighborhood: data.bairro,
+            city: data.localidade,
+            state: data.uf,
+            cep: prev.address.cep,
+          },
+          secretary: {
+            ...prev.secretary,
+            state: data.uf,
+            municipality: "",
+          },
+        };
+      });
+
+      toast.success("Endereço preenchido automaticamente.", { id: toastId });
+    } catch (error) {
+      toast.error((error as Error).message, { id: toastId });
+    } finally {
+      setIsFetchingCep(false);
+    }
+  };
+
   const handleSelectChange = (name: string, value: string | boolean) => {
     const [section, field] = name.split(".");
-    setFormData((prev) => {
+    setFormData((prev:any) => {
       if (!prev) return null;
       const updatedSection = {
         ...prev[section as keyof typeof prev],
         [field]: value,
       };
+
       if (name === "secretary.is_state_level" || name === "secretary.state") {
         (updatedSection as any).municipality = "";
       }
+
+      // Se o estado do endereço for alterado manualmente, sincronize com o estado da secretaria
+      if (name === "address.state") {
+        return {
+          ...prev,
+          address: updatedSection,
+          secretary: {
+            ...prev.secretary,
+            state: value as string,
+            municipality: "",
+          },
+        };
+      }
+
       return { ...prev, [section]: updatedSection };
     });
   };
@@ -246,7 +320,7 @@ const EditSecretaryPage = () => {
 
   return (
     <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4 mb-4">
         <Button
           variant="outline"
           size="icon"
@@ -257,7 +331,9 @@ const EditSecretaryPage = () => {
         </Button>
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-            Editar Secretaria
+            {formData.secretary.is_state_level
+              ? "Editar Secretaria Estadual"
+              : "Editar Secretaria Municipal"}
           </h1>
           <p className="text-muted-foreground">
             Altere os dados necessários e salve as modificações.
@@ -268,7 +344,11 @@ const EditSecretaryPage = () => {
         <form onSubmit={handleUpdate} className="space-y-8">
           <fieldset disabled={isLoading}>
             <FormSection
-              title="Dados da Secretaria"
+              title={
+                formData.secretary.is_state_level
+                  ? "Dados da Secretaria Estadual"
+                  : "Dados da Secretaria Municipal"
+              }
               description="Informações principais sobre a entidade e sua abrangência."
               icon={<Building className="h-6 w-6 text-primary" />}
             >
@@ -284,7 +364,7 @@ const EditSecretaryPage = () => {
                   />
                 </div>
                 <div className="grid gap-2 col-span-1">
-                  <Label>Nível</Label>
+                  <Label>Tipo</Label>
                   <Select
                     value={
                       formData.secretary.is_state_level ? "state" : "municipal"
@@ -368,61 +448,69 @@ const EditSecretaryPage = () => {
               description="Localização física onde a secretaria está estabelecida."
               icon={<Home className="h-6 w-6 text-primary" />}
             >
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
-                  <div className="grid gap-2 sm:col-span-3">
-                    <Label htmlFor="address.street">Rua / Avenida</Label>
-                    <Input
-                      id="address.street"
-                      name="address.street"
-                      value={formData.address.street}
-                      onChange={handleInputChange}
-                      required
-                    />
+              <fieldset disabled={isFetchingCep}>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+                    <div className="grid gap-2">
+                      <Label htmlFor="address.cep">CEP</Label>
+                      <div className="relative">
+                        <Input
+                          id="address.cep"
+                          name="address.cep"
+                          value={formData.address.cep}
+                          onChange={handleInputChange}
+                          onBlur={handleCepBlur}
+                          required
+                        />
+                        {isFetchingCep && (
+                          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid gap-2 sm:col-span-3">
+                      <Label htmlFor="address.street">Rua / Avenida</Label>
+                      <Input
+                        id="address.street"
+                        name="address.street"
+                        value={formData.address.street}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="address.number">Número</Label>
-                    <Input
-                      id="address.number"
-                      name="address.number"
-                      value={formData.address.number || ""}
-                      onChange={handleInputChange}
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="grid gap-2">
+                      <Label htmlFor="address.number">Número</Label>
+                      <Input
+                        id="address.number"
+                        name="address.number"
+                        value={formData.address.number || ""}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="address.neighborhood">Bairro</Label>
+                      <Input
+                        id="address.neighborhood"
+                        name="address.neighborhood"
+                        value={formData.address.neighborhood}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="address.city">Cidade</Label>
+                      <Input
+                        id="address.city"
+                        name="address.city"
+                        value={formData.address.city}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="grid gap-2">
-                    <Label htmlFor="address.neighborhood">Bairro</Label>
-                    <Input
-                      id="address.neighborhood"
-                      name="address.neighborhood"
-                      value={formData.address.neighborhood}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="address.city">Cidade</Label>
-                    <Input
-                      id="address.city"
-                      name="address.city"
-                      value={formData.address.city}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="address.cep">CEP</Label>
-                    <Input
-                      id="address.cep"
-                      name="address.cep"
-                      value={formData.address.cep}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+              </fieldset>
             </FormSection>
 
             <FormSection

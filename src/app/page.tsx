@@ -80,7 +80,7 @@ const Header = () => {
       <div className="container mx-auto flex items-center justify-between p-4">
         <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
           <Library className="h-8 w-8 text-gray-800 dark:text-gray-200" />
-          <span className="text-xl font-bold text-gray-900 dark:text-white">Editora Premium</span>
+          <span className="text-xl font-bold text-gray-900 dark:text-white">Premium Editora</span>
         </Link>
         
         {/* Navegação para Desktop */}
@@ -170,7 +170,7 @@ const Footer = () => (
   <footer className="bg-gray-900 text-white">
     <div className="container mx-auto px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
       <div>
-        <h3 className="text-lg font-bold mb-4">Editora Premium</h3>
+        <h3 className="text-lg font-bold mb-4">Premium Editora</h3>
         <p className="text-sm text-gray-400">Transformando a educação através da tecnologia.</p>
         <div className="flex gap-4 mt-4">
           <Link href="#" className="text-gray-400 hover:text-white"><Twitter /></Link>
@@ -203,7 +203,7 @@ const Footer = () => (
       </div>
     </div>
     <div className="border-t border-gray-800">
-      <p className="text-center text-sm text-gray-500 py-4">&copy; {new Date().getFullYear()} Editora Premium. Todos os direitos reservados.</p>
+      <p className="text-center text-sm text-gray-500 py-4">&copy; {new Date().getFullYear()} Premium Editora. Todos os direitos reservados.</p>
     </div>
   </footer>
 );
@@ -245,7 +245,7 @@ export default function LandingPage() {
           <div className="container mx-auto px-8">
             <div className="bg-gray-900 rounded-2xl text-white p-12 grid md:grid-cols-3 items-center gap-8">
                 <div className="md:col-span-2">
-                    <h2 className="text-3xl font-bold mb-4">Sobre a Editora Premium</h2>
+                    <h2 className="text-3xl font-bold mb-4">Sobre a Premium Editora</h2>
                     <p className="text-gray-300">
                         Nascemos da paixão por educação e da crença no poder da tecnologia. Há mais de 10 anos, nossa missão é criar pontes entre o conhecimento e as pessoas, oferecendo ferramentas que não apenas informam, mas também inspiram.
                     </p>

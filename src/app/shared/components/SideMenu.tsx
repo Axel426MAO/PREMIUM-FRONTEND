@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { type LucideIcon } from "lucide-react";
+import { GraduationCap, UserSquare, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -50,21 +50,49 @@ export function NavLinks({ isCollapsed }: NavLinksProps) {
         { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
         { href: "/admin/secretary", label: "Secretarias", icon: Landmark },
         { href: "/admin/schools", label: "Escolas", icon: School },
+        {
+          href: "/admin/teachers",
+          label: "Professores",
+          icon: UserSquare,
+        },
+        { href: "/admin/students", label: "Alunos", icon: GraduationCap },
+
         { href: "/admin/books", label: "Livros", icon: Book },
+
         { href: "/admin/users", label: "Usuários", icon: Users },
         { href: "/admin/licenses", label: "Licenças", icon: KeyRound },
       ];
     }
 
     if (userType === "responsible_secretary") {
-      // A linha "logoname = ..." foi removida daqui.
       return [
         { href: "/secretary", label: "Dashboard", icon: LayoutDashboard },
         { href: "/secretary/schools", label: "Escolas", icon: School },
+        {
+          href: "/secretary/teachers",
+          label: "Professores",
+          icon: UserSquare,
+        },
+        { href: "/secretary/students", label: "Alunos", icon: GraduationCap },
         { href: "/secretary/books", label: "Livros", icon: Book },
         { href: "/secretary/licenses", label: "Licenças", icon: KeyRound },
       ];
     }
+
+    if (userType === "responsible_school") {
+      return [
+        { href: "/school", label: "Dashboard", icon: LayoutDashboard },
+        {
+          href: "/school/teachers",
+          label: "Professores",
+          icon: UserSquare,
+        },
+        { href: "/school/students", label: "Alunos", icon: GraduationCap },
+        { href: "/school/books", label: "Livros", icon: Book },
+        { href: "/school/licenses", label: "Licenças", icon: KeyRound },
+      ];
+    }
+
 
     return [];
   }, [user]);
@@ -129,9 +157,13 @@ export function SideMenu({
   const logoname = useMemo(() => {
     if (user?.user_type === "responsible_secretary") {
       // Tenta pegar o nome real da secretaria, com um fallback.
-      return  "Portal da Secretaria";
+      return "Portal da Secretaria";
     }
-    return "Editora Premium";
+
+    if (user?.user_type === "responsible_school") {
+      return "Portal da Escola";
+    }
+    return "Premium Editora";
   }, [user]);
 
   return (

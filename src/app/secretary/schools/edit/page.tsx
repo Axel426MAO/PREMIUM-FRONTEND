@@ -8,17 +8,39 @@ import { toast } from "sonner";
 import {
   getSchoolById,
   updateFullSchoolWorkflow,
-  // MODIFICAÇÃO: 'getSecretariesForSelect' não é mais necessário aqui
+  getSecretariesForSelect,
   type FullSchoolUpdatePayload,
+  type SecretarySelectItem,
 } from "../services/api";
 
 // --- UI Components ---
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// MODIFICAÇÃO: Switch, Popover e Command não são mais usados nesta página
-// import { Switch } from "@/components/ui/switch"; 
-// ...
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // --- Icons ---
 import {
@@ -27,23 +49,14 @@ import {
   Building2,
   Home,
   User,
-  // MODIFICAÇÃO: Check e ChevronsUpDown não são mais necessários
+  Check,
+  ChevronsUpDown,
+  Users, // Ícone para a nova seção de turmas
+  PlusCircle,
+  Trash2,
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-// --- NOVO COMPONENTE AUXILIAR ---
-// Componente para exibir dados de forma estática (não editável)
-const InfoDisplay: FC<{ label: string; value: string | null }> = ({
-  label,
-  value,
-}) => (
-  <div className="grid gap-2">
-    <Label>{label}</Label>
-    <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
-      {value || "Não aplicável"}
-    </div>
-  </div>
-);
+import { Class, createClass, deleteClass } from "@/app/admin/schools/services/api";
 
 // Componente para agrupar seções do formulário
 const FormSection: FC<{
@@ -74,9 +87,15 @@ export default function EditSchoolPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(true);
-  
-  const [secretaryName, setSecretaryName] = useState<string | null>(null);
+  const [secretaries, setSecretaries] = useState<SecretarySelectItem[]>([]);
+  const [openSecretaryPopover, setOpenSecretaryPopover] = useState(false);
 
+  // Estados para gerenciamento de turmas
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [newClassName, setNewClassName] = useState("");
+  const [isClassLoading, setIsClassLoading] = useState(false);
+
+  // Busca os dados da escola e a lista de secretarias
   useEffect(() => {
     if (!schoolId) {
       toast.error("ID da escola não fornecido.");
@@ -87,9 +106,9 @@ export default function EditSchoolPage() {
     const fetchInitialData = async () => {
       try {
         const schoolData = await getSchoolById(Number(schoolId));
-        
-        // Guarda o nome da secretaria para exibição
-        setSecretaryName(schoolData.secretary?.name || null);
+        const secretariesData = await getSecretariesForSelect();
+        setSecretaries(secretariesData);
+        setClasses(schoolData.classes || []); // Carrega as turmas existentes
 
         const mainResponsible = schoolData.responsibles?.[0];
         if (!mainResponsible || !mainResponsible.user) {
@@ -118,7 +137,7 @@ export default function EditSchoolPage() {
           },
           user: {
             email: mainResponsible.user.email,
-            password: "",
+            password: "", // Senha fica em branco por padrão
           },
         });
       } catch (error) {
@@ -142,6 +161,14 @@ export default function EditSchoolPage() {
     );
   };
 
+  const handleSecretarySelect = (secretaryId: number) => {
+    setFormData((prev) =>
+      prev
+        ? { ...prev, school: { ...prev.school, secretary_id: secretaryId } }
+        : null
+    );
+    setOpenSecretaryPopover(false);
+  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,15 +178,60 @@ export default function EditSchoolPage() {
     const toastId = toast.loading("Salvando alterações...");
 
     try {
-      await updateFullSchoolWorkflow(Number(schoolId), formData);
+      // Cria uma cópia para não modificar o estado diretamente
+      const payload = { ...formData };
+
+      // Remove a senha do payload se estiver em branco, para não alterá-la no backend
+      if (!payload.user.password) {
+        delete (payload.user as Partial<typeof payload.user>).password;
+      }
+
+      await updateFullSchoolWorkflow(Number(schoolId), payload);
       toast.success("Escola atualizada com sucesso!", { id: toastId });
-      router.push("/secretary/schools");
+      router.push("/admin/schools");
     } catch (error) {
       toast.error((error as Error).message, { id: toastId });
     } finally {
       setIsLoading(false);
     }
   };
+
+  // --- Funções de Gerenciamento de Turmas ---
+  const handleAddClass = async () => {
+    if (!newClassName.trim()) {
+      toast.warning("O nome da turma não pode estar vazio.");
+      return;
+    }
+    if (!schoolId) return;
+
+    setIsClassLoading(true);
+    const toastId = toast.loading("Adicionando turma...");
+    try {
+      const newClass = await createClass(Number(schoolId), newClassName.trim());
+      setClasses((prev) => [...prev, newClass]);
+      setNewClassName("");
+      toast.success("Turma adicionada com sucesso!", { id: toastId });
+    } catch (error) {
+      toast.error((error as Error).message, { id: toastId });
+    } finally {
+      setIsClassLoading(false);
+    }
+  };
+
+  const handleDeleteClass = async (classId: number) => {
+    setIsClassLoading(true);
+    const toastId = toast.loading("Excluindo turma...");
+    try {
+      await deleteClass(classId);
+      setClasses((prev) => prev.filter((c) => c.id !== classId));
+      toast.success("Turma excluída com sucesso!", { id: toastId });
+    } catch (error) {
+      toast.error((error as Error).message, { id: toastId });
+    } finally {
+      setIsClassLoading(false);
+    }
+  };
+  // --- Fim das Funções de Turmas ---
 
   if (isFetchingData) {
     return (
@@ -207,7 +279,7 @@ export default function EditSchoolPage() {
               description="Informações principais sobre a instituição de ensino."
               icon={<Building2 className="h-6 w-6 text-muted-foreground" />}
             >
-              <div className="space-y-6">
+              <div className="space-y-6 grid grid-cols-2">
                 <div className="grid gap-2">
                   <Label htmlFor="school.name">Nome da Escola</Label>
                   <Input
@@ -218,21 +290,64 @@ export default function EditSchoolPage() {
                     required
                   />
                 </div>
-                
-                {/* --- MODIFICAÇÃO: Exibição estática do tipo de escola e secretaria --- */}
-                <div className="hidden ">
-                   <InfoDisplay
-                      label="Tipo de Escola"
-                      value={formData.school.is_private ? "Privada" : "Pública"}
-                   />
-                   {!formData.school.is_private && (
-                     <InfoDisplay
-                       label="Secretaria Vinculada"
-                       value={secretaryName}
-                     />
-                   )}
-                </div>
-
+                {!formData.school.is_private && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="grid gap-2">
+                      <Label>Secretaria Vinculada</Label>
+                      <Popover
+                        open={openSecretaryPopover}
+                        onOpenChange={setOpenSecretaryPopover}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {formData.school.secretary_id
+                              ? secretaries.find(
+                                  (s) => s.id === formData.school.secretary_id
+                                )?.name
+                              : "Selecione uma secretaria..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                          <Command>
+                            <CommandInput placeholder="Buscar secretaria..." />
+                            <CommandList>
+                              <CommandEmpty>
+                                Nenhuma secretaria encontrada.
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {secretaries.map((s) => (
+                                  <CommandItem
+                                    key={s.id}
+                                    value={s.name}
+                                    onSelect={() => handleSecretarySelect(s.id)}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        formData.school.secretary_id === s.id
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      }`}
+                                    />
+                                    {s.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </FormSection>
 
@@ -366,6 +481,101 @@ export default function EditSchoolPage() {
                   </div>
                 </div>
               </div>
+            </FormSection>
+
+            {/* NOVA SEÇÃO DE GERENCIAMENTO DE TURMAS */}
+            <FormSection
+              title="Gerenciamento de Turmas"
+              description="Adicione ou remova turmas para esta escola."
+              icon={<Users className="h-6 w-6 text-muted-foreground" />}
+            >
+              <fieldset disabled={isClassLoading || isLoading}>
+                <div className="flex items-center gap-2 mb-6">
+                  <Input
+                    placeholder="Nome da nova turma (ex: 1º Ano A)"
+                    value={newClassName}
+                    onChange={(e) => setNewClassName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddClass();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleAddClass}
+                    disabled={isClassLoading}
+                  >
+                    {isClassLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Cadastrar
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Turmas Cadastradas
+                  </h4>
+                  {classes.length > 0 ? (
+                    <ul className="rounded-md border">
+                      {classes.map((c, index) => (
+                        <li
+                          key={c.id}
+                          className={`flex items-center justify-between p-3 ${
+                            index < classes.length - 1 ? "border-b" : ""
+                          }`}
+                        >
+                          <span className="text-sm font-medium">{c.name}</span>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Você tem certeza?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação não pode ser desfeita. Isso
+                                  excluirá permanentemente a turma{" "}
+                                  <strong>"{c.name}"</strong>.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteClass(c.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-center text-sm text-muted-foreground p-6 border rounded-md border-dashed">
+                      Nenhuma turma cadastrada para esta escola.
+                    </div>
+                  )}
+                </div>
+              </fieldset>
             </FormSection>
           </fieldset>
 

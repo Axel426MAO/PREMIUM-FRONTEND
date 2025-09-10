@@ -190,14 +190,12 @@ export const ListLicense: FC<ListLicenseProps> = ({
             <div className="hidden md:block">
               <Table>
                 <TableHeader>
-                  <TableRow>
                     <TableHead className="w-[60px]">#</TableHead>
                     <TableHead>Código da Licença</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Data de Criação</TableHead>
                     <TableHead>Data de Ativação</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
                 </TableHeader>
                 <TableBody>
                   {licenseKeys.map((key, index) => {

@@ -57,15 +57,13 @@ import {
   Building,
   Map,
   Globe,
+  Users,
+  PlusCircle,
+  Trash2,
 } from "lucide-react";
+import { createClass, createFullSchoolWorkflow, FullSchoolCreationPayload, getSecretariesForSelect, SecretarySelectItem } from "../../schools/services/api";
 
 // --- API ---
-import {
-  createFullSchoolWorkflow,
-  getSecretariesForSelect,
-  type FullSchoolCreationPayload,
-  type SecretarySelectItem,
-} from "../services/api";
 
 // --- TIPOS E INTERFACES AUXILIARES ---
 type PasswordStrength = {
@@ -287,6 +285,11 @@ export default function SchoolFormPage() {
     user: { email: "", password: "", user_type: "responsible_school" },
   });
 
+  // --- Estados para Gerenciamento de Turmas ---
+  const [classes, setClasses] = useState<string[]>([]);
+  const [newClassName, setNewClassName] = useState("");
+  // -------------------------------------------
+
   const [schoolTypeSelected, setSchoolTypeSelected] =
     useState<SchoolType | null>(null);
   const [confirmEmail, setConfirmEmail] = useState("");
@@ -315,10 +318,11 @@ export default function SchoolFormPage() {
 
   const steps = useMemo(
     () => [
-      { id: 1, name: "Tipo", icon: <Building2 className="h-5 w-5" /> },
+      { id: 1, name: "Escola", icon: <Building2 className="h-5 w-5" /> },
       { id: 2, name: "Endereço", icon: <MapPin className="h-5 w-5" /> },
       { id: 3, name: "Acesso", icon: <UserCircle className="h-5 w-5" /> },
-      { id: 4, name: "Revisão", icon: <CheckCircle className="h-5 w-5" /> },
+      { id: 4, name: "Turmas", icon: <Users className="h-5 w-5" /> },
+      { id: 5, name: "Revisão", icon: <CheckCircle className="h-5 w-5" /> },
     ],
     []
   );
@@ -416,6 +420,21 @@ export default function SchoolFormPage() {
     }
   };
 
+  // --- Funções de Gerenciamento de Turmas (Estado Local) ---
+  const handleAddClass = () => {
+    if (!newClassName.trim()) {
+      toast.warning("O nome da turma não pode estar vazio.");
+      return;
+    }
+    setClasses((prev) => [...prev, newClassName.trim()]);
+    setNewClassName(""); // Limpa o input
+  };
+
+  const handleDeleteClass = (indexToDelete: number) => {
+    setClasses((prev) => prev.filter((_, index) => index !== indexToDelete));
+  };
+  // --- Fim das Funções de Turmas ---
+
   const isStepValid = useMemo(() => {
     const { school, responsible, user } = formData;
     switch (currentStep) {
@@ -460,13 +479,32 @@ export default function SchoolFormPage() {
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    const toastId = toast.loading("Salvando informações da escola...");
+    const toastId = toast.loading("Criando escola...");
+
     try {
-      await createFullSchoolWorkflow(formData);
+      // Etapa 1: Criar a escola e obter o ID da nova escola
+      // É crucial que `createFullSchoolWorkflow` retorne o objeto da escola criada, incluindo seu `id`
+      const newSchool = await createFullSchoolWorkflow(formData);
       toast.success("Escola cadastrada com sucesso!", { id: toastId });
+
+      // Etapa 2: Se houver turmas, criá-las uma a uma
+      if (classes.length > 0) {
+        toast.loading("Adicionando turmas à escola...", { id: toastId });
+
+        // `Promise.all` garante que todas as chamadas sejam feitas.
+        // Se uma falhar, o `catch` será acionado.
+        await Promise.all(
+          classes.map((className) => createClass(newSchool.id, className))
+        );
+
+        toast.success("Turmas adicionadas com sucesso!", { id: toastId });
+      }
+
       setTimeout(() => router.push("/admin/schools"), 1500);
     } catch (err) {
       toast.error((err as Error).message, { id: toastId });
+      // Aqui você pode Cadastrar uma lógica para deletar a escola que foi criada
+      // caso a criação das turmas falhe, para evitar dados inconsistentes.
       setIsLoading(false);
     }
   };
@@ -479,7 +517,7 @@ export default function SchoolFormPage() {
 
   return (
     <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
-      <div className="w-full mx-auto">
+      <div className="w-full  mx-auto">
         {/* Cabeçalho */}
         <div className="flex items-center gap-4 mb-4">
           <Button
@@ -492,7 +530,7 @@ export default function SchoolFormPage() {
           </Button>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              {schoolId ? "Editar Escola" : "Adicionar Nova Escola"}
+              {schoolId ? "Editar Escola" : "Cadastrar Nova Escola"}
             </h1>
             <p className="text-muted-foreground mt-1">
               Siga as etapas para cadastrar uma nova escola no sistema.
@@ -733,7 +771,9 @@ export default function SchoolFormPage() {
                       </div>
                       <div className="grid sm:grid-cols-4 gap-4">
                         <div className="grid gap-2 sm:col-span-3">
-                          <Label htmlFor="address.street">Rua / Avenida</Label>
+                          <Label htmlFor="address.street">
+                            Rua / Avenida
+                          </Label>
                           <Input
                             id="address.street"
                             name="address.street"
@@ -818,7 +858,10 @@ export default function SchoolFormPage() {
                             onValueChange={handleRoleChange}
                             required
                           >
-                            <SelectTrigger className="w-full" id="responsible.role">
+                            <SelectTrigger
+                              className="w-full"
+                              id="responsible.role"
+                            >
                               <SelectValue placeholder="Selecione um cargo" />
                             </SelectTrigger>
                             <SelectContent>
@@ -949,8 +992,77 @@ export default function SchoolFormPage() {
                     </div>
                   )}
 
-                  {/* Etapa 4: Revisão */}
+                  {/* Etapa 4: Gerenciamento de Turmas */}
                   {currentStep === 4 && (
+                    <div className="space-y-6 max-w-xl">
+                      <h3 className="text-lg font-medium text-foreground">
+                        Gerenciamento de Turmas
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Adicione as turmas que esta escola terá. Você poderá
+                        gerenciar mais detalhes depois.
+                      </p>
+                      <fieldset>
+                        <div className="flex items-center gap-2 mb-6">
+                          <Input
+                            placeholder="Nome da nova turma (ex: 1º Ano A)"
+                            value={newClassName}
+                            onChange={(e) => setNewClassName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddClass();
+                              }
+                            }}
+                          />
+                          <Button type="button" onClick={handleAddClass}>
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Cadastrar
+                          </Button>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-medium text-muted-foreground">
+                            Turmas a serem criadas
+                          </h4>
+                          {classes.length > 0 ? (
+                            <ul className="rounded-md border">
+                              {classes.map((className, index) => (
+                                <li
+                                  key={index}
+                                  className={`flex items-center justify-between p-3 ${
+                                    index < classes.length - 1
+                                      ? "border-b"
+                                      : ""
+                                  }`}
+                                >
+                                  <span className="text-sm font-medium">
+                                    {className}
+                                  </span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteClass(index)}
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="text-center text-sm text-muted-foreground p-6 border rounded-md border-dashed">
+                              Nenhuma turma adicionada ainda.
+                            </div>
+                          )}
+                        </div>
+                      </fieldset>
+                    </div>
+                  )}
+
+                  {/* Etapa 5: Revisão */}
+                  {currentStep === 5 && (
                     <div className="space-y-6">
                       <h3 className="text-xl font-semibold text-foreground text-center md:text-left">
                         Revise as Informações
@@ -984,6 +1096,33 @@ export default function SchoolFormPage() {
                               }
                             />
                           )}
+                        </ReviewCard>
+
+                        <ReviewCard
+                          title="Turmas"
+                          icon={
+                            <Users className="h-5 w-5 text-muted-foreground" />
+                          }
+                        >
+                          <ReviewItem
+                            label="Turmas"
+                            value={
+                              classes.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                  {classes.map((c, i) => (
+                                    <span
+                                      key={i}
+                                      className="bg-muted text-muted-foreground text-xs font-medium px-2.5 py-1 rounded-full"
+                                    >
+                                      {c}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                "Nenhuma turma adicionada"
+                              )
+                            }
+                          />
                         </ReviewCard>
 
                         <ReviewCard

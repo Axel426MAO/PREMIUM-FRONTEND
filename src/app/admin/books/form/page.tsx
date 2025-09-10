@@ -228,13 +228,13 @@ const AttachmentsCard = ({
       <div className="grid sm:grid-cols-2 gap-4">
         <label
           htmlFor="cover-input"
-          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed"
-          data-disabled={!!existingCoverImage || !!coverImageToUpload}
+          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors data-[disabled]:opacity-50 "
+          data-disabled={isLoading}
         >
           <div className="flex flex-col items-center justify-center">
             <ImageIcon className="w-8 h-8 mb-4 text-muted-foreground" />
             <p className="mb-2 text-sm text-muted-foreground">
-              <span className="font-semibold">Adicionar Capa</span>
+              <span className="font-semibold">Cadastrar Capa</span>
             </p>
             <p className="text-xs text-muted-foreground">SVG, PNG, ou JPG</p>
           </div>
@@ -244,20 +244,18 @@ const AttachmentsCard = ({
             className="hidden"
             onChange={(e) => handleFileChange(e, "cover")}
             accept=".svg, .png, .jpg, .jpeg"
-            disabled={
-              isLoading || !!existingCoverImage || !!coverImageToUpload
-            }
+            disabled={isLoading}
           />
         </label>
         <label
           htmlFor="doc-input"
-          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed"
+          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted transition-colors data-[disabled]:opacity-50 "
           data-disabled={isLoading}
         >
           <div className="flex flex-col items-center justify-center">
             <UploadCloud className="w-8 h-8 mb-4 text-muted-foreground" />
             <p className="mb-2 text-sm text-muted-foreground">
-              <span className="font-semibold">Adicionar Documentos</span>
+              <span className="font-semibold">Cadastrar Documentos</span>
             </p>
             <p className="text-xs text-muted-foreground">PDF ou EPUB</p>
           </div>
@@ -275,6 +273,7 @@ const AttachmentsCard = ({
     </CardContent>
   </Card>
 );
+
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function BookFormPage() {
@@ -353,6 +352,10 @@ export default function BookFormPage() {
         }
       };
       fetchBookData();
+    } else {
+      // **ESTA É A CORREÇÃO PRINCIPAL**
+      // Garante que a página não esteja em modo de carregamento se não houver ID de livro.
+      setIsLoading(false);
     }
   }, [bookId]);
 
@@ -554,7 +557,7 @@ export default function BookFormPage() {
         </Button>
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            {bookId ? "Editar Livro" : "Adicionar Novo Livro"}
+            {bookId ? "Editar Livro" : "Cadastrar Novo Livro"}
           </h1>
           <p className="text-muted-foreground">
             Preencha os campos para{" "}

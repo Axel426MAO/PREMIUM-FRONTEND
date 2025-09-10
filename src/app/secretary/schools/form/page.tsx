@@ -7,12 +7,10 @@ import React, {
   useEffect,
   type FC,
   type ChangeEvent,
-  useCallback,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { useUserStore } from "@/app/store/userStore";
 
 // --- UI Components ---
 import { Button } from "@/components/ui/button";
@@ -59,16 +57,19 @@ import {
   Building,
   Map,
   Globe,
-  Lock,
+  Users,
+  PlusCircle,
+  Trash2,
 } from "lucide-react";
-
-// --- API ---
 import {
   createFullSchoolWorkflow,
+  FullSchoolCreationPayload,
   getSecretariesForSelect,
-  type FullSchoolCreationPayload,
-  type SecretarySelectItem,
-} from "../services/api";
+  SecretarySelectItem,
+} from "../../schools/services/api";
+import { createClass } from "@/app/admin/schools/services/api";
+
+// --- API ---
 
 // --- TIPOS E INTERFACES AUXILIARES ---
 type PasswordStrength = {
@@ -274,7 +275,6 @@ export default function SchoolFormPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const schoolId = searchParams.get("id");
-  const { user } = useUserStore();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FullSchoolCreationPayload>({
@@ -290,6 +290,11 @@ export default function SchoolFormPage() {
     responsible: { name: "", role: "Diretor(a)", whatsapp: "", phone: "" },
     user: { email: "", password: "", user_type: "responsible_school" },
   });
+
+  // --- Estados para Gerenciamento de Turmas ---
+  const [classes, setClasses] = useState<string[]>([]);
+  const [newClassName, setNewClassName] = useState("");
+  // -------------------------------------------
 
   const [schoolTypeSelected, setSchoolTypeSelected] =
     useState<SchoolType | null>(null);
@@ -309,49 +314,21 @@ export default function SchoolFormPage() {
     [formData.user.password]
   );
 
-  const handleSchoolTypeChange = useCallback((value: SchoolType) => {
-    setSchoolTypeSelected(value);
-    const isPrivate = value === "privada";
-    setFormData((prev) => ({
-      ...prev,
-      school: {
-        ...prev.school,
-        is_private: isPrivate,
-        secretary_id: isPrivate ? null : prev.school.secretary_id,
-      },
-    }));
-  }, []);
-
   useEffect(() => {
-    if (user?.user_type === "responsible_secretary" && user.responsible?.secretary) {
-      const secretary = user.responsible.secretary;
-      
-      // Apenas define o ID da secretaria no formulário. A seleção de tipo fica a cargo do usuário.
-      setFormData(prev => ({
-        ...prev,
-        school: { ...prev.school, secretary_id: secretary.id }
-      }));
-      
-      // Armazena os dados da secretaria para uso posterior (na etapa de revisão)
-      setSecretaries([{ id: secretary.id, name: secretary.name }]);
-
-    } else {
-      // Comportamento para admins: busca todas as secretarias
-      getSecretariesForSelect()
-        .then(setSecretaries)
-        .catch((err) =>
-          toast.error("Erro ao buscar secretarias: " + (err as Error).message)
-        );
-    }
-  }, [user]);
-
+    getSecretariesForSelect()
+      .then(setSecretaries)
+      .catch((err) =>
+        toast.error("Erro ao buscar secretarias: " + err.message)
+      );
+  }, []);
 
   const steps = useMemo(
     () => [
-      { id: 1, name: "Tipo", icon: <Building2 className="h-5 w-5" /> },
+      { id: 1, name: "Escola", icon: <Building2 className="h-5 w-5" /> },
       { id: 2, name: "Endereço", icon: <MapPin className="h-5 w-5" /> },
       { id: 3, name: "Acesso", icon: <UserCircle className="h-5 w-5" /> },
-      { id: 4, name: "Revisão", icon: <CheckCircle className="h-5 w-5" /> },
+      { id: 4, name: "Turmas", icon: <Users className="h-5 w-5" /> },
+      { id: 5, name: "Revisão", icon: <CheckCircle className="h-5 w-5" /> },
     ],
     []
   );
@@ -374,6 +351,19 @@ export default function SchoolFormPage() {
         setEmailError(null);
       }
     }
+  };
+
+  const handleSchoolTypeChange = (value: SchoolType) => {
+    setSchoolTypeSelected(value);
+    const isPrivate = value === "privada";
+    setFormData((prev) => ({
+      ...prev,
+      school: {
+        ...prev.school,
+        is_private: isPrivate,
+        secretary_id: isPrivate ? null : prev.school.secretary_id,
+      },
+    }));
   };
 
   const handleSecretarySelect = (secretaryId: number) => {
@@ -436,6 +426,21 @@ export default function SchoolFormPage() {
     }
   };
 
+  // --- Funções de Gerenciamento de Turmas (Estado Local) ---
+  const handleAddClass = () => {
+    if (!newClassName.trim()) {
+      toast.warning("O nome da turma não pode estar vazio.");
+      return;
+    }
+    setClasses((prev) => [...prev, newClassName.trim()]);
+    setNewClassName(""); // Limpa o input
+  };
+
+  const handleDeleteClass = (indexToDelete: number) => {
+    setClasses((prev) => prev.filter((_, index) => index !== indexToDelete));
+  };
+  // --- Fim das Funções de Turmas ---
+
   const isStepValid = useMemo(() => {
     const { school, responsible, user } = formData;
     switch (currentStep) {
@@ -480,13 +485,30 @@ export default function SchoolFormPage() {
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    const toastId = toast.loading("Salvando informações da escola...");
+    const toastId = toast.loading("Criando escola...");
+
     try {
-      await createFullSchoolWorkflow(formData);
+      // Etapa 1: Criar a escola e obter o ID da nova escola
+      // É crucial que `createFullSchoolWorkflow` retorne o objeto da escola criada, incluindo seu `id`
+      const newSchool = await createFullSchoolWorkflow(formData);
       toast.success("Escola cadastrada com sucesso!", { id: toastId });
-      setTimeout(() => router.push("/secretary/schools"), 1500);
+
+      // Etapa 2: Se houver turmas, criá-las uma a uma
+      if (classes.length > 0) {
+        toast.loading("Adicionando turmas à escola...", { id: toastId });
+
+        await Promise.all(
+          classes.map((className) => createClass(newSchool.id, className))
+        );
+
+        toast.success("Turmas adicionadas com sucesso!", { id: toastId });
+      }
+
+      setTimeout(() => router.push("/admin/schools"), 1500);
     } catch (err) {
       toast.error((err as Error).message, { id: toastId });
+      // Aqui você pode Cadastrar uma lógica para deletar a escola que foi criada
+      // caso a criação das turmas falhe, para evitar dados inconsistentes.
       setIsLoading(false);
     }
   };
@@ -499,7 +521,7 @@ export default function SchoolFormPage() {
 
   return (
     <main className="flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-background min-h-screen">
-      <div className="w-full mx-auto">
+      <div className="w-full  mx-auto">
         {/* Cabeçalho */}
         <div className="flex items-center gap-4 mb-4">
           <Button
@@ -512,7 +534,7 @@ export default function SchoolFormPage() {
           </Button>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              {schoolId ? "Editar Escola" : "Adicionar Nova Escola"}
+              {schoolId ? "Editar Escola" : "Cadastrar Nova Escola"}
             </h1>
             <p className="text-muted-foreground mt-1">
               Siga as etapas para cadastrar uma nova escola no sistema.
@@ -594,13 +616,13 @@ export default function SchoolFormPage() {
                           onValueChange={(value: SchoolType) =>
                             handleSchoolTypeChange(value)
                           }
-                          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+                          className="grid grid-cols-1 sm:grid-cols-3 gap-4 "
                         >
                           {[
                             {
                               id: "estadual",
                               icon: (
-                                <Globe className="h-8 w-8 mb-2 text-muted-foreground" />
+                                <Globe className="h-8 w-8 mb-2 text-muted-foreground " />
                               ),
                               label: "Estadual",
                             },
@@ -615,9 +637,9 @@ export default function SchoolFormPage() {
                             <Label
                               key={type.id}
                               htmlFor={`r-${type.id}`}
-                              className={`flex flex-col items-center justify-center rounded-lg border-2 p-6 transition-all cursor-pointer ${
+                              className={`flex flex-col items-center bg-card shadow-sm justify-center rounded-lg border-2 p-6 cursor-pointer transition-all ${
                                 schoolTypeSelected === type.id
-                                  ? "border-primary bg-muted"
+                                  ? "border-primary "
                                   : "border"
                               }`}
                             >
@@ -655,13 +677,73 @@ export default function SchoolFormPage() {
                                 required
                               />
                             </div>
+
+                            {!formData.school.is_private && (
+                              <div className="grid gap-2">
+                                <Label>
+                                  Secretaria Vinculada (Obrigatório)
+                                </Label>
+                                <Popover
+                                  open={openSecretaryPopover}
+                                  onOpenChange={setOpenSecretaryPopover}
+                                >
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      className="w-full justify-between"
+                                    >
+                                      {formData.school.secretary_id
+                                        ? secretaries.find(
+                                            (s) =>
+                                              s.id ===
+                                              formData.school.secretary_id
+                                          )?.name
+                                        : "Selecione uma secretaria..."}
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                    <Command>
+                                      <CommandInput placeholder="Buscar secretaria..." />
+                                      <CommandList>
+                                        <CommandEmpty>
+                                          Nenhuma secretaria encontrada.
+                                        </CommandEmpty>
+                                        <CommandGroup>
+                                          {secretaries.map((s) => (
+                                            <CommandItem
+                                              key={s.id}
+                                              value={s.name}
+                                              onSelect={() =>
+                                                handleSecretarySelect(s.id)
+                                              }
+                                            >
+                                              <Check
+                                                className={`mr-2 h-4 w-4 ${
+                                                  formData.school
+                                                    .secretary_id === s.id
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                                }`}
+                                              />
+                                              {s.name}
+                                            </CommandItem>
+                                          ))}
+                                        </CommandGroup>
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </div>
                   )}
 
-                  {/* Etapa 2: Endereço (sem modificações) */}
+                  {/* Etapa 2: Endereço */}
                   {currentStep === 2 && (
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -745,7 +827,7 @@ export default function SchoolFormPage() {
                     </div>
                   )}
 
-                  {/* Etapa 3: Acesso (sem modificações) */}
+                  {/* Etapa 3: Acesso */}
                   {currentStep === 3 && (
                     <div className="space-y-6">
                       <h3 className="text-lg font-medium border-b pb-2 text-foreground">
@@ -771,7 +853,10 @@ export default function SchoolFormPage() {
                             onValueChange={handleRoleChange}
                             required
                           >
-                            <SelectTrigger id="responsible.role">
+                            <SelectTrigger
+                              className="w-full"
+                              id="responsible.role"
+                            >
                               <SelectValue placeholder="Selecione um cargo" />
                             </SelectTrigger>
                             <SelectContent>
@@ -828,14 +913,13 @@ export default function SchoolFormPage() {
                             )}
                           </div>
                         </div>
-                        <div className="grid gap-2 ">
+                        <div className="grid gap-2">
                           <Label htmlFor="confirm.email">
                             Confirmar E-mail
                           </Label>
                           <Input
                             id="confirm.email"
                             name="confirm.email"
-                            className=""
                             type="email"
                             value={confirmEmail}
                             onChange={(e) => setConfirmEmail(e.target.value)}
@@ -857,11 +941,11 @@ export default function SchoolFormPage() {
                           onChange={handleInputChange}
                           onGenerate={handleGeneratePassword}
                         />
-                        <div className="grid gap-2 pt-1">
+                        <div className="grid gap-2">
                           <Label htmlFor="confirm.password">
                             Confirmar Senha
                           </Label>
-                          <div className="relative">
+                          <div className="relative pt-1">
                             <Input
                               id="confirm.password"
                               name="confirm.password"
@@ -903,8 +987,75 @@ export default function SchoolFormPage() {
                     </div>
                   )}
 
-                  {/* Etapa 4: Revisão (sem modificações) */}
+                  {/* Etapa 4: Gerenciamento de Turmas */}
                   {currentStep === 4 && (
+                    <div className="space-y-6 max-w-xl">
+                      <h3 className="text-lg font-medium text-foreground">
+                        Gerenciamento de Turmas
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Adicione as turmas que esta escola terá. Você poderá
+                        gerenciar mais detalhes depois.
+                      </p>
+                      <fieldset>
+                        <div className="flex items-center gap-2 mb-6">
+                          <Input
+                            placeholder="Nome da nova turma (ex: 1º Ano A)"
+                            value={newClassName}
+                            onChange={(e) => setNewClassName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddClass();
+                              }
+                            }}
+                          />
+                          <Button type="button" onClick={handleAddClass}>
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Cadastrar
+                          </Button>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-medium text-muted-foreground">
+                            Turmas a serem criadas
+                          </h4>
+                          {classes.length > 0 ? (
+                            <ul className="rounded-md border">
+                              {classes.map((className, index) => (
+                                <li
+                                  key={index}
+                                  className={`flex items-center justify-between p-3 ${
+                                    index < classes.length - 1 ? "border-b" : ""
+                                  }`}
+                                >
+                                  <span className="text-sm font-medium">
+                                    {className}
+                                  </span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteClass(index)}
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="text-center text-sm text-muted-foreground p-6 border rounded-md border-dashed">
+                              Nenhuma turma adicionada ainda.
+                            </div>
+                          )}
+                        </div>
+                      </fieldset>
+                    </div>
+                  )}
+
+                  {/* Etapa 5: Revisão */}
+                  {currentStep === 5 && (
                     <div className="space-y-6">
                       <h3 className="text-xl font-semibold text-foreground text-center md:text-left">
                         Revise as Informações
@@ -938,6 +1089,33 @@ export default function SchoolFormPage() {
                               }
                             />
                           )}
+                        </ReviewCard>
+
+                        <ReviewCard
+                          title="Turmas"
+                          icon={
+                            <Users className="h-5 w-5 text-muted-foreground" />
+                          }
+                        >
+                          <ReviewItem
+                            label="Turmas"
+                            value={
+                              classes.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                  {classes.map((c, i) => (
+                                    <span
+                                      key={i}
+                                      className="bg-muted text-muted-foreground text-xs font-medium px-2.5 py-1 rounded-full"
+                                    >
+                                      {c}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                "Nenhuma turma adicionada"
+                              )
+                            }
+                          />
                         </ReviewCard>
 
                         <ReviewCard

@@ -1,25 +1,37 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
+export interface Class {
+  id: number;
+  name: string;
+  school_id: number;
+}
 export interface SchoolApiResponse {
+  id: number;
+  name: string;
+  is_private: boolean;
+  address: {
+    street: string;
+    number: string | null;
+    neighborhood: string;
+    city: string;
+    state: string;
+    cep: string;
+  };
+  secretary: {
     id: number;
     name: string;
-    is_private: boolean;
-    address: {
-        city: string;
-        state: string;
+  } | null;
+  responsibles: {
+    name: string;
+    role: string;
+    whatsapp: string | null;
+    phone: string | null;
+    user: {
+      status: boolean;
+      email: string;
     };
-    secretary: {
-        id: number;
-        name: string;
-    } | null;
-    responsibles: {
-        name: string;
-        user: {
-            status: boolean;
-        } | null;
-    }[];
+  }[];
+  classes: Class[];
 }
-
 export interface FullSchoolCreationPayload {
     school: {
         name: string;
@@ -200,3 +212,27 @@ export async function updateFullSchoolWorkflow(id: number, payload: FullSchoolUp
 
     return response.json();
 }
+
+
+export const createClass = async (schoolId: number, name: string): Promise<Class> => {
+  const response = await fetch(`${API_BASE_URL}/schools/${schoolId}/classes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Erro ao criar a turma.");
+  }
+  return response.json();
+};
+
+export const deleteClass = async (classId: number): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/schools/classes/${classId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Erro ao excluir a turma.");
+  }
+};

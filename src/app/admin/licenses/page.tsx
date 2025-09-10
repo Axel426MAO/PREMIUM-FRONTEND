@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-  DropdownMenuSeparator, // Importado para separar visualmente as ações
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Table,
@@ -37,8 +37,10 @@ import {
   Trash2,
   Search,
   BookOpen,
-  Pencil, // Ícone já estava importado
   Send,
+  ChevronRight,
+  ChevronDown,
+  Building,
 } from "lucide-react";
 import {
   getLicenseBatches,
@@ -47,13 +49,18 @@ import {
   updateLicenseBatchStatus,
 } from "./services/api";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 // --- TIPOS ---
 type LicenseBatchStatus = LicenseBatchApiResponse["status"];
+
 type LicenseBatchViewData = LicenseBatchApiResponse & {
   formattedCreatedAt: string;
   customerName: string;
+  quantityAvailable: number;
+  quantityDistributed: number;
 };
+
 type CustomerTypeFilter = "all" | "secretary" | "private_school";
 
 // --- MAPEAMENTOS E FUNÇÕES AUXILIARES ---
@@ -89,6 +96,48 @@ const customerTypeLabels: Record<CustomerTypeFilter, string> = {
   private_school: "Escolas Privadas",
 };
 
+// --- SUB-COMPONENTE PARA A TABELA DE MICROLOTES ---
+const ChildBatchesSubTable: React.FC<{
+  childBatches: LicenseBatchApiResponse["child_batches"];
+}> = ({ childBatches }) => {
+  if (!childBatches || childBatches.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground p-4">
+        Nenhuma licença distribuída a partir deste lote.
+      </p>
+    );
+  }
+
+  return (
+    <div className="bg-muted/50 p-4">
+      <h4 className="font-bold mb-2 pl-2">Distribuições para Escolas:</h4>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Escola</TableHead>
+            <TableHead className="text-center">Quantidade</TableHead>
+            <TableHead>Data de Envio</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {childBatches.map((child) => (
+            <TableRow key={child.id} className="bg-background">
+              <TableCell className="font-medium flex items-center gap-2">
+                <Building className="h-4 w-4 text-muted-foreground" />
+                {child.school?.name ?? "N/A"}
+              </TableCell>
+              <TableCell className="text-center">{child.quantity}</TableCell>
+              <TableCell>
+                {new Date(child.createdAt).toLocaleDateString("pt-BR")}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
 // --- COMPONENTE PRINCIPAL ---
 export default function LicenseBatchesPage() {
   const router = useRouter();
@@ -103,20 +152,32 @@ export default function LicenseBatchesPage() {
   const [batchToSend, setBatchToSend] = useState<LicenseBatchViewData | null>(
     null
   );
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchBatches = async () => {
       try {
         setIsLoading(true);
         const apiData = await getLicenseBatches();
-        const viewData: LicenseBatchViewData[] = apiData.map((batch) => ({
-          ...batch,
-          formattedCreatedAt: new Date(batch.createdAt).toLocaleDateString(
-            "pt-BR"
-          ),
-          customerName:
-            batch.secretary?.name || batch.school?.name || "Não atribuído",
-        }));
+
+        const viewData: LicenseBatchViewData[] = apiData.map((batch) => {
+          const distributed =
+            batch.child_batches?.reduce(
+              (sum, child) => sum + child.quantity,
+              0
+            ) || 0;
+          return {
+            ...batch,
+            formattedCreatedAt: new Date(batch.createdAt).toLocaleDateString(
+              "pt-BR"
+            ),
+            customerName:
+              batch.secretary?.name || batch.school?.name || "Não atribuído",
+            quantityAvailable: batch.quantity,
+            quantityDistributed: distributed,
+          };
+        });
+
         setAllBatches(viewData);
         setError(null);
       } catch (err) {
@@ -127,6 +188,18 @@ export default function LicenseBatchesPage() {
     };
     fetchBatches();
   }, []);
+
+  const handleToggleRow = (batchId: number) => {
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(batchId)) {
+        newSet.delete(batchId);
+      } else {
+        newSet.add(batchId);
+      }
+      return newSet;
+    });
+  };
 
   const handleConfirmSend = async () => {
     if (!batchToSend) return;
@@ -171,10 +244,6 @@ export default function LicenseBatchesPage() {
 
   const handleViewDetails = (id: number) => {
     router.push(`/admin/licenses/resume?id=${id}`);
-  };
-
-  const handleEdit = (id: number) => {
-    router.push(`/admin/licenses/edit?id=${id}`);
   };
 
   const filteredBatches = useMemo(() => {
@@ -249,27 +318,29 @@ export default function LicenseBatchesPage() {
         )}
       </div>
 
-      <div className="shadow rounded-xl">
+      <div className="shadow rounded-xl border">
         <Table>
           <TableHeader>
-              <TableHead>Livro</TableHead>
-              <TableHead className="hidden sm:table-cell">Cliente</TableHead>
-              <TableHead className="text-center">Quantidade</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="hidden md:table-cell">Criação</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="w-[40px]"></TableHead>
+            <TableHead>Livro</TableHead>
+            <TableHead className="hidden sm:table-cell">Cliente</TableHead>
+            <TableHead className="text-center">Disponíveis</TableHead>
+            <TableHead className="text-center">Distribuídas</TableHead>
+            <TableHead className="text-center">Status</TableHead>
+            <TableHead className="hidden md:table-cell">Criação</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24">
+                <TableCell colSpan={8} className="text-center h-24">
                   Carregando...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={8}
                   className="text-center h-24 text-red-500"
                 >
                   {error}
@@ -277,73 +348,101 @@ export default function LicenseBatchesPage() {
               </TableRow>
             ) : filteredBatches.length > 0 ? (
               filteredBatches.map((batch) => (
-                <TableRow
-                  key={batch.id}
-                  className="even:bg-gray-100 dark:even:bg-muted/40"
-                >
-                  <TableCell className="font-medium">
-                    {batch.book.title}
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    {batch.customerName}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {batch.quantity}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      variant="outline"
-                      className={getStatusClasses(batch.status)}
-                    >
-                      {statusLabels[batch.status] || batch.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {batch.formattedCreatedAt}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => handleViewDetails(batch.id)}
-                        >
-                          <BookOpen className="mr-2 h-4 w-4" /> Ver Detalhes
-                        </DropdownMenuItem>
-
-                        {/* --- INÍCIO DA MODIFICAÇÃO --- */}
-                        {/* Mostra as opções de Enviar, Editar e Excluir apenas se o status for "CRIADO" */}
-                        {batch.status === "CRIADO" && (
-                          <>
-                            <DropdownMenuItem
-                              onClick={() => setBatchToSend(batch)}
-                            >
-                              <Send className="mr-2 h-4 w-4" /> Enviar Lote
-                            </DropdownMenuItem>
-                         
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setBatchToDelete(batch)}
-                              className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Excluir Lote
-                            </DropdownMenuItem>
-                          </>
+                <Fragment key={batch.id}>
+                  <TableRow
+                    className={cn(
+                      "even:bg-gray-50 dark:even:bg-muted/40",
+                      expandedRows.has(batch.id) && "border-b-0"
+                    )}
+                  >
+                    <TableCell>
+                      {batch.child_batches &&
+                        batch.child_batches.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleToggleRow(batch.id)}
+                          >
+                            {expandedRows.has(batch.id) ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
+                          </Button>
                         )}
-                        {/* --- FIM DA MODIFICAÇÃO --- */}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {batch.book.title}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {batch.customerName}
+                    </TableCell>
+                    <TableCell className="text-center font-semibold text-blue-600">
+                      {batch.quantityAvailable}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {batch.quantityDistributed}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant="outline"
+                        className={getStatusClasses(batch.status)}
+                      >
+                        {statusLabels[batch.status] || batch.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {batch.formattedCreatedAt}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => handleViewDetails(batch.id)}
+                          >
+                            <BookOpen className="mr-2 h-4 w-4" /> Ver Detalhes
+                          </DropdownMenuItem>
+                          {batch.status === "CRIADO" && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => setBatchToSend(batch)}
+                              >
+                                <Send className="mr-2 h-4 w-4" /> Enviar Lote
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setBatchToDelete(batch)}
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir Lote
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+
+                  {expandedRows.has(batch.id) && (
+                    <TableRow className="bg-gray-50 dark:bg-muted/40">
+                      <TableCell colSpan={8} className="p-0">
+                        <ChildBatchesSubTable
+                          childBatches={batch.child_batches}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </Fragment>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24">
+                <TableCell colSpan={8} className="text-center h-24">
                   Nenhum lote encontrado para os filtros aplicados.
                 </TableCell>
               </TableRow>
@@ -385,8 +484,8 @@ export default function LicenseBatchesPage() {
               Tem certeza que deseja excluir o lote para o livro{" "}
               <strong>&quot;{batchToDelete?.book.title}&quot;</strong>? Todas as{" "}
               <strong>{batchToDelete?._count.license_keys}</strong> chaves de
-              licença associadas também serão excluídas. Esta ação não pode ser
-              desfeita.
+              licença associadas, bem como todos os microlotes distribuídos,
+              também serão excluídos. Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

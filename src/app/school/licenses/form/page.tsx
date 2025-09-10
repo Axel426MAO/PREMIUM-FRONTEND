@@ -119,7 +119,7 @@ export default function LicenseBatchCreationForm() {
     try {
       await createLicenseBatch(payload);
       // Idealmente, você usaria um sistema de toast aqui para notificar o sucesso
-      router.push("/secretary/licenses");
+      router.push("/school/licenses");
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -141,7 +141,7 @@ export default function LicenseBatchCreationForm() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {"Adicionar Novo Lote"}
+            {"Cadastrar Novo Lote"}
           </h1>
           <p className="text-muted-foreground mt-1">
             Preencha os dados para cadastrar uma nova escola no sistema.

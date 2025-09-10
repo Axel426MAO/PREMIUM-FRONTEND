@@ -111,7 +111,12 @@ const SchoolCard: FC<{
         </div>
       </div>
 
-  
+      {/* Rodapé do Card */}
+      <div className="pt-4 mt-auto">
+        <Badge variant={school.status === "Ativa" ? "default" : "destructive"}>
+          {school.status}
+        </Badge>
+      </div>
     </div>
   );
 };
@@ -230,7 +235,7 @@ export default function SchoolsPage() {
             className="shrink-0"
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar
+            Cadastrar
           </Button>
         </div>
       </div>

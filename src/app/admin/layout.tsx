@@ -33,6 +33,13 @@ const protectedRoutes = [
   "/admin/licenses/form",
   "/admin/licenses/resume",
   "/admin/profile",
+  "/admin/students",
+  "/admin/students/form",
+  "/admin/students/edit",
+
+  "/admin/teachers",
+  "/admin/teachers/form",
+  "/admin/teachers/edit",
 ];
 
 function AdminPanelLayout({ children }: { children: React.ReactNode }) {
@@ -61,7 +68,7 @@ function AdminPanelLayout({ children }: { children: React.ReactNode }) {
               <div className="flex-1 overflow-y-auto">
                 <div className="flex items-center border-b p-2 justify-between">
                   <span className="pl-2 text-lg font-bold">
-                    Editora Premium
+                    Premium Editora
                   </span>
                 </div>
                 <div className="mt-4">
