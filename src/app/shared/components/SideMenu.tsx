@@ -94,6 +94,27 @@ export function NavLinks({ isCollapsed }: NavLinksProps) {
     }
 
 
+        if (userType === "student") {
+      return [
+        { href: "/student", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/student/books", label: "Livros", icon: Book },
+      ];
+
+      
+    }
+
+
+    
+        if (userType === "teacher") {
+      return [
+        { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/teacher/books", label: "Livros", icon: Book },
+      ];
+
+      
+    }
+
+
     return [];
   }, [user]);
 
@@ -163,6 +184,17 @@ export function SideMenu({
     if (user?.user_type === "responsible_school") {
       return "Portal da Escola";
     }
+
+    if (user?.user_type === "student") {
+      return "Portal do Aluno";
+    }
+
+
+     if (user?.user_type === "teacher") {
+      return "Portal do Professor";
+    }
+
+
     return "Premium Editora";
   }, [user]);
 

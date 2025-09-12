@@ -279,6 +279,7 @@ const SummaryModal: FC<{ book: BookWithAccess; onClose: () => void }> = ({
   </div>
 );
 
+
 const Header: FC<{
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -306,6 +307,7 @@ const Header: FC<{
     </div>
   </div>
 );
+
 
 const FullScreenLoader: FC = () => (
   <div className="flex h-full w-full flex-grow items-center justify-center p-20">

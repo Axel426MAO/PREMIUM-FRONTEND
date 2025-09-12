@@ -307,6 +307,7 @@ const Header: FC<{
   </div>
 );
 
+
 const FullScreenLoader: FC = () => (
   <div className="flex h-full w-full flex-grow items-center justify-center p-20">
     <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>

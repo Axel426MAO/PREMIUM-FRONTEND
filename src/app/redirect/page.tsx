@@ -19,8 +19,8 @@ const LoadingSpinner = () => (
 // --- Mapeamento de Rota por Tipo de Usuário ---
 const userTypeToRouteMap: { [key: string]: string } = {
   responsible_secretary: "/secretary",
-  aluno: "/aluno/dashboard",
-  professor: "/professor/dashboard",
+  student: "/student",
+  teacher: "/teacher",
   responsible_school: "/school",
   admin: "/admin/",
 };
